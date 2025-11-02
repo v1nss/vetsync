@@ -1,10 +1,11 @@
 import express from "express";
 import cors from "cors";
-import { syncDB } from "./models/users/index.js";
+import { syncDB } from "./models/index.js";
 import userRoutes from "./routes/userRoutes.js";
 import authRoutes from './routes/authRoutes.js';
 import petRoutes from "./routes/petRoutes.js";
 import clinicRoutes from "./routes/clinicRoutes.js";
+import appointmentRoutes from "./routes/appointmentRoutes.js";
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -23,6 +24,8 @@ app.use("/api/pets", petRoutes);
 
 //clinic Routes
 app.use("/api/clinics", clinicRoutes);
+
+app.use("/api/appointments", appointmentRoutes);
 
 syncDB().then(() => {
   app.listen(port, () => {

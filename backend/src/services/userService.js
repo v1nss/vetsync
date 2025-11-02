@@ -58,6 +58,7 @@ export const registerVetProfessional = async (data, adminUserId) => {
 
   await VetProfessional.create({
     user_id: user.id,
+    clinic_admin_id: adminUserId,
     specialization,
   });
 
