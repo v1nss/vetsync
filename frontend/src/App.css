@@ -6,10 +6,12 @@
   --color-secondary: #164A57;
   --color-background: #F5F5F5;
   --color-background-dark: #E0E0E0;
-  --text-primary: 32px;
-  --text-secondary: 28px;
-  --text-tertiary: 24px;
   --padding-base: 1rem;
   --padding-large: 2rem;
   --spacing-custom-large: 4rem;
+}
+
+:root {
+  font-family: var(--font-base);
+  line-height: 1.5;
 }
