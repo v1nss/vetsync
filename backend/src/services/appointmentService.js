@@ -16,7 +16,7 @@ export const acceptAppointment = async (clinicAdminId, appointmentId, vetProId) 
       user_id: vetProId,
       clinic_admin_id: clinicAdminId,
     },
-  });// need to double check restriction logic
+  });// need to double check restriction logic // cannot handle multiple clinics for now
     if (!vetProExists) {
         throw new Error("Vet Professional does not belong to this Clinic"); // does not belong to clinic admin
     }
