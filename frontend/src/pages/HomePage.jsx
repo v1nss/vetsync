@@ -1,5 +1,6 @@
-import { FaSearch, FaRegHeart, FaHeart, FaMapMarkerAlt } from "react-icons/fa";
+import { FaSearch, FaRegHeart, FaHeart, FaMapMarkerAlt, FaStar, FaClock } from "react-icons/fa";
 import { useState } from "react";
+import Navbar from "../components/Navbar";
 
 export default function HomePage() {
     const [clinics, setClinics] = useState([
@@ -59,8 +60,16 @@ export default function HomePage() {
 
     function displayClinics() {
         const query = searchQuery.trim().toLowerCase();
-        // basic client-side filtering by query and simple activeFilter
-        const filtered = clinics.filter((clinic) => {
+
+        // parse distance helper
+        const parseDistance = (d) => {
+            if (!d) return Infinity;
+            const m = String(d).match(/\d+(?:\.\d+)?/);
+            return m ? Number(m[0]) : Infinity;
+        };
+
+        // base filter by search query
+        let filtered = clinics.filter((clinic) => {
             if (!query) return true;
             return (
                 clinic.name.toLowerCase().includes(query) ||
@@ -69,8 +78,19 @@ export default function HomePage() {
             );
         });
 
+        if (activeFilter === 'Near You') {
+            filtered = filtered.filter((c) => parseDistance(c.distance) <= radius);
+            // sort by distance ascending when near you
+            filtered = filtered.sort((a, b) => parseDistance(a.distance) - parseDistance(b.distance));
+        } else if (activeFilter === '24/7 Open') {
+            filtered = filtered.filter((c) => String(c.hours).toLowerCase().includes('24/7') || String(c.hours).toLowerCase().includes('24/7'));
+        } else if (activeFilter === 'Popular') {
+            // simple heuristic: show liked first, then others
+            filtered = filtered.sort((a, b) => (b.liked === true) - (a.liked === true));
+        }
+
         return filtered.map((clinic) => (
-            <div key={clinic.id} className="bg-white p-4 rounded-xl shadow-md flex flex-col h-full">
+            <div key={clinic.id} className="bg-white border border-gray-200 hover:scale-105 p-4 rounded-xl shadow-md flex flex-col h-full transition ease-in duration-300">
                 <div className="overflow-hidden rounded-md">
                     <img src={clinic.image} alt="Vet Clinic" className="w-full bg-gray-300 h-52 object-cover rounded-lg mb-4" />
                 </div>
@@ -82,7 +102,6 @@ export default function HomePage() {
                     <span className="text-gray-600 mb-4"><strong>{clinic.hours}</strong></span>
                 </div>
 
-                {/* Always at the bottom */}
                 <div className="flex justify-end items-center mt-auto">
                     <button className="flex-1 bg-primary text-white px-4 py-2 rounded-xl hover:bg-[#FEA08E] transition">
                         Book Appointment
@@ -90,7 +109,7 @@ export default function HomePage() {
                     <button 
                         className="ml-2 border border-gray-300 bg-white text-black px-4 py-3 rounded-xl hover:bg-gray-100 transition"
                         onClick={() => toggleLike(clinic.id)}>
-                        {clinic.liked ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
+                        {clinic.liked ? <FaHeart className="text-red-500" /> : <FaRegHeart className="text-gray-500" />}
                     </button>
                 </div>
             </div>
@@ -118,73 +137,88 @@ export default function HomePage() {
     }
 
     return (
-        <div className="min-h-screen pb-10">
-            {/* Home Header */}
-            <nav className="sticky flex items-center justify-between py-4">
-                <div>
-                    <img src="/vetsync-logo-wname.png" className="flex h-10 w-auto" alt="Vetsync Logo" />
-                </div>
-                <div></div>
-            </nav>
-            <div className="mt-10 mb-6">
-                <div className="bg-linear-to-r from-primary to-[#FFB49A] px-6 py-10 rounded-2xl shadow-lg">
-                    <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                        <div className="text-white px-2 md:px-6">
-                            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">Your Pet's Health, Our Priority</h1>
-                            <p className="text-white/90 mb-6 max-w-xl">Find trusted veterinary clinics nearby. Book appointments, view services, and get care for your pet — all in one place.</p>
+        <div>
+            <Navbar />
+            <section className="min-h-screen pb-10"> 
+                <div className="mt-10 mb-6">
+                    <div className="bg-linear-to-r from-primary to-[#FFB49A] px-6 py-10 rounded-2xl shadow-lg">
+                        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                            <div className="text-white px-2 md:px-6">
+                                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">Your Pet's Health, Our Priority</h1>
+                                <p className="text-white/90 mb-6 max-w-xl">Find trusted veterinary clinics nearby. Book appointments, view services, and get care for your pet — all in one place.</p>
 
-                            <form className="flex items-center gap-3 mb-4" onSubmit={(e)=>{e.preventDefault(); console.log('Search:', searchQuery, radius, activeFilter);}}>
-                                <div className="flex items-center bg-white rounded-xl shadow-md overflow-hidden flex-1">
-                                    <input
-                                        id="search"
-                                        type="text"
-                                        value={searchQuery}
-                                        onChange={(e)=>setSearchQuery(e.target.value)}
-                                        placeholder="Search clinics, services, or addresses"
-                                        className="text-black px-4 py-3 w-full focus:outline-none"
-                                        aria-label="Search clinics"
-                                    />
-                                    <button aria-label="Search" className="group px-4 py-3 rounded-full" type="submit">
-                                        <FaSearch className="text-gray-400 group-hover:text-gray-500" />
-                                    </button>
+                                <form className="flex items-center gap-3 mb-4" onSubmit={(e)=>{e.preventDefault(); console.log('Search:', searchQuery, radius, activeFilter);}}>
+                                    <div className="flex items-center bg-white rounded-xl shadow-md overflow-hidden flex-1">
+                                        <input
+                                            id="search"
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={(e)=>setSearchQuery(e.target.value)}
+                                            placeholder="Search clinics, services, or addresses"
+                                            className="text-black px-4 py-3 w-full focus:outline-none"
+                                            aria-label="Search clinics"
+                                        />
+                                        <button aria-label="Search" className="group px-4 py-3 rounded-full" type="submit">
+                                            <FaSearch className="text-gray-400 group-hover:text-gray-500" />
+                                        </button>
+                                    </div>
+
+                                    <div className="flex items-center space-x-2">
+                                        <button
+                                            type="button"
+                                            onClick={handleDetectLocation}
+                                            className="inline-flex items-center px-4 py-3 rounded-xl bg-white text-primary hover:bg-gray-100 shadow-sm"
+                                            aria-pressed={isDetectingLocation}
+                                        >
+                                            <FaMapMarkerAlt className="my-1 sm:my-0 sm:mr-2" />
+                                            <span className="hidden sm:flex">{isDetectingLocation ? 'Detecting...' : 'Use My Location'}</span>
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <div className="flex justify-center sm:justify-start mt-6">
+                                    <button className="w-full sm:w-fit bg-white text-primary font-semibold px-6 py-3 rounded-xl hover:bg-gray-100 shadow">Find Clinics</button>
+                                    <button className="w-full sm:w-fit ml-4 bg-white/20 text-white px-5 py-3 rounded-xl hover:bg-white/30 transition">Learn More</button>
                                 </div>
-
-                                <div className="flex items-center space-x-2">
-                                    <button
-                                        type="button"
-                                        onClick={handleDetectLocation}
-                                        className="inline-flex items-center px-4 py-3 rounded-xl bg-white text-primary hover:bg-gray-100 shadow-sm"
-                                        aria-pressed={isDetectingLocation}
-                                    >
-                                        <FaMapMarkerAlt className="my-1 sm:my-0 sm:mr-2" />
-                                        <span className="hidden sm:flex">{isDetectingLocation ? 'Detecting...' : 'Use My Location'}</span>
-                                    </button>
-                                </div>
-                            </form>
-
-                            <div className="flex justify-center sm:justify-start mt-6">
-                                <button className="w-full sm:w-fit bg-white text-primary font-semibold px-6 py-3 rounded-xl hover:bg-gray-100 shadow">Find Clinics</button>
-                                <button className="w-full sm:w-fit ml-4 bg-white/20 text-white px-5 py-3 rounded-xl hover:bg-white/30 transition">Learn More</button>
                             </div>
-                        </div>
 
-                        <div className="order-first md:order-last flex justify-center md:justify-end">
-                            <img src="/pets-hero-section.png" alt="Happy pets and their owners" className="w-full max-w-md md:max-w-lg object-cover" />
+                            <div className="order-first md:order-last flex justify-center md:justify-end">
+                                <img src="/pets-hero-section.png" alt="Happy pets and their owners" className="w-full max-w-md md:max-w-lg object-cover" />
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Filter Tab buttons eg.Near You, Popular, 24/7 Open */}
-            <div className="flex space-x-4 mt-8 mb-2">
-                <button className="bg-primary text-white px-4 py-2 rounded-xl hover:bg-[#FEA08E] transition">Near You</button>
-                <button className="bg-background-dark text-black px-4 py-2 rounded-xl hover:bg-gray-300 transition">Popular</button>
-                <button className="bg-background-dark text-black px-4 py-2 rounded-xl hover:bg-gray-300 transition">24/7 Open</button>
-            </div>
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
-                {/* Vet Clinic Card */}
-                {displayClinics()}
-            </div>
+                {/* Filter Tab buttons eg.Near You, Popular, 24/7 Open */}
+                <div className="mt-8 mb-2">
+                    <div className="flex gap-3 overflow-x-auto pb-2" role="tablist" aria-label="Clinic filters">
+                        {[
+                            { key: 'Near You', icon: FaMapMarkerAlt },
+                            { key: 'Popular', icon: FaStar },
+                            { key: '24/7 Open', icon: FaClock },
+                        ].map((tab) => {
+                            const Icon = tab.icon;
+                            const isActive = activeFilter === tab.key;
+                            return (
+                                <button
+                                    key={tab.key}
+                                    role="tab"
+                                    aria-selected={isActive}
+                                    onClick={() => setActiveFilter(tab.key)}
+                                    className={`shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition focus:outline-none ${isActive ? 'bg-primary text-white shadow-md' : 'border border-gray-200 bg-white/80 text-black hover:bg-gray-100'}`}
+                                >
+                                    <Icon className={`${isActive ? 'text-white' : 'text-primary'}`} />
+                                    <span className="whitespace-nowrap">{tab.key}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+                    {/* Vet Clinic Card */}
+                    {displayClinics()}
+                </div>
+            </section>
         </div>
     );
 }

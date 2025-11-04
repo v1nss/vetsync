@@ -22,7 +22,7 @@ export default function RegisterPage() {
   };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background">
+        <section className="min-h-screen flex items-center justify-center bg-background">
             <div className="bg-white sm:p-8 rounded-2xl sm:shadow-lg w-full max-w-md">
                 <img src="/vetsync-logo-wname.png" alt="VetSync Logo" className="h-12 mx-auto my-8" />
                 <h2 className="text-2xl font-semibold text-center">Create Your Account</h2>
@@ -117,6 +117,6 @@ export default function RegisterPage() {
                     </div>
                 </form>
             </div>
-        </div>
+        </section>
     );
 }
