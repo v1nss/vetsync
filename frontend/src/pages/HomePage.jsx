@@ -1,8 +1,11 @@
 import { FaSearch, FaRegHeart, FaHeart, FaMapMarkerAlt, FaStar, FaClock } from "react-icons/fa";
 import { useState } from "react";
 import Navbar from "../components/Navbar";
+import ClinicView from "../components/ClinicView";
 
 export default function HomePage() {
+    const [selectedClinic, setSelectedClinic] = useState(null);
+
     const [clinics, setClinics] = useState([
         {
             id: 1,
@@ -55,7 +58,6 @@ export default function HomePage() {
         clinic.id === id ? { ...clinic, liked: !clinic.liked } : clinic
         )
     );
-    console.log("Toggled like for clinic with id:", id);
     };
 
     function displayClinics() {
@@ -90,7 +92,13 @@ export default function HomePage() {
         }
 
         return filtered.map((clinic) => (
-            <div key={clinic.id} className="bg-white border border-gray-200 hover:scale-105 p-4 rounded-xl shadow-md flex flex-col h-full transition ease-in duration-300">
+            <div
+                key={clinic.id}
+                onClick={() => setSelectedClinic(clinic)}  // ✅ opens modal
+                className="bg-white border border-gray-200 hover:scale-105 p-4 rounded-xl shadow-md flex flex-col h-full transition ease-in duration-300 cursor-pointer"
+            >
+                {/* (same content below — no changes to UI layout, only added onClick) */}
+
                 <div className="overflow-hidden rounded-md">
                     <img src={clinic.image} alt="Vet Clinic" className="w-full bg-gray-300 h-52 object-cover rounded-lg mb-4" />
                 </div>
@@ -100,15 +108,25 @@ export default function HomePage() {
                     <span className="text-gray-600">{clinic.distance}</span>
                     <p className="text-gray-600">{clinic.address}</p>
                     <span className="text-gray-600 mb-4"><strong>{clinic.hours}</strong></span>
+
+                    <div className="flex flex-wrap gap-2 mt-2">
+                        <span className="px-3 py-1 bg-primary/20 rounded-full text-xs">Grooming</span>
+                        <span className="px-3 py-1 bg-primary/20 rounded-full text-xs">Vaccine</span>
+                        <span className="px-3 py-1 bg-primary/20 rounded-full text-xs">Consultation</span>
+                    </div>
                 </div>
 
-                <div className="flex justify-end items-center mt-auto">
+                <div
+                    className="flex justify-end items-center mt-auto"
+                    onClick={(e) => e.stopPropagation()} // ✅ prevents modal from opening when clicking buttons
+                >
                     <button className="flex-1 bg-primary text-white px-4 py-2 rounded-xl hover:bg-[#FEA08E] transition">
                         Book Appointment
                     </button>
-                    <button 
+                    <button
                         className="ml-2 border border-gray-300 bg-white text-black px-4 py-3 rounded-xl hover:bg-gray-100 transition"
-                        onClick={() => toggleLike(clinic.id)}>
+                        onClick={() => toggleLike(clinic.id)}
+                    >
                         {clinic.liked ? <FaHeart className="text-red-500" /> : <FaRegHeart className="text-gray-500" />}
                     </button>
                 </div>
@@ -218,6 +236,9 @@ export default function HomePage() {
                     {/* Vet Clinic Card */}
                     {displayClinics()}
                 </div>
+                {selectedClinic && (
+                    <ClinicView clinic={selectedClinic} onClose={() => setSelectedClinic(null)} />
+                )}
             </section>
         </div>
     );
