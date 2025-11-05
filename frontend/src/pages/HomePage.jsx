@@ -43,6 +43,42 @@ export default function HomePage() {
             address: "789 Canine Road, Dog City",
             image: "/clinic-image4.jpg",
             liked: false,
+        },
+        {
+            id: 5,
+            name: "Furry Friends Vet Clinic",
+            distance: "4km away",
+            hours: "Open 24/7",
+            address: "789 Canine Road, Dog City",
+            image: "/clinic-image4.jpg",
+            liked: false,
+        },
+        {
+            id: 6,
+            name: "Furry Friends Vet Clinic",
+            distance: "4km away",
+            hours: "Open 24/7",
+            address: "789 Canine Road, Dog City",
+            image: "/clinic-image4.jpg",
+            liked: false,
+        },
+        {
+            id: 7,
+            name: "Furry Friends Vet Clinic",
+            distance: "4km away",
+            hours: "Open 24/7",
+            address: "789 Canine Road, Dog City",
+            image: "/clinic-image4.jpg",
+            liked: false,
+        },
+        {
+            id: 8,
+            name: "Furry Friends Vet Clinic",
+            distance: "4km away",
+            hours: "Open 24/7",
+            address: "789 Canine Road, Dog City",
+            image: "/clinic-image4.jpg",
+            liked: false,
         }
     ]);
 
