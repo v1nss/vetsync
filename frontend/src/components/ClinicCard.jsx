@@ -1,4 +1,3 @@
-// components/ClinicCard.jsx
 import { FaRegHeart, FaHeart } from "react-icons/fa";
 
 export default function ClinicCard({ clinic, onLike, onOpen }) {
@@ -24,19 +23,17 @@ export default function ClinicCard({ clinic, onLike, onOpen }) {
         </span>
 
         <div className="flex flex-wrap gap-2 mt-2">
-          <span className="px-3 py-1 bg-primary/20 rounded-full text-xs">
-            Grooming
-          </span>
-          <span className="px-3 py-1 bg-primary/20 rounded-full text-xs">
-            Vaccine
-          </span>
-          <span className="px-3 py-1 bg-primary/20 rounded-full text-xs">
-            Consultation
-          </span>
+          {clinic.services?.map((service, index) => (
+              <span
+                  key={index}
+                  className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs"
+              >
+                  {service}
+              </span>
+          ))}
         </div>
       </div>
 
-      {/* Like + Book buttons */}
       <div
         className="flex justify-end items-center mt-auto"
         onClick={(e) => e.stopPropagation()}
