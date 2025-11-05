@@ -1,7 +1,7 @@
 import { FaSearch, FaRegHeart, FaHeart, FaMapMarkerAlt, FaStar, FaClock } from "react-icons/fa";
 import { useState } from "react";
 import Navbar from "../components/Navbar";
-import ClinicView from "../components/ClinicView";
+import ClinicViewModal from "../components/ClinicViewModal";
 import ClinicCard from "../components/ClinicCard";
 
 export default function HomePage() {
@@ -16,6 +16,7 @@ export default function HomePage() {
             address: "64 Doña Soledad Avenue, Better Living Subdivision, Don Bosco, Parañaque City",
             image: "/clinic-image.jpg",
             liked: false,
+            services: ["Grooming", "Vaccine", "Consultation"],
         },
         {
             id: 2,
@@ -25,6 +26,7 @@ export default function HomePage() {
             address: "123 Pet Street, Animal City",
             image: "/clinic-image2.jpg",
             liked: false,
+            services: ["Surgery", "Dental Care", "Emergency Care"],
         },
         {
             id: 3,
@@ -34,6 +36,7 @@ export default function HomePage() {
             address: "456 Feline Avenue, Cat Town",
             image: "/clinic-image3.jpg",
             liked: false,
+            services: ["Wellness Exams", "Spaying/Neutering", "Microchipping"],
         },
         {
             id: 4,
@@ -43,10 +46,10 @@ export default function HomePage() {
             address: "789 Canine Road, Dog City",
             image: "/clinic-image4.jpg",
             liked: false,
+            services: ["Vaccinations", "Parasite Control", "Nutritional Counseling"],
         }
     ]);
 
-    // UI + search state
     const [searchQuery, setSearchQuery] = useState("");
     const [radius, setRadius] = useState(10); // km
     const [isDetectingLocation, setIsDetectingLocation] = useState(false);
@@ -203,7 +206,11 @@ export default function HomePage() {
                     {displayClinics()}
                 </div>
                 {selectedClinic && (
-                    <ClinicView clinic={selectedClinic} onClose={() => setSelectedClinic(null)} />
+                    <ClinicViewModal
+                        clinic={selectedClinic}
+                        onClose={() => setSelectedClinic(null)}
+                        isOpen={!!selectedClinic}
+                    />
                 )}
             </section>
         </div>

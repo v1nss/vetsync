@@ -5,7 +5,7 @@ import HomePage from "../pages/HomePage";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import { useAuth } from "../context/AuthContext";
-import ClinicView from "../components/ClinicView";
+import ClinicViewModal from "../components/ClinicViewModal";
 
 // Public routes (no auth required)
 const PublicRoute = () => {
@@ -42,14 +42,14 @@ const AppRoutes = () => (
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/clinic/" element={<ClinicView />} />
+            <Route path="/clinic/" element={<ClinicViewModal />} />
         </Route>
 
         {/* Protected routes (requires auth) */}
             <Route element={<ProtectedRoute />}> 
                 {/* Pet Owner */}
                 <Route element={<PetOwnerRoute />}> 
-                    <Route path="/:clinicId" element={<ClinicView />} />
+                    <Route path="/:clinicId" element={<ClinicViewModal />} />
                     <Route path="/dashboard" element={<PetOwnerDashboard />} />
                 </Route>
                 {/* Clinic Admin */}
