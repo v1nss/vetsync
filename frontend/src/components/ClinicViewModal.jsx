@@ -42,7 +42,7 @@ export default function ClinicViewModal({ clinic, onClose }) {
       onClick={handleOverlayClick}
       className="fixed inset-0 bg-black/50 z-50 flex justify-center items-center sm:p-4 backdrop-blur-sm"
     >
-      <div className="relative bg-white h-full sm:h-auto sm:rounded-2xl w-full sm:max-w-2xl sm:max-h-[90vh] overflow-y-auto shadow-xl animate-slide-down">
+      <div className="relative bg-white h-full sm:h-auto sm:rounded-2xl w-full sm:max-w-2xl sm:max-h-[90vh] overflow-y-auto shadow-xl animate-slide-up">
         {/* Close button */}
         <button
           onClick={handleClose}
