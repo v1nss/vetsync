@@ -4,6 +4,7 @@ import { createNewAppointment, acceptAppointmentRequest, completeAppointmentRequ
 
 const router = express.Router();
 
+// endpoints not finalized yet
 // Create new appointment - only pet owners
 router.post('/create', verifyToken, createNewAppointment);
 
