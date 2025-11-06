@@ -1,5 +1,5 @@
 import { FaRegHeart, FaHeart } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 export default function ClinicCard({ clinic, onLike }) {
   const navigate = useNavigate();
@@ -39,12 +39,14 @@ export default function ClinicCard({ clinic, onLike }) {
         onClick={(e) => e.stopPropagation()}
         className="flex justify-end items-center mt-auto"
       >
-        <button
-          className="flex-1 bg-primary text-white px-4 py-2 rounded-xl hover:bg-[#FEA08E] transition"
-          onClick={goToClinicViewPage}
-        >
-          Book Appointment
-        </button>
+        <Link to="/book-appointment" state={{ clinic }} className="flex-1">
+          <button
+            className="w-full bg-primary text-white px-4 py-2 rounded-xl hover:bg-[#FEA08E] transition"
+            onClick={goToClinicViewPage}
+          >
+            Book Appointment
+          </button>
+        </Link>
 
         <button
           className="ml-2 border border-gray-300 bg-white text-black px-4 py-3 rounded-xl hover:bg-gray-100 transition"

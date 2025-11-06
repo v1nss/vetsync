@@ -1,11 +1,12 @@
 
 import React from "react";
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import HomePage from "../pages/HomePage";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
-import { useAuth } from "../context/AuthContext";
 import ClinicViewPage from "../pages/ClinicViewPage";
+import BookAppointmentPage from "../pages/BookAppointmentPage";
 
 // Public routes (no auth required)
 const PublicRoute = () => {
@@ -43,6 +44,7 @@ const AppRoutes = () => (
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/clinic/:id" element={<ClinicViewPage />} />
+            <Route path="/book-appointment" element={<BookAppointmentPage />} />
         </Route>
 
         {/* Protected routes (requires auth) */}

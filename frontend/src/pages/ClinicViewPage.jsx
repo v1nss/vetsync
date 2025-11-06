@@ -1,8 +1,7 @@
 import { RiPinDistanceFill } from "react-icons/ri";
 import { FaLocationDot, FaClock } from "react-icons/fa6";
-import { FaRegHeart, FaHeart } from "react-icons/fa";
-import { IoArrowBack } from "react-icons/io5";
-import { useLocation, useNavigate } from "react-router-dom";
+import { FaRegHeart, FaHeart, FaChevronLeft } from "react-icons/fa";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import React from "react";
 
@@ -67,7 +66,7 @@ export default function ClinicViewPage({ onLike }) {
           onClick={() => navigate(-1)}
           className="top-4 sm:hidden fixed left-4 z-50 flex items-center gap-2 bg-white/90 border border-gray-300 p-3 rounded-full backdrop-blur-sm hover:bg-gray-200 transition"
         >
-          <IoArrowBack className="text-gray-500" />
+          <FaChevronLeft className="text-gray-500" />
         </button>
 
         {/* Like Button (For Mobile Only) */}
@@ -94,13 +93,15 @@ export default function ClinicViewPage({ onLike }) {
               {clinic.name}
             </h1>
 
-            <button className="hidden md:block bg-primary text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 transition">
-              Book appointment
-            </button>
+            <Link to="/book-appointment" state={{ clinic }}>
+              <button className="hidden md:inline-block bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#FEA08E] transition">
+                Book appointment
+              </button>
+            </Link>
           </div>
 
           {/* Info Card */}
-          <div className="rounded-2xl bg-gray-50 p-6 space-y-4 border border-gray-200">
+          <div className="rounded-2xl bg-gray-50 p-6 space-y-4 border border-gray-300">
 
             {/* Distance */}
             <div className="flex items-start gap-3">
@@ -159,7 +160,7 @@ export default function ClinicViewPage({ onLike }) {
           {/* Map */}
           <div>
             <h2 className="font-semibold text-gray-900 mb-4 text-lg">Location Map</h2>
-            <div className="rounded-2xl overflow-hidden h-64 border border-gray-200">
+            <div className="rounded-2xl overflow-hidden h-64 border border-gray-300">
               <iframe
                 title="clinic-map"
                 width="100%"
@@ -174,10 +175,12 @@ export default function ClinicViewPage({ onLike }) {
         </div>
 
         {/* Mobile CTA */}
-        <div className="md:hidden fixed bottom-0 w-full bg-white p-4 border-t border-gray-200">
-          <button className="w-full bg-primary text-white py-2 rounded-xl font-semibold">
-            Book appointment
-          </button>
+        <div className="md:hidden fixed bottom-0 w-full bg-white p-4 border-t border-gray-300">
+          <Link to="/book-appointment" state={{ clinic }}>
+            <button className="w-full bg-primary text-white py-2 rounded-xl font-semibold">
+              Book appointment
+            </button>
+          </Link>
         </div>
       </div>
     </main>
