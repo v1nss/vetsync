@@ -1,11 +1,10 @@
 import { FaSearch, FaRegHeart, FaHeart, FaMapMarkerAlt, FaStar, FaClock } from "react-icons/fa";
 import { useState } from "react";
 import Navbar from "../components/Navbar";
-import ClinicViewModal from "../components/ClinicViewModal";
+import ClinicViewPage from "./ClinicViewPage";
 import ClinicCard from "../components/ClinicCard";
 
 export default function HomePage() {
-    const [selectedClinic, setSelectedClinic] = useState(null);
 
     const [clinics, setClinics] = useState([
         {
@@ -17,6 +16,7 @@ export default function HomePage() {
             image: "/clinic-image.jpg",
             liked: false,
             services: ["Grooming", "Vaccine", "Consultation"],
+            description: "Happy Paws Veterinary Clinic is dedicated to providing top-notch care for your beloved pets. Our experienced veterinarians and friendly staff ensure a comfortable and welcoming environment for both you and your furry friends. We offer a wide range of services including grooming, vaccinations, and health consultations to keep your pets happy and healthy."
         },
         {
             id: 2,
@@ -27,6 +27,7 @@ export default function HomePage() {
             image: "/clinic-image2.jpg",
             liked: false,
             services: ["Surgery", "Dental Care", "Emergency Care"],
+            description: "Healthy Tails Vet Center is committed to the health and well-being of your pets. Our state-of-the-art facility is equipped to handle a variety of medical needs, from routine check-ups to emergency care. Our skilled veterinarians specialize in surgery, dental care, and preventive medicine, ensuring that your pets receive the best possible treatment."
         },
         {
             id: 3,
@@ -37,6 +38,7 @@ export default function HomePage() {
             image: "/clinic-image3.jpg",
             liked: false,
             services: ["Wellness Exams", "Spaying/Neutering", "Microchipping"],
+            description: "Purrfect Care Animal Hospital is your trusted partner in pet health. We provide comprehensive wellness exams, spaying/neutering services, and microchipping to ensure the safety and longevity of your pets. Our compassionate team is dedicated to delivering personalized care tailored to the unique needs of each animal we treat."
         },
         {
             id: 4,
@@ -47,6 +49,7 @@ export default function HomePage() {
             image: "/clinic-image4.jpg",
             liked: false,
             services: ["Vaccinations", "Parasite Control", "Nutritional Counseling"],
+            description: "Furry Friends Vet Clinic is passionate about providing exceptional care for your pets. Our experienced veterinarians offer a range of services including vaccinations, parasite control, and nutritional counseling to keep your furry friends healthy and happy. We strive to create a warm and welcoming atmosphere for both pets and their owners."
         }
     ]);
 
@@ -96,7 +99,6 @@ export default function HomePage() {
             <ClinicCard
             key={clinic.id}
             clinic={clinic}
-            onOpen={() => setSelectedClinic(clinic)} 
             onLike={() => toggleLike(clinic.id)}
             />
         ));
@@ -127,6 +129,8 @@ export default function HomePage() {
         <div>
             <Navbar />
             <section className="min-h-screen pb-10"> 
+
+                {/* Hero Section */}
                 <div className="mt-10 mb-6">
                     <div className="bg-linear-to-r from-primary to-[#FFB49A] px-6 py-10 rounded-2xl shadow-lg">
                         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
@@ -135,7 +139,7 @@ export default function HomePage() {
                                 <p className="text-white/90 mb-6 max-w-xl">Find trusted veterinary clinics nearby. Book appointments, view services, and get care for your pet — all in one place.</p>
 
                                 <form className="flex items-center gap-3 mb-4" onSubmit={(e)=>{e.preventDefault(); console.log('Search:', searchQuery, radius, activeFilter);}}>
-                                    <div className="flex items-center bg-white rounded-xl shadow-md overflow-hidden flex-1">
+                                    <div className="flex items-center bg-white rounded-xl overflow-hidden flex-1">
                                         <input
                                             id="search"
                                             type="text"
@@ -154,7 +158,7 @@ export default function HomePage() {
                                         <button
                                             type="button"
                                             onClick={handleDetectLocation}
-                                            className="inline-flex items-center px-4 py-3 rounded-xl bg-white text-primary hover:bg-gray-100 shadow-sm"
+                                            className="inline-flex items-center px-4 py-3 rounded-xl bg-white text-primary hover:bg-gray-100"
                                             aria-pressed={isDetectingLocation}
                                         >
                                             <FaMapMarkerAlt className="my-1 sm:my-0 sm:mr-2" />
@@ -164,7 +168,7 @@ export default function HomePage() {
                                 </form>
 
                                 <div className="flex justify-center sm:justify-start mt-6">
-                                    <button className="w-full sm:w-fit bg-white text-primary font-semibold px-6 py-3 rounded-xl hover:bg-gray-100 shadow">Find Clinics</button>
+                                    <button className="w-full sm:w-fit bg-white text-primary font-semibold px-6 py-3 rounded-xl hover:bg-gray-100">Find Clinics</button>
                                     <button className="w-full sm:w-fit ml-4 bg-white/20 text-white px-5 py-3 rounded-xl hover:bg-white/30 transition">Learn More</button>
                                 </div>
                             </div>
@@ -176,7 +180,7 @@ export default function HomePage() {
                     </div>
                 </div>
 
-                {/* Filter Tab buttons eg.Near You, Popular, 24/7 Open */}
+                {/* Filter Tab buttons */}
                 <div className="mt-8 mb-2">
                     <div className="flex gap-3 overflow-x-auto pb-2" role="tablist" aria-label="Clinic filters">
                         {[
@@ -192,7 +196,7 @@ export default function HomePage() {
                                     role="tab"
                                     aria-selected={isActive}
                                     onClick={() => setActiveFilter(tab.key)}
-                                    className={`shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition focus:outline-none ${isActive ? 'bg-primary text-white shadow-md' : 'border border-gray-200 bg-white/80 text-black hover:bg-gray-100'}`}
+                                    className={`shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition focus:outline-none ${isActive ? 'bg-primary text-white' : 'border border-gray-200 bg-white/80 text-black hover:bg-gray-100'}`}
                                 >
                                     <Icon className={`${isActive ? 'text-white' : 'text-primary'}`} />
                                     <span className="whitespace-nowrap">{tab.key}</span>
@@ -201,17 +205,11 @@ export default function HomePage() {
                         })}
                     </div>
                 </div>
+
+                {/* Clinics Container */}
                 <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
-                    {/* Vet Clinic Card */}
                     {displayClinics()}
                 </div>
-                {selectedClinic && (
-                    <ClinicViewModal
-                        clinic={selectedClinic}
-                        onClose={() => setSelectedClinic(null)}
-                        isOpen={!!selectedClinic}
-                    />
-                )}
             </section>
         </div>
     );
