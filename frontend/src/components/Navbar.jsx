@@ -15,7 +15,9 @@ function MobileNavBar() {
     return (
         <div>
             <header className="px-4 py-2 sm:hidden shadow-md bg-white flex items-center justify-between h-16">
-                <img src="/vetsync-logo-wname.png" alt="VetSync Logo" className="h-8" />
+                <Link to="/" aria-label="Home">
+                    <img src="/vetsync-logo-wname.png" alt="VetSync Logo" className="h-8" />
+                </Link>
                 <button aria-label="Favorites" className="p-2">
                     <FaRegHeart className="h-6 w-6 text-gray-600 hover:text-primary" />
                 </button>
@@ -51,9 +53,9 @@ export default function Navbar() {
                     <div className="mx-auto px-base sm:px-large lg:px-custom-large">
                         <div className="flex justify-between h-16">
                             <div className="flex">
-                                <div className="shrink-0 flex items-center">
+                                <Link to="/" className="shrink-0 flex items-center">
                                     <img className="h-8 w-auto" src="/vetsync-logo-wname.png" alt="VetSync Logo" />
-                                </div>
+                                </Link>
                             </div>
                             <div className="flex items-center">
                                 <Link to="/dashboard" className="text-gray-800 hover:text-primary px-3 py-2 rounded-md text-sm font-medium">
@@ -82,9 +84,9 @@ export default function Navbar() {
                 <div className="mx-auto px-base sm:px-large lg:px-custom-large">
                     <div className="flex justify-between h-16">
                         <div className="flex">
-                            <div className="shrink-0 flex items-center">
+                            <Link to="/" className="shrink-0 flex items-center">
                                 <img className="h-8 w-auto" src="/vetsync-logo-wname.png" alt="VetSync Logo" />
-                            </div>
+                            </Link>
                         </div>
                         <div className="flex items-center">
                             <Link to="/login" className="text-gray-800 hover:text-primary px-3 py-2 rounded-md text-sm font-medium">

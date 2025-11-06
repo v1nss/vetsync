@@ -1,11 +1,12 @@
 
 import React from "react";
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import HomePage from "../pages/HomePage";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
-import { useAuth } from "../context/AuthContext";
-import ClinicViewModal from "../components/ClinicViewModal";
+import ClinicViewPage from "../pages/ClinicViewPage";
+import BookAppointmentPage from "../pages/BookAppointmentPage";
 
 // Public routes (no auth required)
 const PublicRoute = () => {
@@ -42,14 +43,15 @@ const AppRoutes = () => (
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/clinic/" element={<ClinicViewModal />} />
+            <Route path="/clinic/:id" element={<ClinicViewPage />} />
+            <Route path="/book-appointment" element={<BookAppointmentPage />} />
         </Route>
 
         {/* Protected routes (requires auth) */}
             <Route element={<ProtectedRoute />}> 
                 {/* Pet Owner */}
                 <Route element={<PetOwnerRoute />}> 
-                    <Route path="/:clinicId" element={<ClinicViewModal />} />
+                    <Route path="/clinic/:id" element={<ClinicViewPage />} />
                     <Route path="/dashboard" element={<PetOwnerDashboard />} />
                 </Route>
                 {/* Clinic Admin */}
