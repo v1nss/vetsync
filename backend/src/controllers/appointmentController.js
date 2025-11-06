@@ -1,6 +1,7 @@
 import {
   createAppointment,
   acceptAppointment,
+  completeAppointment
 } from "../services/appointmentService.js";
 
 export const createNewAppointment = async (req, res) => {
@@ -38,5 +39,21 @@ export const acceptAppointmentRequest = async (req, res) => {
     res
     .status(500)
     .json({message: "Error accepting appointment", error: err.message });
+  }
+};
+
+export const completeAppointmentRequest = async (req, res) => {
+  try {
+    const appointmentId = req.params.appointmentId;
+    // const { vet_professional_id } = req.body // not sure for now if clinicAdmin is the only one that can accept appointment
+    const appointment = await completeAppointment(appointmentId);
+    res
+    .status(200)
+    .json({message: "Appointment completed successfully", appointment });
+  } catch (err) {
+    console.error("Error completing appointment", err.message);
+    res
+    .status(500)
+    .json({message: "Error completing appointment", error: err.message });
   }
 };

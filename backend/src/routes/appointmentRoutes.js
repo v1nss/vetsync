@@ -1,6 +1,6 @@
 import express from 'express';
 import { verifyToken, verifyClinicAdmin } from '../middleware/authMiddleware.js';
-import { createNewAppointment, acceptAppointmentRequest } from '../controllers/appointmentController.js';
+import { createNewAppointment, acceptAppointmentRequest, completeAppointmentRequest } from '../controllers/appointmentController.js';
 
 const router = express.Router();
 
@@ -8,5 +8,7 @@ const router = express.Router();
 router.post('/create', verifyToken, createNewAppointment);
 
 router.patch('/accept/:appointmentId', verifyToken, verifyClinicAdmin, acceptAppointmentRequest);
+
+router.patch('/complete/:appointmentId', verifyToken, completeAppointmentRequest);
 
 export default router;

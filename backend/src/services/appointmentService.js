@@ -26,3 +26,10 @@ export const acceptAppointment = async (clinicAdminId, appointmentId, vetProId) 
   await appointment.update(appointment);
   return appointment;
 };
+
+export const completeAppointment = async (appointmentId) => {
+ await Appointment.update(
+  { status: "completed" },
+  { where: { appointment_id: appointmentId } }
+);
+}
