@@ -1,15 +1,27 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 export default function RegisterPage() {
   const [userType, setUserType] = useState("pet_owner");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const [user, setUser] = useState({
+    full_name: "",
+    email: "",
+    user_type:"",
+    // phoneNumber: "",
+    password: "",
+  });
+
   const handleRoleChange = (role) => {
     setUserType(role);
-
+    setUser(prev => ({ ...prev, user_type: role })); 
     chooseRole(role);
   };
 
@@ -21,13 +33,42 @@ export default function RegisterPage() {
     }
   };
 
+  const handleOnChange = (e) => {
+  const { name, value } = e.target;
+  setUser((prev) => ({ ...prev, [name]: value }));
+};
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+    const res = await axios.post(`${BACKEND_URL}/users/register`, {
+      full_name: user.full_name,
+      email: user.email,
+      user_type: userType,
+      password: user.password,
+    //   address: user.address,         // optional
+    //   clinic_name: user.clinic_name, // optional
+    });
+
+      if (res.status === 200) {
+        console.log("✅ Registered:", res.data);
+        navigate("/login");
+      }
+    } catch (err) {
+      console.error("Registration error:", err.response?.data || err.message);
+    }
+  };
+
     return (
         <section className="min-h-screen flex items-center justify-center bg-background">
             <div className="bg-white sm:p-8 rounded-2xl sm:shadow-lg w-full max-w-md">
                 <img src="/vetsync-logo-wname.png" alt="VetSync Logo" className="h-12 mx-auto my-8" />
                 <h2 className="text-2xl font-semibold text-center">Create Your Account</h2>
                 <p className="text-center text-gray-600 mb-6">Join VetSync and connect with top vets near you.</p>
-                <form>
+                <form
+                    onSubmit={handleSubmit}
+                    method="POST"
+                >
                     {/* Choose Role: Pet Owner or Clinic Admin */}
                     <label className="block text-sm text-gray-700 mb-2">I am a:</label>
                     <div className="flex justify-center mb-6 space-x-4">
@@ -59,6 +100,9 @@ export default function RegisterPage() {
                             id="name"
                             className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl"
                             placeholder="Enter your full name"
+                            onChange={handleOnChange}
+                            name="full_name"
+                            value={user.full_name}
                         />
                     </div>
                     <div className="mb-4">
@@ -69,6 +113,9 @@ export default function RegisterPage() {
                             id="email"
                             className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl"
                             placeholder="Enter your email"
+                            onChange={handleOnChange}
+                            name="email"
+                            value={user.email}
                         />
                     </div>
                     <div className="mb-4 relative">
@@ -80,6 +127,9 @@ export default function RegisterPage() {
                                 id="password"
                                 className="focus:outline-none w-full outline-none text-sm"
                                 placeholder="Enter your password"
+                                onChange={handleOnChange}
+                                name="password"
+                                value={user.password}
                             />
                             <button
                                 type="button"
