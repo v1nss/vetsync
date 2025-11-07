@@ -1,4 +1,4 @@
-import { getAllUsers, registerSystemAdmin, getAllClinics} from '../services/systemAdminService.js';
+import { getAllUsers, registerSystemAdmin, getAllClinics, getPendingClinics, acceptClinicStatus} from '../services/systemAdminService.js';
 
 export const registerAdmin = async (req, res) => {
   try {
@@ -21,9 +21,29 @@ export const fetchAllUsers = async (req, res) => {
 
 export const fetchAllClinics = async (req, res) => {
     try {
-        const clinics = await getAllClinics();
+        const { status } = req.query; // e.g. ?status=pending
+        const clinics = await getAllClinics(status);
         res.status(200).json({ clinics });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 };
+
+export const fetchPendingClinics = async (req, res) => {
+    try {
+        const clinics = await getPendingClinics();
+        res.status(200).json({ clinics });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+export const approveClinic = async (req, res) => {
+    try {
+        const { clinicId } = req.params;
+        await acceptClinicStatus(clinicId);
+        res.status(200).json({ message: 'Clinic approved successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}

@@ -1,10 +1,9 @@
+import bcrypt from 'bcryptjs';
 import User from '../models/users/userModel.js';
 import ClinicAdmin from '../models/users/clinicAdminModel.js';
 import VetProfessional from '../models/users/vetProfessionalModel.js';
 import PetOwner from '../models/users/petOwnerModel.js';
 import Clinic from '../models/clinicModel.js';
-import bcrypt from 'bcryptjs';
-
 
 export const registerSystemAdmin = async (adminData) => {
 
@@ -42,12 +41,15 @@ export const getAllUsers = async () => {
 };
 
 // clinic side
-export const getAllClinics = async () => {
-    try {
-     const clinics = await Clinic.findAll(); 
-     return clinics;
-    } catch (err) {
-        console.error('Error fetching clinics', err.message);
-        throw err;
-    } 
+export const getAllClinics = async (status) => {
+  const where = status ? { status } : {};
+  const clinics = await Clinic.findAll({ where });
+  return clinics;
+};
+
+export const acceptClinicStatus = async (clinicId) => {
+  await Clinic.update(
+    { status: "approved" },
+    { where: { clinic_id: clinicId } }
+  );
 }

@@ -33,6 +33,11 @@ const Clinic = sequelize.define( "Clinic", {
       type: DataTypes.STRING,
       allowNull: true,
     },
+    status: {
+      type: DataTypes.ENUM("pending", "approved", "rejected"),
+      defaultValue: "pending",
+    },
+    // Additional fields like
     // operating schedule, services offered, etc. can be added later
   }, {
     tableName: "clinics",
