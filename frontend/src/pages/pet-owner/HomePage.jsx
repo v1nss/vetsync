@@ -1,8 +1,7 @@
 import { FaSearch, FaRegHeart, FaHeart, FaMapMarkerAlt, FaStar, FaClock } from "react-icons/fa";
 import { useState } from "react";
-import Navbar from "../components/Navbar";
-import ClinicViewPage from "./ClinicViewPage";
-import ClinicCard from "../components/ClinicCard";
+import Navbar from "../../components/Navbar";
+import ClinicCard from "../../components/ClinicCard";
 
 export default function HomePage() {
 
@@ -54,7 +53,7 @@ export default function HomePage() {
     ]);
 
     const [searchQuery, setSearchQuery] = useState("");
-    const [radius, setRadius] = useState(10); // km
+    const [radius, setRadius] = useState(10);
     const [isDetectingLocation, setIsDetectingLocation] = useState(false);
     const [userLocation, setUserLocation] = useState(null);
     const [activeFilter, setActiveFilter] = useState("Near You");
