@@ -34,11 +34,18 @@ export const verifyOwner = (req, res, next) => {
   next();
 };
 
-
 // Verify if user is a ClinicAdmin
 export const verifyClinicAdmin = (req, res, next) => {
   if (req.user.user_type !== 'clinic_admin') {
     return res.status(403).json({ error: 'Access denied — ClinicAdmin only' });
+  }
+  next();
+};
+
+// Verify if user is a System Admin
+export const verifySystemAdmin = (req, res, next) => {
+  if (req.user.user_type !== 'system_admin') {
+    return res.status(403).json({ error: 'Access denied — System Admin only' });
   }
   next();
 };
