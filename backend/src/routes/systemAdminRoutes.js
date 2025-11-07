@@ -10,5 +10,5 @@ router.post('/register', registerAdmin);
 router.get('/users', verifyToken, verifySystemAdmin, fetchAllUsers);
 router.get('/clinics', verifyToken, verifySystemAdmin, fetchAllClinics);
 
-
+//need to add routes for pending clinics, approving/rejecting clinics, stats, etc.
 export default router;
