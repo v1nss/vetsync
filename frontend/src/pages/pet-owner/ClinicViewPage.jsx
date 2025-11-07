@@ -1,14 +1,16 @@
 import { RiPinDistanceFill } from "react-icons/ri";
 import { FaLocationDot, FaClock } from "react-icons/fa6";
 import { FaRegHeart, FaHeart, FaChevronLeft } from "react-icons/fa";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar.jsx";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { slugify } from "../../utils/slugify";
+import Navbar from "../../components/Navbar.jsx";
 import React from "react";
 
 export default function ClinicViewPage({ onLike }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const clinic = location.state;
+  const { slug } = useParams();
+  const clinic = location.state?.clinic;
 
   const [liked, setLiked] = React.useState(clinic?.liked || false);
   const [isExpanded, setIsExpanded] = React.useState(false);
@@ -32,6 +34,11 @@ export default function ClinicViewPage({ onLike }) {
 
     return () => window.removeEventListener("resize", checkOverflow);
   }, []);
+
+  if (!clinic) {
+    const clinics = JSON.parse(localStorage.getItem("clinics"));
+    clinic = clinics?.find(c => slugify(c.name) === slug);
+  }
 
   if (!clinic) {
     return (
@@ -93,11 +100,12 @@ export default function ClinicViewPage({ onLike }) {
               {clinic.name}
             </h1>
 
-            <Link to="/book-appointment" state={{ clinic }}>
-              <button className="hidden md:inline-block bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#FEA08E] transition">
-                Book appointment
-              </button>
-            </Link>
+            <button 
+              className="hidden md:inline-block bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#FEA08E] transition"
+              onClick={() => navigate(`/${slugify(clinic.name)}/book`, { state: { clinic } })}
+            >
+              Book appointment
+            </button>
           </div>
 
           {/* Info Card */}
@@ -176,11 +184,12 @@ export default function ClinicViewPage({ onLike }) {
 
         {/* Mobile CTA */}
         <div className="md:hidden fixed bottom-0 w-full bg-white p-4 border-t border-gray-300">
-          <Link to="/book-appointment" state={{ clinic }}>
-            <button className="w-full bg-primary text-white py-2 rounded-xl font-semibold">
-              Book appointment
-            </button>
-          </Link>
+          <button 
+            className="w-full bg-primary text-white py-2 rounded-xl font-semibold"
+              onClick={() => navigate(`/${slugify(clinic.name)}/book`, { state: { clinic } })}
+            >
+            Book appointment
+          </button>
         </div>
       </div>
     </main>
