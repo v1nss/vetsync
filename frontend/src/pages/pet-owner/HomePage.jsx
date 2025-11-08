@@ -160,8 +160,8 @@ export default function HomePage() {
                                             className="inline-flex items-center px-4 py-3 rounded-xl bg-white text-primary hover:bg-gray-100"
                                             aria-pressed={isDetectingLocation}
                                         >
-                                            <FaMapMarkerAlt className="my-1 sm:my-0 sm:mr-2" />
-                                            <span className="hidden sm:flex">{isDetectingLocation ? 'Detecting...' : 'Use My Location'}</span>
+                                            <FaMapMarkerAlt className="my-1 lg:my-0 lg:mr-2" />
+                                            <span className="hidden lg:flex">{isDetectingLocation ? 'Detecting...' : 'Use My Location'}</span>
                                         </button>
                                     </div>
                                 </form>
