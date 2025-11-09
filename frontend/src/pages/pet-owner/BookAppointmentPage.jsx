@@ -72,33 +72,6 @@ export default function BookAppointmentPage() {
     console.log("APPOINTMENT BOOKED:", appointmentData);
   };
 
-  // useEffect(() => {
-  //   if (clinic) return;
-
-  //   async function fetchClinic() {
-  //     try {
-  //       // 💡 Mock temporary clinic data (remove once backend is ready)
-  //       const mockClinic = {
-  //         id: id,
-  //         name: "Sample Clinic",
-  //         address: "Sample Address",
-  //         contact: "09123456789",
-  //         openingHours: "8AM - 5PM",
-  //         services: ["Check-up", "Vaccination", "Grooming"],
-  //       };
-
-  //       setClinic(mockClinic);
-  //     } catch (error) {
-  //       console.error("Error fetching clinic:", error);
-  //       setClinic(null);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-
-  //   fetchClinic();
-  // }, [clinic, id]);
-
   return (
     <main>
         <div className="hidden sm:block">
