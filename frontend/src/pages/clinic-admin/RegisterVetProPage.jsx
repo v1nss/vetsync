@@ -111,8 +111,8 @@ export default function RegisterVetProPage() {
   };
 
   return (
-    <section className="min-h-screen bg-background py-8">
-      <div className="bg-white sm:p-8 rounded-2xl sm:shadow-lg w-full max-w-md">
+    <section className="min-h-screen flex justify-center bg-background py-8">
+      <div className="bg-white sm:p-8 rounded-2xl md:shadow-lg w-full max-w-xl">
         <div className="text-center mb-8">
           <img src="/vetsync-logo-wname.png" alt="VetSync Logo" className="h-12 mx-auto mb-6" />
           <h2 className="text-2xl font-semibold">Create Vet Professional Accounts</h2>

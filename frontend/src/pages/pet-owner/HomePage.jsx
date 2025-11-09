@@ -130,9 +130,9 @@ export default function HomePage() {
             <section className="min-h-screen pb-10"> 
 
                 {/* Hero Section */}
-                <div className="mt-10 mb-6">
+                <div className="my-6">
                     <div className="bg-linear-to-r from-primary to-[#FFB49A] px-6 py-10 rounded-2xl shadow-lg">
-                        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
                             <div className="text-white px-2 md:px-6">
                                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">Your Pet's Health, Our Priority</h1>
                                 <p className="text-white/90 mb-6 max-w-xl">Find trusted veterinary clinics nearby. Book appointments, view services, and get care for your pet — all in one place.</p>
@@ -172,7 +172,7 @@ export default function HomePage() {
                                 </div>
                             </div>
 
-                            <div className="order-first md:order-last flex justify-center md:justify-end">
+                            <div className="hidden order-first lg:order-last md:flex justify-center lg:justify-end">
                                 <img src="/pets-hero-section.png" alt="Happy pets and their owners" className="w-full max-w-md md:max-w-lg object-cover" />
                             </div>
                         </div>
