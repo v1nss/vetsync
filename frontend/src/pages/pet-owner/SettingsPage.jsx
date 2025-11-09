@@ -44,7 +44,7 @@ export default function SettingsPage() {
         <div className="lg:hidden">
           <div className="bg-white min-h-screen pb-20">
             {/* Header */}
-            <div className="sticky top-0 flex items-center justify-between p-4 bg-white border-b border-gray-200">
+            <div className="sticky top-0 flex items-center justify-between p-4 bg-white border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => navigate(-1)}
@@ -78,7 +78,8 @@ export default function SettingsPage() {
               <div className="p-4 rounded-xl border border-gray-200 mb-4">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="font-semibold">My Pets</h2>
-                  <button className="text-sm text-primary hover:underline">
+                  <button className="text-sm text-primary hover:underline"
+                  onClick={() => navigate('/pets')}>
                     See more <FaChevronRight className="inline text-xs" />
                   </button>
                 </div>

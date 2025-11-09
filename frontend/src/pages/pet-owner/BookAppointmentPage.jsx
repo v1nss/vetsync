@@ -79,7 +79,7 @@ export default function BookAppointmentPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 pt-20 pb-10 sm:pt-8">
-        <div className="top-0 sm:hidden fixed left-0 p-4 z-50 flex items-center gap-2 bg-white w-full border-b border-gray-300">
+        <div className="top-0 sm:hidden fixed left-0 p-4 z-50 flex items-center gap-2 bg-white w-full border-b border-gray-100">
           <button
             onClick={() => navigate(-1)}
             className="rounded-full hover:bg-gray-300 transition"

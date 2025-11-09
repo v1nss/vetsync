@@ -20,6 +20,7 @@ import ClinicsManagementPage from "../pages/system-admin/ClinicsManagementPage";
 import UserManagementPage from "../pages/system-admin/UserManagementPage";
 import RegisterClinicPage from "../pages/clinic-admin/RegisterClinicPage";
 import RegisterVetProPage from "../pages/clinic-admin/RegisterVetProPage";
+import AddPetPage from "../pages/pet-owner/AddPetPage";
 
 // Public routes (no auth required)
 const PublicRoute = () => {
@@ -62,6 +63,7 @@ const AppRoutes = () => (
             <Route path="/health-records" element={<EHRPage />} />
             <Route path="/appointments" element={<AppointmentsPage />} />
             <Route path="/pets" element={<ManagePetsPage />} />
+            <Route path="/pets/add" element={<AddPetPage />} />
             <Route path="/messages" element={<MessagesPage />} />
             <Route path="/settings" element={<SettingsPage />} />
 
