@@ -1,4 +1,4 @@
-import sequelize from "../config/db.js";
+import sequelize from "../global/config/db.js";
 import User from "./users/userModel.js";
 import PetOwner from "./users/petOwnerModel.js";
 import ClinicAdmin from "./users/clinicAdminModel.js";

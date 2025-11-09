@@ -1,6 +1,6 @@
 import express from "express";
 import { registerNewClinic, updateClinicDetails } from "../controllers/clinicController.js";
-import { verifyToken, verifyClinicAdmin } from "../middleware/authMiddleware.js";
+import { verifyToken, verifyClinicAdmin } from "../global/middleware/authMiddleware.js";
 
 const router = express.Router();
 

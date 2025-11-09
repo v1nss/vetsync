@@ -6,7 +6,7 @@ import {
   deletePet,
   updatePet
 } from "../controllers/petController.js";
-import { verifyToken, verifyOwner } from "../middleware/authMiddleware.js";
+import { verifyToken, verifyOwner } from "../global/middleware/authMiddleware.js";
 
 const router = express.Router();
 

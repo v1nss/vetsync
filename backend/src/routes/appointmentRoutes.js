@@ -1,5 +1,5 @@
 import express from 'express';
-import { verifyToken, verifyClinicAdmin } from '../middleware/authMiddleware.js';
+import { verifyToken, verifyClinicAdmin } from '../global/middleware/authMiddleware.js';
 import { createNewAppointment, acceptAppointmentRequest, completeAppointmentRequest } from '../controllers/appointmentController.js';
 
 const router = express.Router();
