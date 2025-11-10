@@ -1,10 +1,27 @@
+import { useState, useContext } from "react";
+
 import { Link } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaEye, FaEyeSlash } from "react-icons/fa";
-import { useState } from "react";
+
+import {AuthContext} from "../context/AuthContext.jsx"
+import { loginUser } from "../global/api/auth.jsx";
 
 export default function LoginPage() {
+    const { login } = useContext(AuthContext);
     const [showPassword, setShowPassword] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const { user, token } = await loginUser(email, password);
+            login(user, token);
+        } catch (err) {
+            console.error(err.message);
+        }
+    };
 
     return (
         <section className="min-h-screen flex items-center justify-center bg-background">
@@ -20,6 +37,8 @@ export default function LoginPage() {
                             id="email"
                             className="w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none"
                             placeholder="Enter your email"
+                            value={email}
+                            onChange={(e)=> setEmail(e.target.value)}
                         />
                     </div>
                     <div className="mb-2 relative">
@@ -30,6 +49,8 @@ export default function LoginPage() {
                                 id="password"
                                 className="w-full outline-none text-sm"
                                 placeholder="Enter your password"
+                                value={password}
+                                onChange={(e)=> setPassword(e.target.value)}
                             />
                             <button
                                 type="button"
@@ -47,7 +68,7 @@ export default function LoginPage() {
                         </div>
                         <a href="#" className="text-sm text-primary hover:underline">Forgot Password?</a>
                     </div>
-                    <button type="submit" className="w-full bg-primary text-white py-3 rounded-2xl hover:bg-[#FEA08E] transition">
+                    <button type="submit" className="w-full bg-primary text-white py-3 rounded-2xl hover:bg-[#FEA08E] transition" onClick={handleSubmit}>
                         Login
                     </button>
                     <div className="flex items-center my-4">

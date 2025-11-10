@@ -1,6 +1,8 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/users/userModel.js';
+import generateToken from '../global/utils/generateToken.js';
+import generateRefreshToken from '../global/utils/generateRefreshToken.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -12,11 +14,30 @@ export const loginUser = async ({ email, password }) => {
   const isMatch = await bcrypt.compare(password, user.password_hash);
   if (!isMatch) throw new Error('Invalid credentials');
 
-  const token = jwt.sign(
-    { id: user.id, user_type: user.user_type },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '1d' }
-  );
+  const token = generateToken({ id: user.id, user_type: user.user_type });
+  const refreshToken = generateRefreshToken({ id: user.id, user_type: user.user_type });
 
-  return { user, token };
+  return { user, token, refreshToken };
 };
+
+
+export const generateRefreshTokenService = async (refreshToken) => {
+  // Implementation for refreshing token can be added here
+
+  if (!refreshToken) throw new Error('No refresh token provided');
+  
+    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const user = await User.findByPk(decoded.id);
+    if (!user) throw new Error("User not found");
+
+   const token = generateToken({ id: user.id, user_type: user.user_type });
+
+   res.cookies('authToken', token, { 
+    httpOnly: true, 
+    secure: true, 
+    sameSite: 'Strict',
+    maxAge:36000000, 
+  });
+
+   return token; 
+}

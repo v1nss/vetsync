@@ -1,4 +1,4 @@
-import { registerUser, registerVetProfessional, updateUserProfile } from '../services/userService.js';
+import { registerUser, registerVetProfessional, updateUserProfile, getUserById } from '../services/userService.js';
 
 export const register = async (req, res) => {
   try {
@@ -31,3 +31,14 @@ export const updateUserDetails = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 }
+
+export const fetchUserDataById = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const user = await getUserById(userId);
+    res.status(200).json(user);
+  } catch (err) {
+    console.error("Error fetching user data", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};

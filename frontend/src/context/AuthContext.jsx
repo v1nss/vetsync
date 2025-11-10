@@ -1,51 +1,139 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+  getToken,
+  saveToken,
+  getRefreshToken,
+  removeToken,
+  removeRefreshToken,
+} from '../global/utils/token.jsx';
 
-const AuthContext = createContext(null);
+import { fetchUserData } from '../global/api/user.jsx';
+
+import { refreshAuthToken } from '../global/api/auth.jsx';
+
+export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [role, setRole] = useState(null);
-  const [user, setUser] = useState(null);
+    const [user, setUser] = useState(null);
+    const [token, setToken] = useState(null);
+    const [role, setRole] = useState(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    // const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // initialize from localStorage if present
-    const token = localStorage.getItem('token');
-    const storedRole = localStorage.getItem('role');
-    const storedUser = localStorage.getItem('user');
-    if (token) {
-      setIsAuthenticated(true);
-      setRole(storedRole || null);
+    useEffect(() => {
+      const initializeAuth = async () => {
+        // Logic to check for existing token and fetch user data can be added here
+        try {
+          const existingToken = getToken();
+          const existingRefreshToken = getRefreshToken();
+
+          if (!existingToken && !existingRefreshToken) {
+            console.log("No existing token, but found refresh token.");
+            return;
+          }
+
+          if (existingToken) {
+            try {
+              const storedUser = JSON.parse(atob(existingToken.split(".")[1]));
+              const isExpired = storedUser.exp * 1000 < Date.now();
+              if (isExpired) {
+                if (existingRefreshToken) {
+                  console.log("Token expired, attempting to refresh.");
+                  const newToken = await refreshAuthToken();
+                  const newUser = JSON.parse(atob(newToken.split(".")[1]));
+                  const fullUserData = await fetchUserData(newUser.id, newToken);
+
+                  setUser({
+                    ...newUser, 
+                    ...fullUserData 
+                  });
+
+                  setRole(newUser.userType);
+                  setIsAuthenticated(true);
+                  setToken(newToken);
+                } else {
+                  console.log("No refresh token available, cannot refresh.");
+                  logout(); 
+                }
+              } else {
+                const fullUserData = await fetchUserData(storedUser.id, existingToken )
+                setUser({
+                  ...storedUser, 
+                  ...fullUserData 
+                });
+                setRole(storedUser.userType);
+                setIsAuthenticated(true);
+                setToken(existingToken);
+              } 
+            } catch (err) {
+              console.error("Invalid token:", err)
+              logout(); 
+            }
+          } else if (existingRefreshToken) {
+            try {
+              const newToken = await refreshAuthToken();
+              const newUser = JSON.parse(atob(newToken.split(".")[1]));
+              const fullUserData = await fetchUserData(newUser.id, newToken);
+
+              setUser({
+                ...newUser, 
+                ...fullUserData 
+              });
+              setRole(newUser.userType);
+              setIsAuthenticated(true);
+              setToken(newToken);
+            } catch (err) {
+              console.error("Invalid token:", err)
+              logout(); 
+            }
+          }
+
+        } catch (err) {
+          console.error("Auth Initialize error:", err)
+          logout(); 
+        } finally {
+          //setLoading(false)
+        }
+      };
+      initializeAuth();
+    },[]);
+
+    const login = async (userData, authToken) => {
       try {
-        setUser(storedUser ? JSON.parse(storedUser) : null);
-      } catch (e) {
-        setUser(null);
+        // setLoading(true);
+        const fullUserData = await fetchUserData(userData.id, authToken);
+        setUser({
+          ...userData,
+          ...fullUserData,
+        });
+        setToken(authToken);
+        saveToken(authToken);
+        setIsAuthenticated(true);
+        setRole(userData.userType);
+      } catch (err) {
+        console.error("Error fetching full user data:", err);
+        logout();
+      } finally {
+        // setLoading(false);
       }
-    }
-  }, []);
+    };
 
-  const login = ({ token, role: r, user: u }) => {
-    localStorage.setItem('token', token);
-    if (r) localStorage.setItem('role', r);
-    if (u) localStorage.setItem('user', JSON.stringify(u));
-    setIsAuthenticated(true);
-    setRole(r || null);
-    setUser(u || null);
-  };
+    const logout = () => {
+      setUser(null);
+      setToken(null);
+      removeToken();
+      removeRefreshToken();
+      localStorage.clear();
+      isAuthenticated(false);
+      setRole(null);
+      // setLoading(false);
+    };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    localStorage.removeItem('user');
-    setIsAuthenticated(false);
-    setRole(null);
-    setUser(null);
-  };
-
-  return (
-    <AuthContext.Provider value={{ isAuthenticated, role, user, login, logout, setRole }}>
-      {children}
-    </AuthContext.Provider>
-  );
+    return ( // loading
+      <AuthContext.Provider value={{ user, token, login, logout, role, isAuthenticated}}> 
+        {children}
+      </AuthContext.Provider>
+    );
 };
 
 export const useAuth = () => {
