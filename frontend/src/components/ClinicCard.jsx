@@ -7,8 +7,10 @@ export default function ClinicCard({ clinic, onLike }) {
 
   const goToClinic = () => {
     const slug = slugify(clinic.name);
-    navigate(`/${slug}`, { state: { clinic } });
+    navigate(`/clinics/${slug}`, { state: { clinic } });
   };
+
+  //TODO: Handle bookappointment for not logged in users
 
   return (
     <div

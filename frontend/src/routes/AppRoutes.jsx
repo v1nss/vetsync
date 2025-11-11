@@ -36,35 +36,35 @@ const ProtectedRoute = () => {
 
 // Role-based route guards
 const PetOwnerRoute = () => {
-    const { user_type } = useAuth();
-    return user_type === "pet_owner" ? <Outlet /> : <Navigate to="/unauthorized" replace />;
+    const { role } = useAuth();
+    return role === "pet_owner" ? <Outlet /> : <Navigate to="/unauthorized" replace />;
 };
 
 const ClinicAdminRoute = () => {
-    const { user_type } = useAuth();
-    return user_type === "clinic_admin" ? <Outlet /> : <Navigate to="/unauthorized" replace />;
+    const { role } = useAuth();
+    return role === "clinic_admin" ? <Outlet /> : <Navigate to="/unauthorized" replace />;
 };
 
 const VetProRoute = () => {
-    const { user_type } = useAuth();
-    return user_type === "vet_professional" ? <Outlet /> : <Navigate to="/unauthorized" replace />;
+    const { role } = useAuth();
+    return role === "vet_professional" ? <Outlet /> : <Navigate to="/unauthorized" replace />;
 };
 
 const SystemAdminRoute = () => {
-    const { user_type } = useAuth();
-    return user_type === "system_admin" ? <Outlet /> : <Navigate to="/unauthorized" replace />;
+    const { role } = useAuth();
+    return role === "system_admin" ? <Outlet /> : <Navigate to="/unauthorized" replace />;
 };
 
 const HomePageRoute = () => {
-    const { isAuthenticated, user_type } = useAuth();
+    const { isAuthenticated, role } = useAuth();
     
     // Allow unauthenticated users and pet owners
-    if (!isAuthenticated || user_type === "pet_owner") {
+    if (!isAuthenticated || role === "pet_owner") {
         return <Outlet />;
     }
     
     // Redirect other authenticated users to their default pages
-    switch (user_type) {
+    switch (role) {
         case "clinic_admin":
             return <Navigate to="/clinic-admin/dashboard" replace />;
         case "vet_professional":
