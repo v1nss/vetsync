@@ -24,7 +24,7 @@ export default function LoginPage() {
     };
 
     return (
-        <main className="min-h-screen flex items-center justify-center bg-background">
+        <section className="min-h-screen flex items-center justify-center bg-background">
             <div className="bg-white sm:p-8 rounded-2xl sm:shadow-lg w-full max-w-lg">
                 <img src="/vetsync-logo-wname.png" alt="VetSync Logo" className="h-12 mx-auto my-8" />
                 <h2 className="text-2xl font-semibold text-center">Welcome Back!</h2>
@@ -89,6 +89,6 @@ export default function LoginPage() {
                     </div>
                 </form>
             </div>
-        </main>
+        </section>
     );
 }
