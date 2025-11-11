@@ -102,7 +102,7 @@ export default function ClinicViewPage({ onLike }) {
 
             <button 
               className="hidden md:inline-block bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#FEA08E] transition"
-              onClick={() => navigate(`/${slugify(clinic.name)}/book`, { state: { clinic } })}
+              onClick={() => navigate(`/pet-owner/clinics/${slugify(clinic.name)}/book`, { state: { clinic } })}
             >
               Book appointment
             </button>
@@ -186,7 +186,7 @@ export default function ClinicViewPage({ onLike }) {
         <div className="md:hidden fixed bottom-0 w-full bg-white p-4 border-t border-gray-300">
           <button 
             className="w-full bg-primary text-white py-2 rounded-xl font-semibold"
-              onClick={() => navigate(`/${slugify(clinic.name)}/book`, { state: { clinic } })}
+              onClick={() => navigate(`/pet-owner/clinics/${slugify(clinic.name)}/book`, { state: { clinic } })}
             >
             Book appointment
           </button>
