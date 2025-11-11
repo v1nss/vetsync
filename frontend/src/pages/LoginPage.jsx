@@ -1,5 +1,5 @@
 import { useState, useContext } from "react";
-
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaEye, FaEyeSlash } from "react-icons/fa";
@@ -8,6 +8,7 @@ import {AuthContext} from "../context/AuthContext.jsx"
 import { loginUser } from "../global/api/auth.jsx";
 
 export default function LoginPage() {
+    const navigate = useNavigate();
     const { login } = useContext(AuthContext);
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
@@ -18,6 +19,23 @@ export default function LoginPage() {
         try {
             const { user, token } = await loginUser(email, password);
             login(user, token);
+            console.log("Logged in user:", user);
+            setTimeout(() => {
+                switch (user.user_type) {
+                    case "clinic_admin":
+                    navigate("/admin/clinic", { replace: true });
+                    break;
+                    case "system_admin":
+                    navigate("/admin/system/clinics", { replace: true });
+                    break;
+                    case "vet_professional":
+                    navigate("/vet-appointments", { replace: true });
+                    break;
+                    default:
+                    navigate("/", { replace: true });
+                }
+            }, 100);            
+
         } catch (err) {
             console.error(err.message);
         }

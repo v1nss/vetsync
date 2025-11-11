@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
                     ...fullUserData 
                   });
 
-                  setRole(newUser.userType);
+                  setRole(fullUserData.user_type);
                   setIsAuthenticated(true);
                   setToken(newToken);
                 } else {
@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }) => {
                   ...storedUser, 
                   ...fullUserData 
                 });
-                setRole(storedUser.userType);
+                setRole(fullUserData.user_type);
                 setIsAuthenticated(true);
                 setToken(existingToken);
               } 
@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }) => {
                 ...newUser, 
                 ...fullUserData 
               });
-              setRole(newUser.userType);
+              setRole(fullUserData.user_type);
               setIsAuthenticated(true);
               setToken(newToken);
             } catch (err) {
@@ -109,7 +109,8 @@ export const AuthProvider = ({ children }) => {
         setToken(authToken);
         saveToken(authToken);
         setIsAuthenticated(true);
-        setRole(userData.userType);
+        setRole(fullUserData.user_type);
+        console.log(userData)
       } catch (err) {
         console.error("Error fetching full user data:", err);
         logout();
@@ -124,7 +125,7 @@ export const AuthProvider = ({ children }) => {
       removeToken();
       removeRefreshToken();
       localStorage.clear();
-      isAuthenticated(false);
+      setIsAuthenticated(false);
       setRole(null);
       // setLoading(false);
     };
@@ -138,6 +139,7 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
+  console.log*("context:", context);
   if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };

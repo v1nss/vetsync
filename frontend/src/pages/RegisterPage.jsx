@@ -104,7 +104,7 @@ export default function RegisterPage() {
           </div>
 
           {/* Clinic Name - Only shown for Clinic Admin */}
-          {userType === "clinic_admin" && (
+          {/* {userType === "clinic_admin" && (
             <div>
               <div className="mb-4">
                 <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="clinic_name">
@@ -137,7 +137,7 @@ export default function RegisterPage() {
                 />
               </div>
             </div>
-          )}
+          )} */}
 
           <div className="mb-4">
             <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="email">

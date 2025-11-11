@@ -32,11 +32,11 @@ export const generateRefreshTokenService = async (refreshToken) => {
 
    const token = generateToken({ id: user.id, user_type: user.user_type });
 
-   res.cookies('authToken', token, { 
+  res.cookie('authToken', token, { 
     httpOnly: true, 
-    secure: true, 
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'Strict',
-    maxAge:36000000, 
+    maxAge: 36000000, 
   });
 
    return token; 
