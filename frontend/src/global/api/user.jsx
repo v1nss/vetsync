@@ -2,15 +2,15 @@ import axios from 'axios';
 
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
-export const loginUser = async (email, password) => {
-    try {
-        const res = await axios.post(`${BASE_URL}/auth/login`, { email, password });
-        return res.data;
-    } catch (err) {
-        console.error('Login failed:', err.message);
-        throw err;
-    }
-};
+// export const loginUser = async (email, password) => {
+//     try {
+//         const res = await axios.post(`${BASE_URL}/auth/login`, { email, password });
+//         return res.data;
+//     } catch (err) {
+//         console.error('Login failed:', err.message);
+//         throw err;
+//     }
+// };
 
 export const fetchUserData = async (id, token) => {
     try {
@@ -26,3 +26,12 @@ export const fetchUserData = async (id, token) => {
     }
 };
 
+export const registerUser = async (userData) => {
+    try {
+        const res = await axios.post(`${BASE_URL}/users/register`, userData)
+        return res.data;
+    } catch (err) {
+        console.error('Registration failed:', err.message);
+        throw err;
+    }
+};

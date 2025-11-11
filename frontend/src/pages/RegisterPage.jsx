@@ -3,8 +3,7 @@ import { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+import { registerUser } from "../global/api/user";
 
 export default function RegisterPage() {
   const [userType, setUserType] = useState("pet_owner");
@@ -41,14 +40,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-    const res = await axios.post(`${BACKEND_URL}/users/register`, {
-      full_name: user.full_name,
-      email: user.email,
-      user_type: userType,
-      password: user.password,
-    //   address: user.address,         // optional
-    //   clinic_name: user.clinic_name, // optional
-    });
+        const res = await registerUser(user);
 
       if (res.status === 200) {
         console.log("✅ Registered:", res.data);
