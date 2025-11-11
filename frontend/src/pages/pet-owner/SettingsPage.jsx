@@ -179,7 +179,9 @@ export default function SettingsPage() {
                 <div className="bg-white rounded-2xl p-6 border border-gray-200">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="font-semibold text-lg">My Pets</h2>
-                    <button className="text-sm text-primary hover:underline">
+                    <button className="text-sm text-primary hover:underline"
+                      onClick={() => navigate("/pets")}
+                    >
                       See more <FaChevronRight className="inline text-xs" />
                     </button>
                   </div>
@@ -188,6 +190,7 @@ export default function SettingsPage() {
                       <button
                         key={pet.id}
                         className="w-full flex items-center gap-3 hover:bg-gray-50 rounded-xl p-2 transition"
+                        onClick={() => navigate("/pets")}
                       >
                         <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center">
                           <img src={pet.image} alt={pet.name} />

@@ -184,10 +184,10 @@ export default function AddPetPage() {
       <div className="hidden sm:block min-h-screen bg-background">
         <div className="max-w-4xl mx-auto py-8 px-6">
           <div className="flex items-center gap-4 mb-8">
-            <button onClick={handleCancel} className="p-2 hover:bg-gray-100 rounded-full transition">
-              <FaChevronLeft className="text-lg" />
+            <button onClick={handleCancel} className="flex items-center gap-2 rounded-full">
+              <FaChevronLeft className="text-gray-500" />
+              <h1 className="text-2xl font-medium">Add New Pet</h1>
             </button>
-            <h1 className="text-2xl font-medium">Add New Pet</h1>
           </div>
 
           <div className="bg-white rounded-2xl p-8 border border-gray-200">

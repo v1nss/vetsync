@@ -79,6 +79,13 @@ export default function BookAppointmentPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 pt-20 pb-10 sm:pt-8">
+        <button
+          onClick={() => navigate(-1)}
+          className="hidden rounded-full sm:flex items-center gap-2 mb-8"
+        >
+          <FaChevronLeft className="text-gray-500" />
+          <h1 className="text-2xl font-medium">Book Appointment</h1>
+        </button>
         <div className="top-0 sm:hidden fixed left-0 p-4 z-50 flex items-center gap-2 bg-white w-full border-b border-gray-100">
           <button
             onClick={() => navigate(-1)}

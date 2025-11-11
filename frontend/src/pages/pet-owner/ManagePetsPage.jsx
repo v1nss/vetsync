@@ -25,7 +25,7 @@ export default function ManagePetsPage() {
       <div className="md:hidden min-h-screen bg-white">
         {!selected ? (
           <>
-            <div className="top-0 sm:hidden fixed left-0 p-4 z-50 flex items-center justify-between gap-2 bg-white w-full border-b border-gray-100">
+            <div className="top-0 sm:hidden sticky left-0 p-4 z-50 flex items-center justify-between gap-2 bg-white w-full border-b border-gray-100">
                 <div className="flex gap-2">
                     <button
                         onClick={() => navigate(-1)}
@@ -44,7 +44,7 @@ export default function ManagePetsPage() {
                 </button>
               </div>
             </div>
-            <div className="pt-20 p-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
               {pets.map(pet => (
                 <PetItem key={pet.id} pet={pet} variant="card" onClick={() => setSelected(pet)} />
               ))}
@@ -79,7 +79,13 @@ export default function ManagePetsPage() {
       <div className="hidden md:block min-h-screen bg-background">
         <div className="max-w-7xl mx-auto py-8 px-6">
           <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-semibold">Manage Pets</h1>
+            <button
+              onClick={() => navigate("/")}
+              className="rounded-full flex items-center gap-2"
+            >
+              <FaChevronLeft className="text-gray-500" />
+              <h1 className="text-2xl font-medium">Manage Pets</h1>
+            </button>
             <div className="flex gap-3">
               <button onClick={handleAddPet} className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-2xl hover:bg-[#FEA08E] transition">
                 <FaPlus />

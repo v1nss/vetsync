@@ -131,7 +131,7 @@ export default function HomePage() {
 
                 {/* Hero Section */}
                 <div className="my-6">
-                    <div className="bg-linear-to-r from-primary to-[#FFB49A] px-6 py-10 rounded-2xl shadow-lg">
+                    <div className="bg-linear-to-r from-primary to-[#FFB49A] px-4 py-8 sm:px-6 sm:py-10 rounded-2xl shadow-lg">
                         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
                             <div className="text-white px-2 md:px-6">
                                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">Your Pet's Health, Our Priority</h1>
@@ -167,8 +167,8 @@ export default function HomePage() {
                                 </form>
 
                                 <div className="flex justify-center sm:justify-start mt-6">
-                                    <button className="w-full sm:w-fit bg-white text-primary font-semibold px-6 py-3 rounded-xl hover:bg-gray-100">Find Clinics</button>
-                                    <button className="w-full sm:w-fit ml-4 bg-white/20 text-white px-5 py-3 rounded-xl hover:bg-white/30 transition">Learn More</button>
+                                    <button className="w-full sm:w-fit bg-white text-primary font-semibold px-3 py-3 rounded-xl hover:bg-gray-100">Find Clinics</button>
+                                    <button className="w-full sm:w-fit ml-4 bg-white/20 text-white px-3 py-3 rounded-xl hover:bg-white/30 transition">Learn More</button>
                                 </div>
                             </div>
 
