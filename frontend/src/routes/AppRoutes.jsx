@@ -20,11 +20,12 @@ import UserManagementPage from "../pages/system-admin/UserManagementPage";
 import RegisterClinicPage from "../pages/clinic-admin/RegisterClinicPage";
 import RegisterVetProPage from "../pages/clinic-admin/RegisterVetProPage";
 import AddPetPage from "../pages/pet-owner/AddPetPage";
+import UnauthorizedPage from "../pages/Unauthorized/UnauthorizedPage";
 
 // Public routes (no auth required)
 const PublicRoute = () => {
     const { isAuthenticated } = useAuth();
-    return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Outlet />;
+    return isAuthenticated ? <Navigate to="/" replace /> : <Outlet />;
 };
 
 // Protected routes (auth required)
@@ -54,16 +55,6 @@ const SystemAdminRoute = () => {
     return user_type === "system_admin" ? <Outlet /> : <Navigate to="/unauthorized" replace />;
 };
 
-// Placeholder dashboard pages
-const Unauthorized = () => (
-    <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Unauthorized</h1>
-            <p className="text-gray-600">You don't have permission to access this page.</p>
-        </div>
-    </div>
-);
-
 const AppRoutes = () => (
     <Routes>
         {/* Public routes */}
@@ -72,7 +63,7 @@ const AppRoutes = () => (
             <Route path="/register" element={<RegisterPage />} />
         </Route>
 
-        {/* Always accessible (no auth needed for now) */}
+        {/* Always accessible (no auth needed) */}
         <Route path="/" element={<HomePage />} />
         <Route path="/:slug" element={<ClinicViewPage />} />
         <Route path="/:slug/book" element={<BookAppointmentPage />} />
@@ -84,8 +75,8 @@ const AppRoutes = () => (
             <Route element={<PetOwnerRoute />}> 
                 <Route path="/health-records" element={<EHRPage />} />
                 <Route path="/appointments" element={<AppointmentsPage />} />
-                <Route path="/manage-pets" element={<ManagePetsPage />} />
-                <Route path="/manage-pets/add" element={<AddPetPage />} />
+                <Route path="/pets" element={<ManagePetsPage />} />
+                <Route path="/pets/add" element={<AddPetPage />} />
                 <Route path="/messages" element={<MessagesPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
             </Route>
@@ -112,7 +103,7 @@ const AppRoutes = () => (
         </Route>
 
         {/* Unauthorized fallback */}
-        <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
         
         {/* Catch-all: redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
