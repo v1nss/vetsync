@@ -34,7 +34,7 @@ const ProtectedRoute = () => {
     return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
-// Role-based wrappers
+// Role-based route guards
 const PetOwnerRoute = () => {
     const { user_type } = useAuth();
     return user_type === "pet_owner" ? <Outlet /> : <Navigate to="/unauthorized" replace />;
@@ -55,57 +55,83 @@ const SystemAdminRoute = () => {
     return user_type === "system_admin" ? <Outlet /> : <Navigate to="/unauthorized" replace />;
 };
 
+const HomePageRoute = () => {
+    const { isAuthenticated, user_type } = useAuth();
+    
+    // Allow unauthenticated users and pet owners
+    if (!isAuthenticated || user_type === "pet_owner") {
+        return <Outlet />;
+    }
+    
+    // Redirect other authenticated users to their default pages
+    switch (user_type) {
+        case "clinic_admin":
+            return <Navigate to="/clinic-admin/dashboard" replace />;
+        case "vet_professional":
+            return <Navigate to="/vet/appointments" replace />;
+        case "system_admin":
+            return <Navigate to="/system-admin/clinics" replace />;
+        default:
+            return <Navigate to="/unauthorized" replace />;
+    }
+};
+
 const AppRoutes = () => (
     <Routes>
-        {/* Public routes */}
+        {/* PUBLIC ROUTES */}
         <Route element={<PublicRoute />}> 
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
         </Route>
 
-        {/* Always accessible (no auth needed) */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/:slug" element={<ClinicViewPage />} />
-        <Route path="/:slug/book" element={<BookAppointmentPage />} />
+        {/* PUBLIC PAGES (No Auth Required) */}
+        <Route element={<HomePageRoute />} >
+            <Route path="/" element={<HomePage />} />
+            <Route path="/clinics/:slug" element={<ClinicViewPage />} />
+        </Route>
         
-        {/* Protected routes (requires auth) */}
+        {/* PROTECTED ROUTES */}
         <Route element={<ProtectedRoute />}> 
             
             {/* Pet Owner Routes */}
-            <Route element={<PetOwnerRoute />}> 
-                <Route path="/health-records" element={<EHRPage />} />
-                <Route path="/appointments" element={<AppointmentsPage />} />
-                <Route path="/pets" element={<ManagePetsPage />} />
-                <Route path="/pets/add" element={<AddPetPage />} />
-                <Route path="/messages" element={<MessagesPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/pet-owner" element={<PetOwnerRoute />}> 
+                <Route index element={<Navigate to="home" replace />} />
+                <Route path="home" element={<HomePage />} />
+                <Route path="clinics/:slug/book" element={<BookAppointmentPage />} />
+                <Route path="appointments" element={<AppointmentsPage />} />
+                <Route path="health-records" element={<EHRPage />} />
+                <Route path="pets" element={<ManagePetsPage />} />
+                <Route path="pets/add" element={<AddPetPage />} />
+                <Route path="messages" element={<MessagesPage />} />
+                <Route path="settings" element={<SettingsPage />} />
             </Route>
 
             {/* Clinic Admin Routes */}
-            <Route element={<ClinicAdminRoute />}> 
-                <Route path="/register/clinic" element={<RegisterClinicPage />} />
-                <Route path="/register/vet-pro" element={<RegisterVetProPage />} />
-                <Route path="/admin/clinic" element={<ClinicAdminDashboard />} />
-                <Route path="/admin/clinic/patients" element={<PatientManagementPage />} />
-                <Route path="/admin/clinic/settings" element={<ClinicManagementPage />} />
+            <Route path="/clinic-admin" element={<ClinicAdminRoute />}> 
+                <Route index element={<Navigate to="dashboard" replace />} />
+                <Route path="dashboard" element={<ClinicAdminDashboard />} />
+                <Route path="patients" element={<PatientManagementPage />} />
+                <Route path="settings" element={<ClinicManagementPage />} />
+                <Route path="register-clinic" element={<RegisterClinicPage />} />
+                <Route path="register-vet" element={<RegisterVetProPage />} />
             </Route>
 
             {/* Vet Professional Routes */}
-            <Route element={<VetProRoute />}> 
-                <Route path="/vet-appointments" element={<VetAppointmentPage />} />
+            <Route path="/vet" element={<VetProRoute />}> 
+                <Route index element={<Navigate to="appointments" replace />} />
+                <Route path="appointments" element={<VetAppointmentPage />} />
             </Route>
 
             {/* System Admin Routes */}
-            <Route element={<SystemAdminRoute />}> 
-                <Route path="/admin/system/clinics" element={<ClinicsManagementPage />} />
-                <Route path="/admin/system/users" element={<UserManagementPage />} />
+            <Route path="/system-admin" element={<SystemAdminRoute />}> 
+                <Route index element={<Navigate to="clinics" replace />} />
+                <Route path="clinics" element={<ClinicsManagementPage />} />
+                <Route path="users" element={<UserManagementPage />} />
             </Route>
         </Route>
 
-        {/* Unauthorized fallback */}
+        {/* ERROR ROUTES */}
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
-        
-        {/* Catch-all: redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
 );
