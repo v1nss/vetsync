@@ -81,7 +81,7 @@ export default function RegisterClinicPage() {
 
   return (
     <section className="min-h-screen flex items-center justify-center bg-background py-8">
-      <div className="bg-white sm:p-8 rounded-2xl sm:shadow-lg w-full max-w-2xl">
+      <div className="bg-white sm:p-8 rounded-2xl sm:shadow-lg w-full max-w-xl">
         <img src="/vetsync-logo-wname.png" alt="VetSync Logo" className="h-12 mx-auto mb-6" />
         <h2 className="text-2xl font-semibold text-center">Register Your Clinic</h2>
         <p className="text-center text-gray-600 mb-6">Complete the form to register your veterinary clinic</p>
