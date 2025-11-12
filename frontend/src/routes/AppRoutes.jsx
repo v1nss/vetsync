@@ -24,34 +24,52 @@ import UnauthorizedPage from "../pages/Unauthorized/UnauthorizedPage";
 
 // Public routes (no auth required)
 const PublicRoute = () => {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, loading } = useAuth();
+    if (loading) {
+        return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    }
     return isAuthenticated ? <Navigate to="/" replace /> : <Outlet />;
 };
 
 // Protected routes (auth required)
 const ProtectedRoute = () => {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, loading } = useAuth();
+    if (loading) {
+        return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    }
     return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
 // Role-based route guards
 const PetOwnerRoute = () => {
-    const { role } = useAuth();
+    const { role, loading } = useAuth();
+    if (loading) {
+        return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    }
     return role === "pet_owner" ? <Outlet /> : <Navigate to="/unauthorized" replace />;
 };
 
 const ClinicAdminRoute = () => {
-    const { role } = useAuth();
+    const { role, loading } = useAuth();
+    if (loading) {
+        return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    }
     return role === "clinic_admin" ? <Outlet /> : <Navigate to="/unauthorized" replace />;
 };
 
 const VetProRoute = () => {
-    const { role } = useAuth();
+    const { role, loading } = useAuth();
+    if (loading) {
+        return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    }
     return role === "vet_professional" ? <Outlet /> : <Navigate to="/unauthorized" replace />;
 };
 
 const SystemAdminRoute = () => {
-    const { role } = useAuth();
+    const { role, loading } = useAuth();
+    if (loading) {
+        return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    }
     return role === "system_admin" ? <Outlet /> : <Navigate to="/unauthorized" replace />;
 };
 

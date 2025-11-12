@@ -7,11 +7,11 @@ import './App.css';
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </Router>
+    <AuthProvider>
+      <Router>
+          <AppRoutes />
+      </Router>
+    </AuthProvider>
   );
 }
 
