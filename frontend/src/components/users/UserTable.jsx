@@ -68,7 +68,7 @@ export default function UserTable({ users, onViewDetails }) {
                 <td className="px-6 py-4 text-center">
                   <button
                     onClick={() => onViewDetails(user)}
-                    className="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-blue-600 transition"
+                    className="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary/80 transition"
                   >
                     View Details
                   </button>

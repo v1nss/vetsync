@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { FaSearch } from 'react-icons/fa';
+import { FaSearch } from "react-icons/fa";
 import Navbar from '../../components/Navbar';
+import Pagination from '../../components/Pagination';
 import ClinicTable from '../../components/clinic/ClinicTable';
 import ClinicMobileCards from '../../components/clinic/ClinicMobileCards';
 import ReviewModal from '../../components/clinic/ReviewModal';
@@ -12,6 +13,12 @@ export default function ClinicManagementPage() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [selectedClinic, setSelectedClinic] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const clinicsPerPage = 10;
+  const totalPages = Math.ceil(filteredClinics.length / clinicsPerPage);
+  const indexOfLastClinic = currentPage * clinicsPerPage;
+  const indexOfFirstClinic = indexOfLastClinic - clinicsPerPage;
+  const currentClinics = filteredClinics.slice(indexOfFirstClinic, indexOfLastClinic);
 
   useEffect(() => {
     const mockClinics = [
@@ -209,14 +216,23 @@ export default function ClinicManagementPage() {
         {/* Clinics Table/Cards */}
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-14">
           <ClinicTable
-            clinics={filteredClinics}
+            clinics={currentClinics}
             onReview={setSelectedClinic}
             getStatusBadge={getStatusBadge}
           />
           <ClinicMobileCards
-            clinics={filteredClinics}
+            clinics={currentClinics}
             onReview={setSelectedClinic}
             getStatusBadge={getStatusBadge}
+          />
+        </div>
+
+        {/* Pagination */}
+        <div className="flex justify-end items-center gap-2 sm:mb-0">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => setCurrentPage(page)}
           />
         </div>
       </section>

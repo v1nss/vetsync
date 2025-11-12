@@ -1,17 +1,11 @@
-import React, { useState, useEffect } from "react";
-import {
-  FaSearch,
-  FaUser,
-  FaEnvelope,
-  FaPhone,
-  FaCalendar,
-} from "react-icons/fa";
+import { useState, useEffect } from "react";
+import { FaSearch, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import UserDetailsModal from "../../components/users/UserDetailsModal";
 import UserMobileCards from "../../components/users/UserMobileCards";
 import UserTable from "../../components/users/UserTable";
 import Navbar from "../../components/Navbar";
+import Pagination from "../../components/Pagination";
 
-// Main User Management Page
 export default function UserManagementPage() {
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
@@ -25,7 +19,6 @@ export default function UserManagementPage() {
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
-
 
   useEffect(() => {
     const mockUsers = [
@@ -67,11 +60,6 @@ export default function UserManagementPage() {
     vet_pro: users.filter((u) => u.role === "vet_pro").length,
     pet_owner: users.filter((u) => u.role === "pet_owner").length,
   };
-
-  const goToPage = (pageNumber) => setCurrentPage(pageNumber);
-  const nextPage = () =>
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  const prevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
 
   return (
     <div>
@@ -169,34 +157,13 @@ export default function UserManagementPage() {
           />
         </div>
 
-        <div className="flex justify-between items-center gap-2 sm:mb-0">
-          <button
-            onClick={prevPage}
-            disabled={currentPage === 1}
-            className="px-4 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-0"
-          >
-            Prev
-          </button>
-
-          <div className="flex gap-2 items-center">
-            {[...Array(totalPages)].map((_, i) => (
-                <button
-                key={i}
-                onClick={() => goToPage(i + 1)}
-                disabled={totalPages === 1}
-                className={`px-4 py-2 rounded-lg text-sm font-medium ${currentPage === i + 1 ? "bg-primary text-white" : "border border-gray-200 bg-white hover:bg-gray-100"} disabled:opacity-0`}
-                >
-                {i + 1}
-                </button>
-            ))}
-          </div>
-          <button
-            onClick={nextPage}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-0"
-          >
-            Next
-          </button>
+        {/* Pagination */}
+        <div className="flex justify-end items-center gap-2 sm:mb-0">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => setCurrentPage(page)}
+          />
         </div>
       </section>
 
