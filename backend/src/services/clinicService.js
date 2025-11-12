@@ -31,3 +31,13 @@ export const updateClinic = async (clinicId, updateData, adminUserId) => {
     await clinic.update(updateData);
     return clinic;
 }
+
+export const getClinicByOwnerId = async (owner_id) => {
+  const owner = await ClinicAdmin.findOne({ where: {user_id: owner_id}})
+  if (!owner) throw new Error("Owner id does not exist")
+
+  const clinic = await Clinic.findOne({where: {owner_id: owner_id}})
+  if (!clinic) throw new Error("Clinic does not exist");
+
+  return clinic;
+}

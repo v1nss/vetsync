@@ -19,6 +19,19 @@ export const registerClinic = async (clinicData, token) => {
     }
 };
 
-export const fetchClinicById = async() => {
+export const fetchClinicByOwnerId = async(owner_id, token) => {
+    try {
+        const res = await axios.get(`${BASE_URL}/clinics/get-clinic/${owner_id}`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            }
+        );
+        console.log("Clinic Fetched Successfully");
+        return res.data
+    } catch (err) {
+        console.error("Unable to fetch clinic by owner id", err.message)
+    }
 
 };
