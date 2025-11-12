@@ -18,3 +18,7 @@ export const registerClinic = async (clinicData, token) => {
         throw err;
     }
 };
+
+export const fetchClinicById = async() => {
+
+};
