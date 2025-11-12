@@ -82,6 +82,7 @@ const AppRoutes = () => (
         <Route element={<PublicRoute />}> 
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/register-clinic" element={<RegisterClinicPage />} />
         </Route>
 
         {/* PUBLIC PAGES (No Auth Required) */}
@@ -112,7 +113,7 @@ const AppRoutes = () => (
                 <Route path="dashboard" element={<ClinicAdminDashboard />} />
                 <Route path="patients" element={<PatientManagementPage />} />
                 <Route path="settings" element={<ClinicManagementPage />} />
-                <Route path="register-clinic" element={<RegisterClinicPage />} />
+                {/* <Route path="register-clinic" element={<RegisterClinicPage />} /> */}
                 <Route path="register-vet" element={<RegisterVetProPage />} />
             </Route>
 

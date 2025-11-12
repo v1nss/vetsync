@@ -27,9 +27,13 @@ const Clinic = sequelize.define( "Clinic", {
     },
     contact_number: {
       type: DataTypes.STRING,
-      allowNull: true,
+      allowNull: false,
     },
     email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    description: {
       type: DataTypes.STRING,
       allowNull: true,
     },

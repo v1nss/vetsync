@@ -20,7 +20,7 @@ export default function LoginPage() {
             const { user, token } = await loginUser(email, password);
             login(user, token);
             console.log("Logged in user:", user);
-            setTimeout(() => {
+            // setTimeout(() => {
                 switch (user.user_type) {
                     case "clinic_admin":
                     navigate("/admin/clinic", { replace: true });
@@ -34,7 +34,7 @@ export default function LoginPage() {
                     default:
                     navigate("/", { replace: true });
                 }
-            }, 100);            
+            // }, 100);            
 
         } catch (err) {
             console.error(err.message);

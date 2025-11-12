@@ -28,7 +28,8 @@ export const AuthProvider = ({ children }) => {
           const existingRefreshToken = getRefreshToken();
 
           if (!existingToken && !existingRefreshToken) {
-            console.log("No existing token, but found refresh token.");
+            console.log("No existing token, returning early.");
+            //setLoading(false);
             return;
           }
 

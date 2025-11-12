@@ -3,7 +3,7 @@ import { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { registerUser } from "../global/api/user";
+import { registerUser, checkEmailExists } from "../global/api/user";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -40,12 +40,23 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const emailExists = await checkEmailExists(user.email);
+    if (emailExists) {
+      alert("Email is already registered. Please use a different email.");
+      return;
+    }
+    if (user.user_type === "clinic_admin") {
+      // Additional validation for clinic admin can be added here
+      navigate("/register-clinic", { state: { user } });
+      return;
+    }
+
     try {
       const res = await registerUser(user);
-
+      //TODO: this should be redirected to "/"
       if (res.status === 200) {
         console.log("Registered:", res.data);
-        navigate("/login");
+        navigate("/");
       }
     } catch (err) {
       console.error("Registration error:", err.response?.data || err.message);

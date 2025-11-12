@@ -29,9 +29,21 @@ export const fetchUserData = async (id, token) => {
 export const registerUser = async (userData) => {
     try {
         const res = await axios.post(`${BASE_URL}/users/register`, userData)
+        console.log('Registration response data:', res.data);
         return res.data;
     } catch (err) {
         console.error('Registration failed:', err.message);
         throw err;
     }
 };
+
+export const checkEmailExists = async (email) => {
+    try {
+        const res = await axios.put(`${BASE_URL}/users/email-check`, { email });
+        return res.data.exists;
+    } catch (err) {
+        console.error('Email check failed:', err.message);
+        throw err;
+    }
+};
+

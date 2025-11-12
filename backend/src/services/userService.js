@@ -90,3 +90,8 @@ export const getUserById = async (userId) => {
   if (!user) throw new Error("User not found");
   return user;
 }
+
+export const verifyExistingEmail = async (email) => {
+  const existing = await User.findOne({ where: { email } });
+  return !!existing;
+};
