@@ -32,6 +32,6 @@ export const fetchClinicByOwnerId = async(owner_id, token) => {
         return res.data
     } catch (err) {
         console.error("Unable to fetch clinic by owner id", err.message)
+        throw err
     }
-
 };

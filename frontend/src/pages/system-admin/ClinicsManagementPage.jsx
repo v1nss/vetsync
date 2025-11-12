@@ -5,8 +5,11 @@ import Pagination from '../../components/Pagination';
 import ClinicTable from '../../components/clinic/ClinicTable';
 import ClinicMobileCards from '../../components/clinic/ClinicMobileCards';
 import ReviewModal from '../../components/clinic/ReviewModal';
+import { useAuth } from '../../context/AuthContext';
+import { fetchAllClinics, updateClinicStatus } from '../../global/api/systemAdmin';
 
 export default function ClinicManagementPage() {
+  const {token} = useAuth();
   const [clinics, setClinics] = useState([]);
   const [filteredClinics, setFilteredClinics] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,68 +23,22 @@ export default function ClinicManagementPage() {
   const indexOfFirstClinic = indexOfLastClinic - clinicsPerPage;
   const currentClinics = filteredClinics.slice(indexOfFirstClinic, indexOfLastClinic);
 
-  useEffect(() => {
-    const mockClinics = [
-      {
-        clinic_id: 1,
-        name: "City Medical Center",
-        address: "123 Main St, Metro Manila",
-        contact_number: "+63 2 1234 5678",
-        email: "contact@citymedical.ph",
-        status: "pending",
-        images: [],
-        owner: {
-          id: 101,
-          name: "Dr. Maria Santos",
-          email: "maria.santos@email.com"
-        }
-      },
-      {
-        clinic_id: 2,
-        name: "HealthFirst Clinic",
-        address: "456 Oak Ave, Quezon City",
-        contact_number: "+63 2 8765 4321",
-        email: "info@healthfirst.ph",
-        status: "approved",
-        images: [],
-        owner: {
-          id: 102,
-          name: "Dr. Juan Dela Cruz",
-          email: "juan.delacruz@email.com"
-        }
-      },
-      {
-        clinic_id: 3,
-        name: "Wellness Hub",
-        address: "789 Pine Rd, Makati City",
-        contact_number: "+63 2 5555 6666",
-        email: "hello@wellnesshub.ph",
-        status: "rejected",
-        images: [],
-        owner: {
-          id: 103,
-          name: "Dr. Ana Reyes",
-          email: "ana.reyes@email.com"
-        }
-      },
-      {
-        clinic_id: 4,
-        name: "Care Plus Medical",
-        address: "321 Maple Dr, Pasig City",
-        contact_number: "+63 2 9999 8888",
-        email: "support@careplus.ph",
-        status: "pending",
-        images: [],
-        owner: {
-          id: 104,
-          name: "Dr. Roberto Garcia",
-          email: "roberto.garcia@email.com"
-        }
-      }
-    ];
-    setClinics(mockClinics);
-    setFilteredClinics(mockClinics);
-  }, []);
+useEffect(() => {
+  const getClinics = async () => {
+    try {
+      const data = await fetchAllClinics(token);
+      setClinics(Array.isArray(data) ? data : []); // <-- ensures array
+      setFilteredClinics(Array.isArray(data) ? data : []);
+      console.log(data)
+      console.log(filteredClinics)
+    } catch (err) {
+      console.error("Failed to fetch clinics:", err.message);
+      setClinics([]);
+      setFilteredClinics([]);
+    }
+  };
+  getClinics();
+}, [token]);
 
   useEffect(() => {
     let result = clinics;
@@ -102,17 +59,25 @@ export default function ClinicManagementPage() {
     setFilteredClinics(result);
   }, [searchQuery, activeFilter, clinics]);
 
-  const handleStatusUpdate = (clinicId, newStatus) => {
+  const handleStatusUpdate = async (clinicId, newStatus) => {
     setLoading(true);
-    setTimeout(() => {
+    try {
+      await updateClinicStatus(token, clinicId, newStatus);
+      
+      // Update the local state after successful API call
       setClinics(prev =>
         prev.map(c =>
           c.clinic_id === clinicId ? { ...c, status: newStatus } : c
         )
       );
-      setLoading(false);
+      
       setSelectedClinic(null);
-    }, 500);
+    } catch (err) {
+      console.error("Failed to update clinic status:", err.message);
+      alert(`Failed to update clinic status: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getStatusBadge = (status) => {

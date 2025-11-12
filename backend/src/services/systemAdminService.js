@@ -42,9 +42,43 @@ export const getAllUsers = async () => {
 
 // clinic side
 export const getAllClinics = async (status) => {
-  const where = status ? { status } : {};
-  const clinics = await Clinic.findAll({ where });
-  return clinics;
+  try {
+    // Only filter if status is valid
+    const validStatuses = ["pending", "approved", "rejected"];
+    const where = validStatuses.includes(status) ? { status } : {};
+
+    const clinics = await Clinic.findAll({
+      where,
+      include: [
+        {
+          model: User,
+          as: "owner",
+          attributes: ["id", "full_name", "email"],
+        },
+      ],
+      order: [["clinic_id", "ASC"]],
+    });
+
+    return clinics.map((c) => ({
+      clinic_id: c.clinic_id,
+      name: c.name,
+      address: c.address,
+      contact_number: c.contact_number,
+      email: c.email,
+      status: c.status,
+      images: c.images || [],
+      owner: c.owner
+        ? {
+            id: c.owner.id,
+            name: c.owner.full_name,
+            email: c.owner.email,
+          }
+        : null,
+    }));
+  } catch (err) {
+    console.error("Failed to fetch clinics:", err.message);
+    throw err;
+  }
 };
 
 export const acceptClinicStatus = async (clinicId) => {
@@ -52,4 +86,23 @@ export const acceptClinicStatus = async (clinicId) => {
     { status: "approved" },
     { where: { clinic_id: clinicId } }
   );
+}
+
+export const updateClinicStatus = async (clinicId, status) => {
+  const validStatuses = ["pending", "approved", "rejected"];
+  if (!validStatuses.includes(status)) {
+    throw new Error("Invalid status. Must be 'pending', 'approved', or 'rejected'.");
+  }
+  
+  const clinic = await Clinic.findByPk(clinicId);
+  if (!clinic) {
+    throw new Error("Clinic not found");
+  }
+  
+  await Clinic.update(
+    { status },
+    { where: { clinic_id: clinicId } }
+  );
+  
+  return clinic;
 }
