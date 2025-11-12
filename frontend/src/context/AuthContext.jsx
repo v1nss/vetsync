@@ -18,18 +18,18 @@ export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(null);
     const [role, setRole] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    // const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
       const initializeAuth = async () => {
-        // Logic to check for existing token and fetch user data can be added here
+        setLoading(true);
         try {
           const existingToken = getToken();
           const existingRefreshToken = getRefreshToken();
 
           if (!existingToken && !existingRefreshToken) {
             console.log("No existing token, returning early.");
-            //setLoading(false);
+            setLoading(false);
             return;
           }
 
@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }) => {
                   logout(); 
                 }
               } else {
-                const fullUserData = await fetchUserData(storedUser.id, existingToken )
+                const fullUserData = await fetchUserData(storedUser.id, existingToken)
                 setUser({
                   ...storedUser, 
                   ...fullUserData 
@@ -93,7 +93,7 @@ export const AuthProvider = ({ children }) => {
           console.error("Auth Initialize error:", err)
           logout(); 
         } finally {
-          //setLoading(false)
+          setLoading(false);
         }
       };
       initializeAuth();
@@ -101,7 +101,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (userData, authToken) => {
       try {
-        // setLoading(true);
+        setLoading(true);
         const fullUserData = await fetchUserData(userData.id, authToken);
         setUser({
           ...userData,
@@ -116,7 +116,7 @@ export const AuthProvider = ({ children }) => {
         console.error("Error fetching full user data:", err);
         logout();
       } finally {
-        // setLoading(false);
+        setLoading(false);
       }
     };
 
@@ -128,11 +128,11 @@ export const AuthProvider = ({ children }) => {
       localStorage.clear();
       setIsAuthenticated(false);
       setRole(null);
-      // setLoading(false);
+      setLoading(false);
     };
 
-    return ( // loading
-      <AuthContext.Provider value={{ user, token, login, logout, role, isAuthenticated}}> 
+    return (
+      <AuthContext.Provider value={{ user, token, login, logout, role, isAuthenticated, loading }}>
         {children}
       </AuthContext.Provider>
     );
