@@ -12,6 +12,7 @@ export const registerNewClinic = async (req, res) => {
     res
       .status(500)
       .json({ message: "Error registering clinic", error: error.message });
+    console.log("Error from clinic controller", error.message );
   }
 }
 

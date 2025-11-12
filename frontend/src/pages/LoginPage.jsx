@@ -1,14 +1,49 @@
+import { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaEye, FaEyeSlash } from "react-icons/fa";
-import { useState } from "react";
+
+import {AuthContext} from "../context/AuthContext.jsx"
+import { loginUser } from "../global/api/auth.jsx";
 
 export default function LoginPage() {
+    const navigate = useNavigate();
+    const { login } = useContext(AuthContext);
     const [showPassword, setShowPassword] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const { user, token } = await loginUser(email, password);
+            login(user, token);
+            console.log("Logged in user:", user);
+            // setTimeout(() => {
+                switch (user.user_type) {
+                    case "clinic_admin":
+                    navigate("/admin/clinic", { replace: true });
+                    break;
+                    case "system_admin":
+                    navigate("/admin/system/clinics", { replace: true });
+                    break;
+                    case "vet_professional":
+                    navigate("/vet-appointments", { replace: true });
+                    break;
+                    default:
+                    navigate("/", { replace: true });
+                }
+            // }, 100);            
+
+        } catch (err) {
+            console.error(err.message);
+        }
+    };
 
     return (
         <section className="min-h-screen flex items-center justify-center bg-background">
-            <div className="bg-white sm:p-8 rounded-2xl sm:shadow-lg w-full max-w-md">
+            <div className="bg-white sm:p-8 rounded-2xl sm:shadow-lg w-full max-w-lg">
                 <img src="/vetsync-logo-wname.png" alt="VetSync Logo" className="h-12 mx-auto my-8" />
                 <h2 className="text-2xl font-semibold text-center">Welcome Back!</h2>
                 <p className="text-center text-gray-600 mb-6">Sync up with the best vets near you.</p>
@@ -20,6 +55,8 @@ export default function LoginPage() {
                             id="email"
                             className="w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none"
                             placeholder="Enter your email"
+                            value={email}
+                            onChange={(e)=> setEmail(e.target.value)}
                         />
                     </div>
                     <div className="mb-2 relative">
@@ -30,6 +67,8 @@ export default function LoginPage() {
                                 id="password"
                                 className="w-full outline-none text-sm"
                                 placeholder="Enter your password"
+                                value={password}
+                                onChange={(e)=> setPassword(e.target.value)}
                             />
                             <button
                                 type="button"
@@ -47,7 +86,7 @@ export default function LoginPage() {
                         </div>
                         <a href="#" className="text-sm text-primary hover:underline">Forgot Password?</a>
                     </div>
-                    <button type="submit" className="w-full bg-primary text-white py-3 rounded-2xl hover:bg-[#FEA08E] transition">
+                    <button type="submit" className="w-full bg-primary text-white py-3 rounded-2xl hover:bg-[#FEA08E] transition" onClick={handleSubmit}>
                         Login
                     </button>
                     <div className="flex items-center my-4">

@@ -1,5 +1,5 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../config/db.js";
+import sequelize from "../global/config/db.js";
 import User from "./users/userModel.js";
 
 const Clinic = sequelize.define( "Clinic", {
@@ -27,9 +27,13 @@ const Clinic = sequelize.define( "Clinic", {
     },
     contact_number: {
       type: DataTypes.STRING,
-      allowNull: true,
+      allowNull: false,
     },
     email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    description: {
       type: DataTypes.STRING,
       allowNull: true,
     },

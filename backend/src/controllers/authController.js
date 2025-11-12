@@ -1,13 +1,14 @@
-import { loginUser } from "../services/authService.js";
+import { loginUser, generateRefreshTokenService } from "../services/authService.js";
 
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const { user, token } = await loginUser({ email, password });
+    const { user, token, refreshToken } = await loginUser({ email, password });
     console.log("token", token);
     res.status(200).json({
       message: "Login successful",
       token,
+      refreshToken,
       user,
     });
   } catch (err) {
@@ -24,3 +25,19 @@ export const logout = async (req, res) => {
   }
   return;
 };
+
+export const generateRefreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      return res.status(400).json({ error: "No refresh token provided" });
+    }
+
+    await generateRefreshTokenService(refreshToken);
+
+    return res.status(200).json({ message: "Refresh Token Generated" });
+  } catch (err) {
+    console.error("Unable to generate refresh token", err.message);
+    res.status(400).json({ error: err.message });
+  }
+}

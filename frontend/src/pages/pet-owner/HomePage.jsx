@@ -130,9 +130,9 @@ export default function HomePage() {
             <section className="min-h-screen pb-10"> 
 
                 {/* Hero Section */}
-                <div className="mt-10 mb-6">
-                    <div className="bg-linear-to-r from-primary to-[#FFB49A] px-6 py-10 rounded-2xl shadow-lg">
-                        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                <div className="my-6">
+                    <div className="bg-linear-to-r from-primary to-[#FFB49A] px-4 py-8 sm:px-6 sm:py-10 rounded-2xl shadow-lg">
+                        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
                             <div className="text-white px-2 md:px-6">
                                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">Your Pet's Health, Our Priority</h1>
                                 <p className="text-white/90 mb-6 max-w-xl">Find trusted veterinary clinics nearby. Book appointments, view services, and get care for your pet — all in one place.</p>
@@ -160,19 +160,19 @@ export default function HomePage() {
                                             className="inline-flex items-center px-4 py-3 rounded-xl bg-white text-primary hover:bg-gray-100"
                                             aria-pressed={isDetectingLocation}
                                         >
-                                            <FaMapMarkerAlt className="my-1 sm:my-0 sm:mr-2" />
-                                            <span className="hidden sm:flex">{isDetectingLocation ? 'Detecting...' : 'Use My Location'}</span>
+                                            <FaMapMarkerAlt className="my-1 lg:my-0 lg:mr-2" />
+                                            <span className="hidden lg:flex">{isDetectingLocation ? 'Detecting...' : 'Use My Location'}</span>
                                         </button>
                                     </div>
                                 </form>
 
                                 <div className="flex justify-center sm:justify-start mt-6">
-                                    <button className="w-full sm:w-fit bg-white text-primary font-semibold px-6 py-3 rounded-xl hover:bg-gray-100">Find Clinics</button>
-                                    <button className="w-full sm:w-fit ml-4 bg-white/20 text-white px-5 py-3 rounded-xl hover:bg-white/30 transition">Learn More</button>
+                                    <button className="w-full sm:w-fit bg-white text-primary font-semibold px-3 py-3 rounded-xl hover:bg-gray-100">Find Clinics</button>
+                                    <button className="w-full sm:w-fit ml-4 bg-white/20 text-white px-3 py-3 rounded-xl hover:bg-white/30 transition">Learn More</button>
                                 </div>
                             </div>
 
-                            <div className="order-first md:order-last flex justify-center md:justify-end">
+                            <div className="hidden order-first lg:order-last md:flex justify-center lg:justify-end">
                                 <img src="/pets-hero-section.png" alt="Happy pets and their owners" className="w-full max-w-md md:max-w-lg object-cover" />
                             </div>
                         </div>
@@ -206,7 +206,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Clinics Container */}
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 mb-14">
                     {displayClinics()}
                 </div>
             </section>

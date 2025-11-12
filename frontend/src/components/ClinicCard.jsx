@@ -7,8 +7,10 @@ export default function ClinicCard({ clinic, onLike }) {
 
   const goToClinic = () => {
     const slug = slugify(clinic.name);
-    navigate(`/${slug}`, { state: { clinic } });
+    navigate(`/clinics/${slug}`, { state: { clinic } });
   };
+
+  //TODO: Handle bookappointment for not logged in users
 
   return (
     <div
@@ -43,7 +45,7 @@ export default function ClinicCard({ clinic, onLike }) {
       >
         <button
           className="w-full bg-primary text-white px-4 py-2 rounded-xl hover:bg-[#FEA08E] transition"
-          onClick={() => navigate(`/${slugify(clinic.name)}/book`, { state: { clinic } })}
+          onClick={() => navigate(`/pet-owner/clinics/${slugify(clinic.name)}/book`, { state: { clinic } })}
         >
           Book Appointment
         </button>
