@@ -22,6 +22,9 @@ import RegisterVetProPage from "../pages/clinic-admin/RegisterVetProPage";
 import AddPetPage from "../pages/pet-owner/AddPetPage";
 import UnauthorizedPage from "../pages/Unauthorized/UnauthorizedPage";
 import PendingClinicPage from "../pages/clinic-admin/PendingClinicPage";
+import ClinicAdminLayout from "../pages/clinic-admin/ClinicAdminLayout";
+import VetProManagementPage from "../pages/clinic-admin/VetProManagementPage";
+import ClinicAdminEHRPage from "../pages/clinic-admin/ClinicAdminEHRPage";
 
 // Public routes (no auth required)
 const PublicRoute = () => {
@@ -56,10 +59,10 @@ const ClinicAdminRoute = () => {
         return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
     }
 
-    // Checking if the clinic status is pending
-    if (role === "clinic_admin" && user?.clinic_status === "pending") {
-        return <Navigate to="/clinic-admin/pending" replace />;
-    }
+    // // Checking if the clinic status is pending
+    // if (role === "clinic_admin" && user?.clinic_status === "pending") {
+    //     return <Navigate to="/clinic-admin/pending" replace />;
+    // }
     
     return role === "clinic_admin" ? <Outlet /> : <Navigate to="/unauthorized" replace />;
 };
@@ -134,12 +137,16 @@ const AppRoutes = () => (
 
             {/* Clinic Admin Routes */}
             <Route path="/clinic-admin" element={<ClinicAdminRoute />}> 
-                <Route index element={<Navigate to="dashboard" replace />} />
-                <Route path="dashboard" element={<ClinicAdminDashboard />} />
-                <Route path="patients" element={<PatientManagementPage />} />
-                <Route path="settings" element={<ClinicManagementPage />} />
-                {/* <Route path="register-clinic" element={<RegisterClinicPage />} /> */}
-                <Route path="register-vet" element={<RegisterVetProPage />} />
+                <Route element={<ClinicAdminLayout />}>
+                    <Route index element={<Navigate to="dashboard" replace />} />
+                    <Route path="dashboard" element={<ClinicAdminDashboard />} />
+                    <Route path="patients" exact element={<PatientManagementPage />} />
+                    <Route path="ehr" exact element={<ClinicAdminEHRPage />} />
+                    <Route path="vet-pros" element={<VetProManagementPage />} />
+                    <Route path="settings" element={<ClinicManagementPage />} />
+                    {/* <Route path="register-clinic" element={<RegisterClinicPage />} /> */}
+                    <Route path="register-vet" element={<RegisterVetProPage />} />
+                </Route>
                 <Route path="pending" element={<PendingClinicPage />} />
             </Route>
 
