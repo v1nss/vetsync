@@ -3,15 +3,18 @@ import { BrowserRouter as Router } from "react-router-dom";
 import AppRoutes from './routes/AppRoutes.jsx';
 import { AuthProvider } from './context/AuthContext';
 import './App.css';
+import { ClinicStatusProvider } from "./context/ClinicStatusContext";
 
 
 function App() {
   return (
+  <Router>
     <AuthProvider>
-      <Router>
-          <AppRoutes />
-      </Router>
+      <ClinicStatusProvider>
+        <AppRoutes />
+      </ClinicStatusProvider>
     </AuthProvider>
+  </Router>
   );
 }
 

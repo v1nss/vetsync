@@ -1,4 +1,4 @@
-import { registerClinic, updateClinic } from "../services/clinicService.js";
+import { getClinicByOwnerId, registerClinic, updateClinic } from "../services/clinicService.js";
 
 export const registerNewClinic = async (req, res) => {
   try {
@@ -38,3 +38,13 @@ export const updateClinicDetails = async (req, res) => {
   }
 }
 
+export const fetchClinicByOwnerId = async (req, res) => {
+  try {
+    const ownerId = req.params.ownerId
+    const clinic = await getClinicByOwnerId(ownerId);
+
+    res.status(200).json({message: "Clinic fetched successfully", clinic: clinic})
+  } catch (err) {
+    console.error ("Unable to fetch Clinic Data using Owner ID")
+  }
+}

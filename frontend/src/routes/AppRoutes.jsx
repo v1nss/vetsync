@@ -1,6 +1,7 @@
-import React from "react";
-import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import React, {useContext} from "react";
+import { Routes, Route, Navigate, Outlet, useLocation} from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { ClinicStatusContext } from "../context/ClinicStatusContext";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import HomePage from "../pages/pet-owner/HomePage";
@@ -54,17 +55,20 @@ const PetOwnerRoute = () => {
 };
 
 const ClinicAdminRoute = () => {
-    const { role, loading } = useAuth();
-    if (loading) {
-        return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-    }
+  const { isPending, loading: clinicLoading } = useContext(ClinicStatusContext);
+  const { role, loading: authLoading } = useAuth();
+  const location = useLocation();
 
-    // // Checking if the clinic status is pending
-    // if (role === "clinic_admin" && user?.clinic_status === "pending") {
-    //     return <Navigate to="/clinic-admin/pending" replace />;
-    // }
-    
-    return role === "clinic_admin" ? <Outlet /> : <Navigate to="/unauthorized" replace />;
+  // Wait for both auth and clinic status to be ready
+  if (authLoading || clinicLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  if (role === "clinic_admin" && isPending && location.pathname !== "/clinic-admin/pending") {
+    return <Navigate to="/clinic-admin/pending" replace />;
+  }
+
+  return role === "clinic_admin" ? <Outlet /> : <Navigate to="/unauthorized" replace />;
 };
 
 const VetProRoute = () => {
@@ -84,12 +88,12 @@ const SystemAdminRoute = () => {
 };
 
 const HomePageRoute = () => {
-    const { isAuthenticated, role } = useAuth();
+    const { isAuthenticated, role, loading } = useAuth();
     
     // Allow unauthenticated users and pet owners
-    if (!isAuthenticated || role === "pet_owner") {
-        return <Outlet />;
-    }
+    if (!isAuthenticated || role === "pet_owner") return <Outlet />;
+    
+    if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
     
     // Redirect other authenticated users to their default pages
     switch (role) {
@@ -103,6 +107,7 @@ const HomePageRoute = () => {
             return <Navigate to="/unauthorized" replace />;
     }
 };
+//TODO: app routes needs polishing
 
 const AppRoutes = () => (
     <Routes>
