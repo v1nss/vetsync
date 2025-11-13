@@ -26,6 +26,7 @@ import PendingClinicPage from "../pages/clinic-admin/PendingClinicPage";
 import ClinicAdminLayout from "../pages/clinic-admin/ClinicAdminLayout";
 import VetProManagementPage from "../pages/clinic-admin/VetProManagementPage";
 import ClinicAdminEHRPage from "../pages/clinic-admin/ClinicAdminEHRPage";
+import SystemAdminLayout from "../pages/system-admin/SystemAdminLayout";
 
 // Public routes (no auth required)
 const PublicRoute = () => {
@@ -156,16 +157,18 @@ const AppRoutes = () => (
             </Route>
 
             {/* Vet Professional Routes */}
-            <Route path="/vet" element={<VetProRoute />}> 
+            <Route path="/vet" element={<VetProRoute />}>
                 <Route index element={<Navigate to="appointments" replace />} />
                 <Route path="appointments" element={<VetAppointmentPage />} />
             </Route>
 
             {/* System Admin Routes */}
             <Route path="/system-admin" element={<SystemAdminRoute />}> 
-                <Route index element={<Navigate to="clinics" replace />} />
-                <Route path="clinics" element={<ClinicsManagementPage />} />
-                <Route path="users" element={<UserManagementPage />} />
+                <Route element={<SystemAdminLayout />}>
+                    <Route index element={<Navigate to="clinics" replace />} />
+                    <Route path="clinics" element={<ClinicsManagementPage />} />
+                    <Route path="users" element={<UserManagementPage />} />
+                </Route>
             </Route>
         </Route>
 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { FaSearch } from "react-icons/fa";
-import Navbar from '../../components/Navbar';
 import Pagination from '../../components/Pagination';
 import ClinicTable from '../../components/clinic/ClinicTable';
 import ClinicMobileCards from '../../components/clinic/ClinicMobileCards';
@@ -102,8 +101,7 @@ useEffect(() => {
 
   return (
     <div>
-      <Navbar />
-      <section className="min-h-screen pb-10">
+      <div className="min-h-screen pb-10 overflow-x-hidden">
         {/* Header */}
         <div className="my-6">
           <div className="bg-linear-to-r from-primary to-[#FFB49A] px-4 py-8 sm:px-6 sm:py-10 rounded-2xl">
@@ -200,7 +198,7 @@ useEffect(() => {
             onPageChange={(page) => setCurrentPage(page)}
           />
         </div>
-      </section>
+      </div>
 
       {/* Review Modal */}
       <ReviewModal

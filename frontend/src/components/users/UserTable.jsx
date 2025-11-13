@@ -1,6 +1,6 @@
 export default function UserTable({ users, onViewDetails }) {
   return (
-    <div className="hidden md:block overflow-x-auto">
+    <div className="hidden lg:block overflow-x-auto max-w-full">
       <table className="w-full">
         <thead className="bg-gray-50 border-b border-gray-200">
           <tr>
@@ -40,7 +40,7 @@ export default function UserTable({ users, onViewDetails }) {
                 </td>
                 <td className="px-6 py-4">
                   <span
-                    className={`px-3 py-1 rounded-xl text-xs font-semibold ${
+                    className={`px-3 truncate py-1 rounded-xl text-xs font-semibold ${
                       user.role === "clinic_admin"
                         ? "bg-purple-100 text-purple-700 border border-purple-300"
                         : user.role === "vet_pro"

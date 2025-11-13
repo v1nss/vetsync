@@ -9,7 +9,7 @@ import {
 
 export default function UserMobileCards({ users, onViewDetails }) {
   return (
-    <div className="md:hidden p-4 space-y-4">
+    <div className="lg:hidden p-4 space-y-4">
       {users.length === 0 ? (
         <div className="text-center py-12 text-gray-500">No users found</div>
       ) : (
