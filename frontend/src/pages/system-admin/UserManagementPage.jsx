@@ -3,7 +3,6 @@ import { FaSearch, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import UserDetailsModal from "../../components/users/UserDetailsModal";
 import UserMobileCards from "../../components/users/UserMobileCards";
 import UserTable from "../../components/users/UserTable";
-import Navbar from "../../components/Navbar";
 import Pagination from "../../components/Pagination";
 
 export default function UserManagementPage() {
@@ -63,8 +62,7 @@ export default function UserManagementPage() {
 
   return (
     <div>
-      <Navbar />
-      <section className="min-h-screen pb-10">
+      <div className="min-h-screen pb-10">
         {/* Header */}
         <div className="my-6">
           <div className="bg-linear-to-r from-primary to-[#FFB49A] px-4 py-8 sm:px-6 sm:py-10 rounded-2xl">
@@ -151,10 +149,7 @@ export default function UserManagementPage() {
         {/* Users Table/Cards */}
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-4">
           <UserTable users={currentUsers} onViewDetails={setSelectedUser} />
-          <UserMobileCards
-            users={currentUsers}
-            onViewDetails={setSelectedUser}
-          />
+          <UserMobileCards users={currentUsers} onViewDetails={setSelectedUser} />
         </div>
 
         {/* Pagination */}
@@ -165,7 +160,7 @@ export default function UserManagementPage() {
             onPageChange={(page) => setCurrentPage(page)}
           />
         </div>
-      </section>
+      </div>
 
       {/* User Details Modal */}
       <UserDetailsModal

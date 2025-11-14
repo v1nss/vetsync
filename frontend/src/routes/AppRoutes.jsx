@@ -23,6 +23,10 @@ import RegisterVetProPage from "../pages/clinic-admin/RegisterVetProPage";
 import AddPetPage from "../pages/pet-owner/AddPetPage";
 import UnauthorizedPage from "../pages/Unauthorized/UnauthorizedPage";
 import PendingClinicPage from "../pages/clinic-admin/PendingClinicPage";
+import ClinicAdminLayout from "../pages/clinic-admin/ClinicAdminLayout";
+import VetProManagementPage from "../pages/clinic-admin/VetProManagementPage";
+import ClinicAdminEHRPage from "../pages/clinic-admin/ClinicAdminEHRPage";
+import SystemAdminLayout from "../pages/system-admin/SystemAdminLayout";
 
 // Public routes (no auth required)
 const PublicRoute = () => {
@@ -139,26 +143,32 @@ const AppRoutes = () => (
 
             {/* Clinic Admin Routes */}
             <Route path="/clinic-admin" element={<ClinicAdminRoute />}> 
-                <Route index element={<Navigate to="dashboard" replace />} />
-                <Route path="dashboard" element={<ClinicAdminDashboard />} />
-                <Route path="patients" element={<PatientManagementPage />} />
-                <Route path="settings" element={<ClinicManagementPage />} />
-                {/* <Route path="register-clinic" element={<RegisterClinicPage />} /> */}
-                <Route path="register-vet" element={<RegisterVetProPage />} />
+                <Route element={<ClinicAdminLayout />}>
+                    <Route index element={<Navigate to="dashboard" replace />} />
+                    <Route path="dashboard" element={<ClinicAdminDashboard />} />
+                    <Route path="patients" exact element={<PatientManagementPage />} />
+                    <Route path="ehr" exact element={<ClinicAdminEHRPage />} />
+                    <Route path="vet-pros" element={<VetProManagementPage />} />
+                    <Route path="settings" element={<ClinicManagementPage />} />
+                    {/* <Route path="register-clinic" element={<RegisterClinicPage />} /> */}
+                    <Route path="register-vet" element={<RegisterVetProPage />} />
+                </Route>
                 <Route path="pending" element={<PendingClinicPage />} />
             </Route>
 
             {/* Vet Professional Routes */}
-            <Route path="/vet" element={<VetProRoute />}> 
+            <Route path="/vet" element={<VetProRoute />}>
                 <Route index element={<Navigate to="appointments" replace />} />
                 <Route path="appointments" element={<VetAppointmentPage />} />
             </Route>
 
             {/* System Admin Routes */}
             <Route path="/system-admin" element={<SystemAdminRoute />}> 
-                <Route index element={<Navigate to="clinics" replace />} />
-                <Route path="clinics" element={<ClinicsManagementPage />} />
-                <Route path="users" element={<UserManagementPage />} />
+                <Route element={<SystemAdminLayout />}>
+                    <Route index element={<Navigate to="clinics" replace />} />
+                    <Route path="clinics" element={<ClinicsManagementPage />} />
+                    <Route path="users" element={<UserManagementPage />} />
+                </Route>
             </Route>
         </Route>
 

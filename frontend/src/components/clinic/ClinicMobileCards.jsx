@@ -2,19 +2,19 @@ import { FaEye, FaEnvelope, FaPhone, FaMapMarkerAlt, FaUser, FaBuilding } from '
 
 export default function ClinicMobileCards({ clinics, onReview, getStatusBadge }) {
   return (
-    <div className="lg:hidden divide-y divide-gray-200">
+    <div className="lg:hidden p-4 space-y-4">
       {clinics.length === 0 ? (
         <div className="px-6 py-12 text-center text-gray-500">
           No clinics found matching your criteria
         </div>
       ) : (
         clinics.map((clinic) => (
-          <div key={clinic.clinic_id} className="p-4">
-            <div className="flex justify-between items-start mb-3">
+          <div key={clinic.clinic_id} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+            <div className="flex items-start justify-between mb-3">
               <div className="flex items-start flex-1">
                 <FaBuilding className="text-gray-400 mt-1 mr-2 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 truncate">{clinic.name}</h3>
+                  <h3 className="font-semibold text-gray-900">{clinic.name}</h3>
                   <div className="text-sm text-gray-500 flex items-start mt-1">
                     <FaMapMarkerAlt className="mr-1 text-xs mt-1 shrink-0" />
                     <span className="line-clamp-2">{clinic.address}</span>
@@ -28,20 +28,20 @@ export default function ClinicMobileCards({ clinics, onReview, getStatusBadge })
               <div className="flex items-center text-sm">
                 <FaUser className="text-gray-400 mr-2 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-gray-900 truncate">{clinic.owner.name}</div>
-                  <div className="text-xs text-gray-500 truncate">{clinic.owner.email}</div>
+                  <div className="font-medium text-gray-900 ">{clinic.owner.name}</div>
+                  <div className="text-xs text-gray-500 ">{clinic.owner.email}</div>
                 </div>
               </div>
               {clinic.contact_number && (
                 <div className="flex items-center text-sm text-gray-700">
                   <FaPhone className="text-gray-400 mr-2 shrink-0" />
-                  <span className="truncate">{clinic.contact_number}</span>
+                  <span className="">{clinic.contact_number}</span>
                 </div>
               )}
               {clinic.email && (
                 <div className="flex items-center text-sm text-gray-700">
                   <FaEnvelope className="text-gray-400 mr-2 shrink-0" />
-                  <span className="truncate">{clinic.email}</span>
+                  <span className="">{clinic.email}</span>
                 </div>
               )}
             </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaSearch, FaUser, FaEnvelope, FaPhone, FaCalendar } from 'react-icons/fa';
+import { FaTimesCircle } from 'react-icons/fa';
 
 export default function UserDetailsModal({ user, onClose }) {
   if (!user) return null;
@@ -13,7 +13,7 @@ export default function UserDetailsModal({ user, onClose }) {
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 text-2xl"
           >
-            ×
+            <FaTimesCircle className="text-2xl" />
           </button>
         </div>
 
@@ -80,7 +80,7 @@ export default function UserDetailsModal({ user, onClose }) {
         <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4">
           <button
             onClick={onClose}
-            className="w-full px-4 py-3 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition"
+            className="w-full px-4 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition"
           >
             Close
           </button>
