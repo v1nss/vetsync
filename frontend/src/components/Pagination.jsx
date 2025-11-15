@@ -1,12 +1,9 @@
 import React from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
-export default function Pagination({
-  currentPage,
-  totalPages,
-  onPageChange,
-}) {
+export default function Pagination({ currentPage, totalPages, onPageChange }) {
   if (totalPages <= 1) return null;
+
   const handlePrev = () => {
     if (currentPage > 1) onPageChange(currentPage - 1);
   };
@@ -47,7 +44,7 @@ export default function Pagination({
         disabled={currentPage === totalPages}
         className="p-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-50"
       >
-        <FaChevronRight className="text-gray-500"/>
+        <FaChevronRight className="text-gray-500" />
       </button>
     </div>
   );
