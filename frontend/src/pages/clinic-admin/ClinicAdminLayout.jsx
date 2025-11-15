@@ -11,7 +11,7 @@ export default function ClinicAdminLayout() {
   const clinicAdminLinks = [
     { name: "Dashboard", icon: <BiSolidDashboard />, path: "/clinic-admin/dashboard" },
     { name: "Patient Management", icon: <FaPaw />, path: "/clinic-admin/patients" },
-    { name: "Electronic Health Records", icon: <FaNotesMedical />, path: "/clinic-admin/ehr" },
+    { name: "Health Records", icon: <FaNotesMedical />, path: "/clinic-admin/ehr" },
     // { name: "Communication", icon: <FaBell />, path: "/clinic-admin/communication" },
     { name: "Clinic Management", icon: <FaClinicMedical />, path: "/clinic-admin/settings" },
     { name: "Vet Professionals", icon: <FaUserMd />, path: "/clinic-admin/vet-pros" },
@@ -45,7 +45,7 @@ export default function ClinicAdminLayout() {
         </div>
 
         {/* Page Content */}
-        <main className="md:ml-64 flex-1 p-base pb-16 sm:pb-base overflow-y-auto">
+        <main className="md:pl-68 flex-1 p-base pb-16 sm:pb-base overflow-y-auto max-w-screen lg:w-full">
           <Outlet />
         </main>
       </div>

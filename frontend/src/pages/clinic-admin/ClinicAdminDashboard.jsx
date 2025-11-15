@@ -35,7 +35,12 @@ export default function ClinicAdminDashboard() {
     <div className="min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Clinic Dashboard</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">Clinic Dashboard</h1>
+          <p className="text-gray-600 text-sm">
+            Search and view through patient records and owner information
+          </p>
+        </div>
         <Link
           to="/clinic-admin/patients"
           className="mt-3 sm:mt-0 px-5 py-2 bg-primary hover:bg-primary/80 text-white rounded-lg font-medium transition"
