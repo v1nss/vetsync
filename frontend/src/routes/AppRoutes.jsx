@@ -7,7 +7,7 @@ import RegisterPage from "../pages/RegisterPage";
 import HomePage from "../pages/pet-owner/HomePage";
 import ClinicViewPage from "../pages/pet-owner/ClinicViewPage";
 import BookAppointmentPage from "../pages/pet-owner/BookAppointmentPage";
-import EHRPage from "../pages/pet-owner/EHRPage";
+import PetOwnerEHR from "../pages/pet-owner/PetOwnerEHR";
 import AppointmentsPage from "../pages/pet-owner/AppointmentsPage";
 import ManagePetsPage from "../pages/pet-owner/ManagePetsPage";
 import MessagesPage from "../pages/pet-owner/MessagesPage";
@@ -134,7 +134,7 @@ const AppRoutes = () => (
                 <Route path="home" element={<HomePage />} />
                 <Route path="clinics/:slug/book" element={<BookAppointmentPage />} />
                 <Route path="appointments" element={<AppointmentsPage />} />
-                <Route path="health-records" element={<EHRPage />} />
+                <Route path="health-records" element={<PetOwnerEHR />} />
                 <Route path="pets" element={<ManagePetsPage />} />
                 <Route path="pets/add" element={<AddPetPage />} />
                 <Route path="messages" element={<MessagesPage />} />
