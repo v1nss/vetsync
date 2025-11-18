@@ -94,7 +94,7 @@ export default function AppointmentPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       <Navbar />
-      <section className=" mx-auto py-4">
+        <div className="max-w-7xl mx-auto pb-8 pt-4 px-4 sm:px-6">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">My Appointments</h1>
@@ -225,7 +225,7 @@ export default function AppointmentPage() {
             ))
           )}
         </div>
-      </section>
+      </div>
     </main>
   );
 }

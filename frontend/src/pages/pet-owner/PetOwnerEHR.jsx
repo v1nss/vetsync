@@ -45,14 +45,14 @@ export default function PetOwnerEHR() {
   return (
     <main>
       <Navbar />
-      <div className="min-h-screen bg-gray-50 pb-24 sm:pb-8">
-        <div className="mx-auto px-base sm:px-large lg:px-custom-large pt-4 pb-8">
+      <div className="min-h-screen pb-24 sm:pb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Health Records
+            <h1 className="text-3xl font-bold text-gray-900">
+                Health Records
             </h1>
-            <p className="text-gray-600">
+            <p className="mt-2 text-gray-600">
               Access comprehensive medical records and appointment history
             </p>
           </div>
