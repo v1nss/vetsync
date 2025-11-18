@@ -1,104 +1,167 @@
 import { Link, useLocation } from 'react-router-dom';
 import { FaRegHeart } from 'react-icons/fa';
-import { RiHomeLine, RiMessageLine, RiCalendar2Line, RiListSettingsLine } from "react-icons/ri";
+import { RiHomeLine, RiHealthBookLine, RiCalendar2Line, RiListSettingsLine } from "react-icons/ri";
 import { useAuth } from "../context/AuthContext";
 
+const NAV_ITEMS = [
+  { to: '/', icon: RiHomeLine, label: 'Home' },
+  { to: '/pet-owner/health-records', icon: RiHealthBookLine, label: 'Records' },
+  { to: '/pet-owner/appointments', icon: RiCalendar2Line, label: 'Appointments' },
+  { to: '/pet-owner/settings', icon: RiListSettingsLine, label: 'Settings' },
+];
+
 function MobileNavBar() {
-    const location = useLocation();
-    const navItems = [
-        { to: '/dashboard', icon: <RiHomeLine className="h-6 w-6" />, label: 'Home' },
-        { to: '/inbox', icon: <RiMessageLine className="h-6 w-6" />, label: 'Inbox' },
-        { to: '/appointment', icon: <RiCalendar2Line className="h-6 w-6" />, label: 'Appointment' },
-        { to: '/settings', icon: <RiListSettingsLine className="h-6 w-6" />, label: 'Settings' },
-    ];
+  const location = useLocation();
 
-    return (
-        <div>
-            <header className="px-4 py-2 sm:hidden shadow-md bg-white flex items-center justify-between h-16">
-                <Link to="/" aria-label="Home">
-                    <img src="/vetsync-logo-wname.png" alt="VetSync Logo" className="h-8" />
-                </Link>
-                <button aria-label="Favorites" className="p-2">
-                    <FaRegHeart className="h-6 w-6 text-gray-600 hover:text-primary" />
-                </button>
-            </header>
+  const isActive = (path) => {
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
 
-            <nav className="fixed bottom-4 left-4 right-4 z-40 rounded-2xl bg-white border-t border-gray-200 shadow flex justify-around items-center h-16 sm:hidden">
-                {navItems.map((item) => {
-                    const active = location.pathname === item.to || location.pathname.startsWith(item.to + '/');
-                    return (
-                        <Link
-                            key={item.to}
-                            to={item.to}
-                            aria-label={item.label}
-                            className={`flex flex-col items-center justify-center text-xs font-medium px-2 pt-2 pb-1 transition-colors duration-150 ${active ? 'text-primary' : 'text-gray-500'}`}
-                        >
-                            {item.icon}
-                            <span className="mt-1">{item.label}</span>
-                        </Link>
-                    );
-                })}
-            </nav>
+  return (
+    <>
+      {/* Mobile Header */}
+      <header className="sticky top-0 p-4 sm:hidden bg-white/95 backdrop-blur-lg border-b border-gray-100">
+        <div className="flex items-center justify-between">
+          <Link to="/" aria-label="Home">
+            <img src="/vetsync-logo-wname.png" alt="VetSync" className="h-7" />
+          </Link>
+          <button 
+            aria-label="Favorites" 
+            className="p-2 hover:bg-gray-50 rounded-xl transition-colors"
+          >
+            <FaRegHeart className="h-5 w-5 text-gray-600" />
+          </button>
         </div>
-    );
+      </header>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-4 left-4 right-4 z-50 rounded-2xl sm:hidden bg-white/95 backdrop-blur-lg border border-gray-200">
+        <div className="flex justify-around items-center px-2 h-20">
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.to);
+            
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                aria-label={item.label}
+                className="flex flex-col items-center justify-center gap-1 px-4 py-1 rounded-xl transition-all"
+              >
+                <div className={`p-2 rounded-xl transition-all ${
+                  active 
+                    ? 'bg-primary/10 text-primary' 
+                    : 'text-gray-500'
+                }`}>
+                  <Icon className="h-5 w-5" />
+                </div>
+                <span className={`text-xs font-medium transition-colors ${
+                  active ? 'text-primary' : 'text-gray-500'
+                }`}>
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    </>
+  );
+}
+
+function DesktopNavLink({ to, children }) {
+  const location = useLocation();
+  const isActive = location.pathname === to || location.pathname.startsWith(to + '/');
+
+  return (
+    <Link
+      to={to}
+      className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+        isActive
+          ? 'bg-primary/10 text-primary'
+          : 'text-gray-700 hover:bg-gray-50 hover:text-primary'
+      }`}
+    >
+      {children}
+    </Link>
+  );
 }
 
 export default function Navbar() {
-    const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
 
-    if (isAuthenticated) {
-        return (
-            <>
-                <nav className="sticky top-0 z-30 bg-white shadow-md hidden sm:block">
-                    <div className="mx-auto px-base sm:px-large lg:px-custom-large">
-                        <div className="flex justify-between h-16">
-                            <div className="flex">
-                                <Link to="/" className="shrink-0 flex items-center">
-                                    <img className="h-8 w-auto" src="/vetsync-logo-wname.png" alt="VetSync Logo" />
-                                </Link>
-                            </div>
-                            <div className="flex items-center">
-                                <Link to="/dashboard" className="text-gray-800 hover:text-primary px-3 py-2 rounded-md text-sm font-medium">
-                                    Dashboard
-                                </Link>
-                                <Link to="/profile" className="ml-4 text-gray-800 hover:text-primary px-3 py-2 rounded-md text-sm font-medium">
-                                    Profile
-                                </Link>
-                                <button onClick={() => logout()} className="ml-4 bg-primary text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-[#FEA08E] transition">
-                                    Logout
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </nav>
-                {/* Mobile bottom nav */}
-                <MobileNavBar />
-            </>
-        );
-    }
-
-    // Public (unauthenticated) navbar
+  if (isAuthenticated) {
     return (
-        <>
-            <nav className="sticky top-0 z-30 bg-white shadow-md">
-                <div className="mx-auto px-base sm:px-large lg:px-custom-large">
-                    <div className="flex justify-between h-16">
-                        <div className="flex">
-                            <Link to="/" className="shrink-0 flex items-center">
-                                <img className="h-8 w-auto" src="/vetsync-logo-wname.png" alt="VetSync Logo" />
-                            </Link>
-                        </div>
-                        <div className="flex items-center">
-                            <Link to="/login" className="text-gray-800 hover:text-primary px-3 py-2 rounded-md text-sm font-medium">
-                                Login
-                            </Link>
-                            <Link to="/register" className="ml-4 bg-primary text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-[#FEA08E] transition">
-                                Sign Up
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-        </>
+      <>
+        {/* Desktop Navigation */}
+        <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-gray-100 hidden sm:block">
+          <div className="mx-auto px-base sm:px-large lg:px-custom-large">
+            <div className="flex justify-between items-center h-16">
+              {/* Logo */}
+              <Link to="/" className="flex items-center">
+                <img 
+                  className="h-8 w-auto" 
+                  src="/vetsync-logo-wname.png" 
+                  alt="VetSync" 
+                />
+              </Link>
+
+              {/* Navigation Links */}
+              <div className="flex items-center gap-1">
+                <DesktopNavLink to="/">Home</DesktopNavLink>
+                <DesktopNavLink to="/pet-owner/health-records">Health Records</DesktopNavLink>
+                <DesktopNavLink to="/pet-owner/appointments">Appointments</DesktopNavLink>
+                <DesktopNavLink to="/pet-owner/settings">Settings</DesktopNavLink>
+              </div>
+
+              {/* Logout Button */}
+              <button
+                onClick={logout}
+                className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-[#FEA08E] transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        {/* Mobile Navigation */}
+        <MobileNavBar />
+      </>
     );
+  }
+
+  // Public (unauthenticated) navbar
+  return (
+    <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+      <div className="mx-auto px-base sm:px-large lg:px-custom-large">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <Link to="/" className="flex items-center">
+            <img 
+              className="h-8 w-auto" 
+              src="/vetsync-logo-wname.png" 
+              alt="VetSync" 
+            />
+          </Link>
+
+          {/* Auth Links */}
+          <div className="flex items-center gap-3">
+            <Link
+              to="/login"
+              className="text-gray-700 hover:text-primary px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+            >
+              Login
+            </Link>
+            <Link
+              to="/register"
+              className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-[#FEA08E] transition-colors"
+            >
+              Sign Up
+            </Link>
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
 }
