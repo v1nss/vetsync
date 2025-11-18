@@ -1,20 +1,20 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaChevronLeft, FaEye, FaEyeSlash } from "react-icons/fa";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { registerUser, checkEmailExists } from "../global/api/user";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const [userType, setUserType] = useState("pet_owner");
+  const [userType, setUserType] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [user, setUser] = useState({
     full_name: "",
     email: "",
-    user_type: "pet_owner",
+    user_type: "",
     clinic_name: "",
     password: "",
   });
@@ -63,169 +63,218 @@ export default function RegisterPage() {
     }
   };
 
+  const handleBack = () => {
+    setUserType("");
+    setUser({
+      full_name: "",
+      email: "",
+      user_type: "",
+      clinic_name: "",
+      password: "",
+    });
+  };
+
   return (
     <section className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="bg-white sm:p-8 rounded-2xl sm:shadow-lg w-full max-w-lg">
         <img src="/vetsync-logo-wname.png" alt="VetSync Logo" className="h-12 mx-auto my-8" />
-        <h2 className="text-2xl font-semibold text-center">Create Your Account</h2>
-        <p className="text-center text-gray-600 mb-6">Join VetSync and connect with top vets near you.</p>
-        <form onSubmit={handleSubmit} method="POST">
-          {/* Choose Role: Pet Owner or Clinic Admin */}
-          <label className="block text-sm text-gray-700 mb-2">I am a:</label>
-          <div className="flex justify-center mb-6 space-x-4">
-            <button
-              type="button"
-              onClick={() => handleRoleChange("pet_owner")}
-              className={`flex-1 px-4 py-3 rounded-2xl transition ${
-                userType === "pet_owner" 
-                  ? "bg-primary text-white" 
-                  : "bg-white border border-gray-300 text-black hover:bg-gray-300"
-              }`}
-            >
-              Pet Owner
-            </button>
+        
+        {/* Role Selection Step */}
+        {!userType && (
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold mb-2">Welcome to VetSync</h2>
+            <p className="text-gray-600 mb-8">Let's get started! Please select your role:</p>
+            
+            <div className="space-y-4 mb-6">
+              <button
+                type="button"
+                onClick={() => handleRoleChange("pet_owner")}
+                className="w-full px-6 py-6 rounded-2xl border border-gray-300 hover:border-primary hover:bg-primary/5 transition text-left group"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary">Pet Owner</h3>
+                    <p className="text-sm text-gray-600 mt-1">Book appointments for your pets and manage their health records</p>
+                  </div>
+                  <div className="text-3xl">🐾</div>
+                </div>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => handleRoleChange("clinic_admin")}
-              className={`flex-1 px-4 py-3 rounded-2xl transition ${
-                userType === "clinic_admin" 
-                  ? "bg-primary text-white" 
-                  : "bg-white border border-gray-300 text-black hover:bg-gray-300"
-              }`}
-            >
-              Clinic Admin
-            </button>
+              <button
+                type="button"
+                onClick={() => handleRoleChange("clinic_admin")}
+                className="w-full px-6 py-6 rounded-2xl border border-gray-300 hover:border-primary hover:bg-primary/5 transition text-left group"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary">Clinic Admin</h3>
+                    <p className="text-sm text-gray-600 mt-1">Manage your veterinary clinic and connect with pet owners</p>
+                  </div>
+                  <div className="text-3xl">🏥</div>
+                </div>
+              </button>
+            </div>
+
+            <div className="text-center mt-6">
+              <p className="text-gray-600">
+                Already have an account? <Link to="/login" className="text-primary hover:underline">Login</Link>
+              </p>
+            </div>
           </div>
+        )}
 
-          <div className="mb-4">
-            <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="name">
-              Full Name
-            </label>
-            <input
-              required
-              type="text"
-              id="name"
-              className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl"
-              placeholder="Enter your full name"
-              onChange={handleOnChange}
-              name="full_name"
-              value={user.full_name}
-            />
-          </div>
+        {/* Registration Form Step */}
+        {userType && (
+          <div>
+            <div className="mb-6">
+              <button
+                type="button"
+                onClick={handleBack}
+                className="flex gap-1 items-center text-primary hover:underline text-sm mb-2"
+              >
+                <FaChevronLeft /> Back to role selection
+              </button>
+              <h2 className="text-2xl font-semibold">
+                {userType === "pet_owner" ? "Pet Owner" : "Clinic Admin"} Registration
+              </h2>
+              <p className="text-gray-600 mt-1">
+                {userType === "pet_owner" 
+                  ? "Join VetSync and connect with top vets near you." 
+                  : "Register your clinic and start managing appointments."}
+              </p>
+            </div>
 
-          {/* Clinic Name - Only shown for Clinic Admin */}
-          {/* {userType === "clinic_admin" && (
-            <div>
+            <form onSubmit={handleSubmit} method="POST">
               <div className="mb-4">
-                <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="clinic_name">
-                  Clinic Name
+                <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="name">
+                  Full Name
                 </label>
                 <input
                   required
                   type="text"
-                  id="clinic_name"
+                  id="name"
                   className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl"
-                  placeholder="Enter your clinic name"
+                  placeholder="Enter your full name"
                   onChange={handleOnChange}
-                  name="clinic_name"
-                  value={user.clinic_name}
+                  name="full_name"
+                  value={user.full_name}
                 />
               </div>
+
+              {/* Clinic Name - Only shown for Clinic Admin */}
+              {/* {userType === "clinic_admin" && (
+                <div>
+                  <div className="mb-4">
+                    <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="clinic_name">
+                      Clinic Name
+                    </label>
+                    <input
+                      required
+                      type="text"
+                      id="clinic_name"
+                      className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl"
+                      placeholder="Enter your clinic name"
+                      onChange={handleOnChange}
+                      name="clinic_name"
+                      value={user.clinic_name}
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="clinic_address">
+                      Clinic Address
+                    </label>
+                    <input
+                      required
+                      type="text"
+                      id="clinic_address"
+                      className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl"
+                      placeholder="Enter your clinic address"
+                      onChange={handleOnChange}
+                      name="clinic_address"
+                      value={user.clinic_address}
+                    />
+                  </div>
+                </div>
+              )} */}
+
               <div className="mb-4">
-                <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="clinic_address">
-                  Clinic Address
+                <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="email">
+                  Email
                 </label>
                 <input
                   required
-                  type="text"
-                  id="clinic_address"
+                  type="email"
+                  id="email"
                   className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl"
-                  placeholder="Enter your clinic address"
+                  placeholder="Enter your email"
                   onChange={handleOnChange}
-                  name="clinic_address"
-                  value={user.clinic_address}
+                  name="email"
+                  value={user.email}
                 />
               </div>
-            </div>
-          )} */}
 
-          <div className="mb-4">
-            <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="email">
-              Email
-            </label>
-            <input
-              required
-              type="email"
-              id="email"
-              className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl"
-              placeholder="Enter your email"
-              onChange={handleOnChange}
-              name="email"
-              value={user.email}
-            />
-          </div>
+              <div className="mb-4 relative">
+                <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="password">
+                  Create Password
+                </label>
+                <div className="flex items-center w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl">
+                  <input
+                    required
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    className="focus:outline-none w-full outline-none text-sm"
+                    placeholder="Enter your password"
+                    onChange={handleOnChange}
+                    name="password"
+                    value={user.password}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-gray-400 hover:text-gray-500 focus:outline-none"
+                  >
+                    {showPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
 
-          <div className="mb-4 relative">
-            <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="password">
-              Create Password
-            </label>
-            <div className="flex items-center w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl">
-              <input
-                required
-                type={showPassword ? "text" : "password"}
-                id="password"
-                className="focus:outline-none w-full outline-none text-sm"
-                placeholder="Enter your password"
-                onChange={handleOnChange}
-                name="password"
-                value={user.password}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="text-gray-400 hover:text-gray-500 focus:outline-none"
+              <div className="mb-8">
+                <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="confirm-password">
+                  Confirm Password
+                </label>
+                <div className="flex items-center w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl">
+                  <input
+                    required
+                    type={showConfirmPassword ? "text" : "password"}
+                    id="confirm-password"
+                    className="focus:outline-none w-full outline-none text-sm"
+                    placeholder="Confirm your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="text-gray-400 hover:text-gray-500 focus:outline-none"
+                  >
+                    {showConfirmPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                className="w-full bg-primary text-white py-3 rounded-2xl hover:bg-[#FEA08E] transition"
               >
-                {showPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                Register
               </button>
-            </div>
-          </div>
 
-          <div className="mb-8">
-            <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="confirm-password">
-              Confirm Password
-            </label>
-            <div className="flex items-center w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl">
-              <input
-                required
-                type={showConfirmPassword ? "text" : "password"}
-                id="confirm-password"
-                className="focus:outline-none w-full outline-none text-sm"
-                placeholder="Confirm your password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="text-gray-400 hover:text-gray-500 focus:outline-none"
-              >
-                {showConfirmPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
-              </button>
-            </div>
+              <div className="text-center mt-4">
+                <p className="text-gray-600">
+                  Already have an account? <Link to="/login" className="text-primary hover:underline">Login</Link>
+                </p>
+              </div>
+            </form>
           </div>
-
-          <button 
-            type="submit" 
-            className="w-full bg-primary text-white py-3 rounded-2xl hover:bg-[#FEA08E] transition"
-          >
-            Register
-          </button>
-
-          <div className="text-center mt-4">
-            <p className="text-gray-600">
-              Already have an account? <Link to="/login" className="text-primary hover:underline">Login</Link>
-            </p>
-          </div>
-        </form>
+        )}
       </div>
     </section>
   );
