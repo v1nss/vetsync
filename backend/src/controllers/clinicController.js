@@ -48,3 +48,19 @@ export const fetchClinicByOwnerId = async (req, res) => {
     console.error ("Unable to fetch Clinic Data using Owner ID")
   }
 }
+
+export const fetchMyClinic = async (req, res) => {
+  try {
+    const ownerId = req.user.id; // from JWT
+    const clinic = await getClinicByOwnerId(ownerId);
+
+    if (!clinic) {
+      return res.status(404).json({ message: "Clinic not found" });
+    }
+
+    res.status(200).json({ message: "Clinic fetched successfully", clinic: clinic });
+  } catch (err) {
+    console.error("Unable to fetch Clinic Data", err.message);
+    res.status(500).json({ message: "Error fetching clinic", error: err.message });
+  }
+};
