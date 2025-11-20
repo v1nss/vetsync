@@ -1,4 +1,4 @@
-import { FaEye, FaEnvelope, FaPhone, FaMapMarkerAlt, FaUser, FaBuilding } from 'react-icons/fa';
+import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaUser, FaBuilding } from 'react-icons/fa';
 
 export default function ClinicTable({ clinics, onReview, getStatusBadge }) {
   return (
@@ -64,10 +64,9 @@ export default function ClinicTable({ clinics, onReview, getStatusBadge }) {
                 <td className="px-6 py-4">
                   <button
                     onClick={() => onReview(clinic)}
-                    className="text-primary hover:text-primary/80 font-medium text-sm flex items-center gap-1"
+                    className="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary/80 transition"
                   >
-                    <FaEye />
-                    Review
+                    View Details
                   </button>
                 </td>
               </tr>
