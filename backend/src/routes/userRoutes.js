@@ -1,6 +1,6 @@
 import express from 'express';
 import { register, createVetProfessional, updateUserDetails, fetchUserDataById, checkEmailExists } from '../controllers/userController.js';
-import { verifyToken, verifyClinicAdmin } from '../global/middleware/authMiddleware.js';
+import { verifyToken, verifyClinicAdmin } from '../../global/middleware/authMiddleware.js';
 
 const router = express.Router();
 

@@ -14,7 +14,7 @@ export default function ManagePetsPage() {
     { id: 3, name: 'Bruno', image: '/pet3.jpg', age: '4 years old', gender: 'male', breed: 'Husky', ageValue: '4y', weight: '12kg' }
   ]);
 
-  const handleAddPet = () => navigate('/pets/add');
+  const handleAddPet = () => navigate('add');
 
   return (
     <main>
