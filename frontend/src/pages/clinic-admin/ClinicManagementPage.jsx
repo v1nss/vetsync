@@ -175,7 +175,7 @@ export default function ClinicManagementPage() {
                   <div className="p-4 bg-gray-50 border-t border-gray-200">
                     <div className="flex gap-2 overflow-x-auto">
                       {currentData.picture_urls.map((url, idx) => (
-                        <div key={idx} className="relative flex-shrink-0">
+                        <div key={idx} className="relative shrink-0">
                           <img src={url} alt={`Thumbnail ${idx + 1}`} onClick={() => setCurrentImageIndex(idx)} className={`w-16 h-16 object-cover rounded-lg cursor-pointer transition ${idx === currentImageIndex ? 'ring-2 ring-primary' : 'opacity-60 hover:opacity-100'}`} />
                           <button onClick={() => removeImage(idx)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition">
                             <FaTimes className="text-xs" />

@@ -63,7 +63,7 @@ export default function ClinicViewPage({ onLike }) {
 
   return (
     <main>
-      <div className="hidden sm:block">
+      <div className="hidden sm:block sticky top-0">
         <Navbar />
       </div>
 
