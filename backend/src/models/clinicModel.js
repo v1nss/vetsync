@@ -8,7 +8,7 @@ const Clinic = sequelize.define( "Clinic", {
       primaryKey: true,
       autoIncrement: true,
     },
-    owner_id: {
+    owner_id: { // change to clinic_admin_id
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {

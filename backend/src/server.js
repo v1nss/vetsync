@@ -32,6 +32,7 @@ app.use("/api/clinics", clinicRoutes);
 // appointment Routes
 app.use("/api/appointments", appointmentRoutes);
 
+//system admin Routes
 app.use("/api/system-admin", systemAdminRoutes);
 
 syncDB().then(() => {

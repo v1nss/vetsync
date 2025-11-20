@@ -28,8 +28,8 @@ useEffect(() => {
       const data = await fetchAllClinics(token);
       setClinics(Array.isArray(data) ? data : []); // <-- ensures array
       setFilteredClinics(Array.isArray(data) ? data : []);
-      console.log(data)
-      console.log(filteredClinics)
+      // console.log(data)
+      // console.log(filteredClinics)
     } catch (err) {
       console.error("Failed to fetch clinics:", err.message);
       setClinics([]);
