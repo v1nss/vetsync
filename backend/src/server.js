@@ -11,7 +11,10 @@ import systemAdminRoutes from "./routes/systemAdminRoutes.js";
 const app = express();
 const port = process.env.PORT || 4000;
 
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:5173", // Change this when deployed to prod
+  credentials: true,
+}));
 app.use(express.json());
 
 //user Routes
