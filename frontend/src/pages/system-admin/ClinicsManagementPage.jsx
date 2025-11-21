@@ -105,12 +105,12 @@ useEffect(() => {
         {/* Header */}
         <div className="my-6">
           <div className="bg-linear-to-r from-primary to-[#FFB49A] px-4 py-8 sm:px-6 sm:py-10 rounded-2xl">
-            <div className="max-w-7xl mx-auto">
+            <div>
               <div className="text-white px-2 md:px-6">
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">
                   Clinic Management
                 </h1>
-                <p className="text-white/90 mb-6 max-w-xl">
+                <p className="text-white/90 mb-6">
                   Review and manage clinic registrations. Approve or reject pending applications.
                 </p>
 

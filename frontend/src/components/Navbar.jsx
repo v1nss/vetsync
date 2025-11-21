@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { FaRegHeart } from 'react-icons/fa';
 import { RiHomeLine, RiHealthBookLine, RiCalendar2Line, RiListSettingsLine } from "react-icons/ri";
 import { useAuth } from "../context/AuthContext";
+import ProfileDropdown from './ProfileDropdown';
 
 const NAV_ITEMS = [
   { to: '/', icon: RiHomeLine, label: 'Home' },
@@ -111,16 +112,11 @@ export default function Navbar() {
                 <DesktopNavLink to="/">Home</DesktopNavLink>
                 <DesktopNavLink to="/pet-owner/health-records">Health Records</DesktopNavLink>
                 <DesktopNavLink to="/pet-owner/appointments">Appointments</DesktopNavLink>
-                <DesktopNavLink to="/pet-owner/settings">Settings</DesktopNavLink>
               </div>
 
-              {/* Logout Button */}
-              <button
-                onClick={logout}
-                className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-[#FEA08E] transition-colors"
-              >
-                Logout
-              </button>
+              <div>
+                <ProfileDropdown />
+              </div>
             </div>
           </div>
         </nav>
