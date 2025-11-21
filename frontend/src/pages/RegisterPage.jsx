@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { FaChevronLeft, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaChevronLeft, FaEye, FaEyeSlash, FaCamera, FaUser } from "react-icons/fa";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { registerUser, checkEmailExists } from "../global/api/user";
@@ -10,6 +10,8 @@ export default function RegisterPage() {
   const [userType, setUserType] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [profilePreview, setProfilePreview] = useState(null);
 
   const [user, setUser] = useState({
     full_name: "",
@@ -38,6 +40,18 @@ export default function RegisterPage() {
     setUser((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfilePicture(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const emailExists = await checkEmailExists(user.email);
@@ -47,12 +61,20 @@ export default function RegisterPage() {
     }
     if (user.user_type === "clinic_admin") {
       // Additional validation for clinic admin can be added here
-      navigate("/register-clinic", { state: { user } });
+      navigate("/register-clinic", { state: { user, profilePicture } });
       return;
     }
 
     try {
-      const res = await registerUser(user);
+      const formData = new FormData();
+      Object.keys(user).forEach(key => {
+        formData.append(key, user[key]);
+      });
+      if (profilePicture) {
+        formData.append('profile_picture', profilePicture);
+      }
+
+      const res = await registerUser(formData);
       //TODO: this should be redirected to "/"
       if (res.status === 200) {
         console.log("Registered:", res.data);
@@ -65,6 +87,8 @@ export default function RegisterPage() {
 
   const handleBack = () => {
     setUserType("");
+    setProfilePicture(null);
+    setProfilePreview(null);
     setUser({
       full_name: "",
       email: "",
@@ -145,6 +169,29 @@ export default function RegisterPage() {
             </div>
 
             <form onSubmit={handleSubmit} method="POST">
+              {/* Profile Picture Upload */}
+              <div className="mb-6 flex justify-center">
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-full border-2 border-gray-300 overflow-hidden bg-gray-100 flex items-center justify-center">
+                    {profilePreview ? (
+                      <img src={profilePreview} alt="Profile Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-gray-400 text-3xl"><FaUser /></span>
+                    )}
+                  </div>
+                  <label htmlFor="profile-picture" className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary/80 transition">
+                    <FaCamera className="text-sm" />
+                  </label>
+                  <input
+                    type="file"
+                    id="profile-picture"
+                    accept="image/*"
+                    onChange={handleProfilePictureChange}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+
               <div className="mb-4">
                 <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="name">
                   Full Name
