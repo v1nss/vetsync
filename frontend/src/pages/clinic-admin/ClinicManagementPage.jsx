@@ -113,13 +113,13 @@ export default function ClinicManagementPage() {
       <div className="min-h-screen pb-10">
         <div className="mb-6">
           <div>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Clinic Management</h1>
                 <p className="text-gray-600 mt-1">Manage your clinic profile and information</p>
               </div>
               {!isEditing ? (
-                <button onClick={handleEdit} className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl hover:bg-primary/80 transition">
+                <button onClick={handleEdit} className="mt-2 sm:mt-0 flex w-fit items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl hover:bg-primary/80 transition">
                   <FaEdit /> Edit Clinic
                 </button>
               ) : (

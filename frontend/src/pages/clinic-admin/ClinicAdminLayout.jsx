@@ -1,18 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
-import { FaPaw, FaNotesMedical, FaBell, FaClinicMedical, FaUserMd, FaCog } from "react-icons/fa";
+import { FaPaw, FaNotesMedical, FaClinicMedical, FaUserMd, FaCog } from "react-icons/fa";
 import { IoMenu } from "react-icons/io5";
 import { BiSolidDashboard } from "react-icons/bi";
+import { useAuth } from "../../context/AuthContext";
+import { fetchMyClinic } from "../../global/api/clinicAdmin";
 
 export default function ClinicAdminLayout() {
   const [isOpen, setIsOpen] = useState(true);
+  const {token} = useAuth();
 
   const clinicAdminLinks = [
     { name: "Dashboard", icon: <BiSolidDashboard />, path: "/clinic-admin/dashboard" },
-    { name: "Patient Management", icon: <FaPaw />, path: "/clinic-admin/patients" },
     { name: "Health Records", icon: <FaNotesMedical />, path: "/clinic-admin/ehr" },
-    // { name: "Communication", icon: <FaBell />, path: "/clinic-admin/communication" },
+    { name: "Patient Management", icon: <FaPaw />, path: "/clinic-admin/patients" },
     { name: "Clinic Management", icon: <FaClinicMedical />, path: "/clinic-admin/settings" },
     { name: "Vet Professionals", icon: <FaUserMd />, path: "/clinic-admin/vet-pros" },
     // { name: "Settings", icon: <FaCog />, path: "/clinic-admin/profile-settings" },
@@ -21,6 +23,12 @@ export default function ClinicAdminLayout() {
   const handleLogout = () => {
     alert("Logging out...");
   };
+
+  useEffect(() => {
+    if (!token) return;
+    fetchMyClinic(token)
+      .catch(err => console.error("Failed to fetch clinic data:", err));
+  }, [token]);
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -34,7 +42,7 @@ export default function ClinicAdminLayout() {
 
       <div className="flex-1 flex flex-col">
         {/* Top Navbar */}
-        <div className="bg-white shadow-sm p-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-white shadow-sm p-4 flex items-center justify-between z-25">
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="text-gray-600 hover:text-gray-800 focus:outline-none md:hidden"
