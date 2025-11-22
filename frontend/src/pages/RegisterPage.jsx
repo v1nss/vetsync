@@ -42,6 +42,19 @@ export default function RegisterPage() {
 
   const handleProfilePictureChange = (e) => {
     const file = e.target.files[0];
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg"]
+
+    if (!file) {
+      // setErrorMessage
+      return;
+    }
+
+    if (!allowedTypes.includes(file.type)) {
+      // setErrorMessage("Invalid file type. Only PNG, JPG, and JPEG are allowed.");
+      e.target.value = ""; // Reset the input field
+      return;
+    }
+
     if (file) {
       setProfilePicture(file);
       const reader = new FileReader();
@@ -66,12 +79,11 @@ export default function RegisterPage() {
     }
 
     try {
-      const formData = new FormData();
-      Object.keys(user).forEach(key => {
-        formData.append(key, user[key]);
-      });
+      var formData = new FormData();
+      formData.append('user', JSON.stringify(user)); 
+
       if (profilePicture) {
-        formData.append('profile_picture', profilePicture);
+        formData.append('file', profilePicture); 
       }
 
       const res = await registerUser(formData);

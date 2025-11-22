@@ -4,9 +4,10 @@ import { useAuth } from "../context/AuthContext";
 import { Link } from 'react-router';
 
 export default function ProfileDropdown() {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
+  const dropdownRef = useRef(null); 
+  //TODO: before the page loads the images should be already loaded 
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -28,7 +29,19 @@ export default function ProfileDropdown() {
           className="flex items-center space-x-3 bg-white px-4 py-2 transition-all duration-200"
         >
           <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center text-white font-semibold">
-            JD
+            {user.profile_image_url?.link ? (
+              <img
+                src={user.profile_image_url.link}
+                alt={user.full_name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              user.full_name
+                .split(" ")
+                .map(n => n[0])
+                .join("")
+                .toUpperCase()
+            )}
           </div>
           <FaChevronDown 
             className={`text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
@@ -41,12 +54,24 @@ export default function ProfileDropdown() {
             {/* User Info Section */}
             <div className="px-4 py-3 border-b border-gray-100">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center text-white font-semibold text-lg">
-                  JD
+                <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-lg bg-gradient-to-br from-primary to-primary/80 overflow-hidden">
+                  {user.profile_image_url?.link ? (
+                    <img
+                      src={user.profile_image_url.link}
+                      alt={user.full_name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    user.full_name
+                      .split(" ")
+                      .map(n => n[0])
+                      .join("")
+                      .toUpperCase()
+                  )}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-800">John Doe</p>
-                  <p className="text-sm text-gray-500">john@example.com</p>
+                  <p className="font-semibold text-gray-800">{user.full_name}</p>
+                  <p className="text-sm text-gray-500">{user.email}</p>
                 </div>
               </div>
             </div>

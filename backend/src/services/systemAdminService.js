@@ -81,12 +81,12 @@ export const getAllClinics = async (status) => {
   }
 };
 
-export const acceptClinicStatus = async (clinicId) => {
-  await Clinic.update(
-    { status: "approved" },
-    { where: { clinic_id: clinicId } }
-  );
-}
+// export const acceptClinicStatus = async (clinicId) => {
+//   await Clinic.update(
+//     { status: "approved" },
+//     { where: { clinic_id: clinicId } }
+//   );
+// }
 
 export const updateClinicStatus = async (clinicId, status) => {
   const validStatuses = ["pending", "approved", "rejected"];

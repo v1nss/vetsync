@@ -10,7 +10,7 @@ export default function ClinicViewPage({ onLike }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { slug } = useParams();
-  const clinic = location.state?.clinic;
+  let clinic = location.state?.clinic;
 
   const [liked, setLiked] = React.useState(clinic?.liked || false);
   const [isExpanded, setIsExpanded] = React.useState(false);

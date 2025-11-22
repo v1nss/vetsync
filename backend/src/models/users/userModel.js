@@ -1,5 +1,5 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../../global/config/db.js";
+import sequelize from "../../../global/config/db.js";
 
 const User = sequelize.define("User", {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -11,7 +11,7 @@ const User = sequelize.define("User", {
     allowNull: false,
   },
   phone_number: DataTypes.STRING,
-  profile_image_url: DataTypes.STRING,
+  profile_image_url: { type: DataTypes.JSON, allowNull: true },
 }, {
   tableName: "users",
   timestamps: true,

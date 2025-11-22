@@ -3,32 +3,57 @@ import User from "../models/users/userModel.js";
 import PetOwner from "../models/users/petOwnerModel.js";
 import ClinicAdmin from "../models/users/clinicAdminModel.js";
 import VetProfessional from "../models/users/vetProfessionalModel.js";
+import { uploadFiles } from "../../global/utils/drive.js";
 
 export const registerUser = async (userData) => {
-  const { full_name, email, password, user_type, address, clinic_name } = userData;
+  const { body, file } = userData;
 
+  // Parse the user JSON sent in form-data
+  const user = JSON.parse(body.user);
+  const { full_name, email, password, user_type, address, clinic_name } = user;
+
+  // Check if email already exists
   const existing = await User.findOne({ where: { email } });
   if (existing) throw new Error("Email already registered");
 
+  // Upload profile image if provided
+  let userProfile = null;
+  if (file) {
+    const { id: fileId, name: fileName } = await uploadFiles(
+      file,
+      process.env.GDRIVE_FOLDER_ID
+    );
+
+    userProfile = {
+      id: fileId,
+      name: fileName,
+      link: `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`,
+    };
+  }
+
+  // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
 
+  // Create user
   try {
-    const user = await User.create({
+    const newUser = await User.create({
       full_name,
       email,
       password_hash: hashedPassword,
       user_type,
+      profile_image_url: userProfile,
     });
 
+    // Create related table entry based on user type
     if (user_type === "pet_owner") {
-      await PetOwner.create({ user_id: user.id, address });
+      await PetOwner.create({ user_id: newUser.id, address });
     } else if (user_type === "clinic_admin") {
-      await ClinicAdmin.create({ user_id: user.id, clinic_name });
+      await ClinicAdmin.create({ user_id: newUser.id, clinic_name });
     }
 
-    return user;
+    return newUser;
   } catch (err) {
-    console.error("Error register user", err.message);
+    console.error("Error registering user:", err.message);
     throw err;
   }
 };
