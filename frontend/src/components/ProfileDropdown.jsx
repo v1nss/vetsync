@@ -28,7 +28,7 @@ export default function ProfileDropdown() {
           onClick={() => setIsOpen(!isOpen)}
           className="flex items-center space-x-3 bg-white px-4 py-2 transition-all duration-200"
         >
-          <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center text-white font-semibold">
+          <div className="w-8 h-8 bg-linear-to-br from-primary to-primary/80 rounded-full flex items-center justify-center text-white font-semibold">
             {user.profile_image_url?.link ? (
               <img
                 src={user.profile_image_url.link}
@@ -54,7 +54,7 @@ export default function ProfileDropdown() {
             {/* User Info Section */}
             <div className="px-4 py-3 border-b border-gray-100">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-lg bg-gradient-to-br from-primary to-primary/80 overflow-hidden">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-lg bg-linear-to-br from-primary to-primary/80 overflow-hidden">
                   {user.profile_image_url?.link ? (
                     <img
                       src={user.profile_image_url.link}
