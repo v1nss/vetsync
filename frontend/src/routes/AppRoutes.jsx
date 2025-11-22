@@ -91,10 +91,10 @@ const SystemAdminRoute = () => {
 const HomePageRoute = () => {
     const { isAuthenticated, role, loading } = useAuth();
     
+    if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+
     // Allow unauthenticated users and pet owners
     if (!isAuthenticated || role === "pet_owner") return <Outlet />;
-    
-    if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
     
     // Redirect other authenticated users to their default pages
     switch (role) {
@@ -121,7 +121,9 @@ const AppRoutes = () => (
 
         {/* PUBLIC PAGES (No Auth Required) */}
         <Route element={<HomePageRoute />} >
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<HomePageRoute />}>
+                <Route index element={<HomePage />} />
+            </Route>
             <Route path="/clinics/:slug" element={<ClinicViewPage />} />
         </Route>
         
