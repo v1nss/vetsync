@@ -1,11 +1,11 @@
-import {google} from 'googleapies';
-import dotenv from 'dotenv';
+import {google} from "googleapis";
+import dotenv from "dotenv";
 
 dotenv.config();
 
 const SCOPES = ["https://www.googleapis.com/auth/drive.file"];
 
-export const JWTClient = new google.auth.JWT(
+const JWTClient = new google.auth.JWT(
     process.env.CLIENT_EMAIL,
     null,
     process.env.CLIENT_PRIVATE_KEY,
@@ -18,4 +18,6 @@ JWTClient.authorize(function (err, tokens) {
     } else {
         console.log("Google Authorization Complete");
     }
-})
+});
+
+export default JWTClient;

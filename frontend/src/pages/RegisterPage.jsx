@@ -42,6 +42,8 @@ export default function RegisterPage() {
 
   const handleProfilePictureChange = (e) => {
     const file = e.target.files[0];
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg"]
+
     if (file) {
       setProfilePicture(file);
       const reader = new FileReader();
