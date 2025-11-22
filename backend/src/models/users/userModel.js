@@ -11,7 +11,7 @@ const User = sequelize.define("User", {
     allowNull: false,
   },
   phone_number: DataTypes.STRING,
-  profile_image_url: DataTypes.STRING,
+  profile_image_url: { type: DataTypes.JSON, allowNull: true },
 }, {
   tableName: "users",
   timestamps: true,

@@ -2,6 +2,7 @@ import {google} from 'googleapis'
 import fs from 'fs'
 import authorize from '../config/gDrive.js'
 import oauth2Client from '../config/oauth.js';
+
 // Upload files
 export const uploadFiles = async (file, folder_id) => {
   try {
@@ -19,7 +20,15 @@ export const uploadFiles = async (file, folder_id) => {
       fields: "id,name",
     });
 
-    // Optional: delete the local file after upload
+    await drive.permissions.create({
+      fileId: data.id,
+      requestBody: {
+        type: "anyone",
+        role: "reader",
+      }
+    });
+
+    // delete the local file after upload
     fs.unlinkSync(file.path);
 
     return data;

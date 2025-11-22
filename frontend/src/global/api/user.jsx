@@ -28,7 +28,11 @@ export const fetchUserData = async (id, token) => {
 
 export const registerUser = async (userData) => {
     try {
-        const res = await axios.post(`${BASE_URL}/users/register`, userData)
+        const res = await axios.post(`${BASE_URL}/users/register`, userData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
         console.log('Registration response data:', res.data);
         return res.data;
     } catch (err) {
