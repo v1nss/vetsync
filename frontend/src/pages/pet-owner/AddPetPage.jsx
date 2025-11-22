@@ -41,7 +41,8 @@ export default function AddPetPage() {
     return newErrors;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (e) => {
+    if (e) e.preventDefault();
     const newErrors = validate();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -49,34 +50,34 @@ export default function AddPetPage() {
     }
     // TODO: Submit to backend
     console.log('Pet data:', formData);
-    navigate('/pets');
+    navigate('/pet-owner/pets');
   };
 
   const handleCancel = () => navigate('/pets');
 
-  const InputField = ({ label, name, required, ...props }) => (
+  const InputField = ({ label, name, value, onChange, error, required, ...props }) => (
     <div>
       <label className={`block text-sm font-medium text-gray-700 mb-2 ${required ? 'label-required' : ''}`}>
         {label}
       </label>
       <input
         name={name}
-        value={formData[name]}
-        onChange={handleChange}
+        value={value}
+        onChange={onChange}
         className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl"
         {...props}
       />
-      {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
   );
 
-  const TextareaField = ({ label, name, rows = 2, ...props }) => (
+  const TextareaField = ({ label, name, value, onChange, rows = 2, ...props }) => (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
       <textarea
         name={name}
-        value={formData[name]}
-        onChange={handleChange}
+        value={value}
+        onChange={onChange}
         rows={rows}
         className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl resize-none"
         {...props}
@@ -126,7 +127,7 @@ export default function AddPetPage() {
           <h1 className="text-xl font-medium">Add Pet</h1>
         </div>
         
-        <div className="pt-20 p-4 space-y-6">
+        <form onSubmit={handleSubmit} className="pt-20 p-4 space-y-6">
           {/* Image Upload */}
           <div>
             <label className="label-required block text-sm font-medium text-gray-700 mb-2">Pet Photo</label>
@@ -147,34 +148,34 @@ export default function AddPetPage() {
           {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="font-semibold text-lg">Basic Information</h3>
-            <InputField label="Pet Name" name="name" required placeholder="Enter pet name" />
+            <InputField label="Pet Name" name="name" value={formData.name} onChange={handleChange} error={errors.name} required placeholder="Enter pet name" />
             <ButtonGroup name="species" required options={[{value: 'dog', label: 'Dog'}, {value: 'cat', label: 'Cat'}]} />
-            <InputField label="Breed" name="breed" required placeholder="Enter breed" />
-            <InputField label="Color" name="color" placeholder="e.g., Golden, Black & White" />
+            <InputField label="Breed" name="breed" value={formData.breed} onChange={handleChange} error={errors.breed} required placeholder="Enter breed" />
+            <InputField label="Color" name="color" value={formData.color} onChange={handleChange} placeholder="e.g., Golden, Black & White" />
             <ButtonGroup name="gender" required options={[{value: 'male', label: 'Male'}, {value: 'female', label: 'Female'}]} />
-            <InputField label="Date of Birth" name="dateOfBirth" type="date" />
+            <InputField label="Date of Birth" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} type="date" />
             <div className="grid grid-cols-2 gap-3">
-              <InputField label="Age" name="age" required placeholder="e.g., 2y" />
-              <InputField label="Weight" name="weight" required placeholder="e.g., 8kg" />
+              <InputField label="Age" name="age" value={formData.age} onChange={handleChange} error={errors.age} required placeholder="e.g., 2y" />
+              <InputField label="Weight" name="weight" value={formData.weight} onChange={handleChange} error={errors.weight} required placeholder="e.g., 8kg" />
             </div>
           </div>
 
           {/* Medical Information */}
           <div className="space-y-4">
             <h3 className="font-semibold text-lg">Medical Information</h3>
-            <TextareaField label="Allergies" name="allergies" placeholder="List any known allergies" />
-            <TextareaField label="Current Medications" name="medications" placeholder="List current medications" />
+            <TextareaField label="Allergies" name="allergies" value={formData.allergies} onChange={handleChange} placeholder="List any known allergies" />
+            <TextareaField label="Current Medications" name="medications" value={formData.medications} onChange={handleChange} placeholder="List current medications" />
           </div>
 
-          <TextareaField label="Additional Notes" name="notes" rows={3} placeholder="Any other important information about your pet" />
-        </div>
+          <TextareaField label="Additional Notes" name="notes" value={formData.notes} onChange={handleChange} rows={3} placeholder="Any other important information about your pet" />
+        </form>
 
         {/* Fixed Bottom Buttons */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 flex gap-3">
-          <button onClick={handleCancel} className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-2xl hover:bg-gray-50 transition">
+          <button type="button" onClick={handleCancel} className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-2xl hover:bg-gray-50 transition">
             Cancel
           </button>
-          <button onClick={handleSubmit} className="flex-1 px-4 py-3 bg-primary text-white rounded-2xl hover:bg-[#FEA08E] transition">
+          <button type="button" onClick={handleSubmit} className="flex-1 px-4 py-3 bg-primary text-white rounded-2xl hover:bg-[#FEA08E] transition">
             Add Pet
           </button>
         </div>
@@ -184,14 +185,14 @@ export default function AddPetPage() {
       <div className="hidden sm:block min-h-screen bg-background">
         <div className="max-w-4xl mx-auto py-8 px-6">
           <div className="flex items-center gap-4 mb-8">
-            <button onClick={handleCancel} className="flex items-center gap-2 rounded-full">
+            <button type="button" onClick={handleCancel} className="flex items-center gap-2 rounded-full">
               <FaChevronLeft className="text-gray-500" />
               <h1 className="text-2xl font-medium">Add New Pet</h1>
             </button>
           </div>
 
           <div className="bg-white rounded-2xl p-8 border border-gray-200">
-            <div className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               {/* Same content as mobile */}
               <div>
                 <label className="label-required block text-sm font-medium text-gray-700 mb-2">Pet Photo</label>
@@ -211,35 +212,35 @@ export default function AddPetPage() {
 
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg">Basic Information</h3>
-                <InputField label="Pet Name" name="name" required placeholder="Enter pet name" />
+                <InputField label="Pet Name" name="name" value={formData.name} onChange={handleChange} error={errors.name} required placeholder="Enter pet name" />
                 <ButtonGroup name="species" required options={[{value: 'dog', label: 'Dog'}, {value: 'cat', label: 'Cat'}]} />
-                <InputField label="Breed" name="breed" required placeholder="Enter breed" />
-                <InputField label="Color" name="color" placeholder="e.g., Golden, Black & White" />
+                <InputField label="Breed" name="breed" value={formData.breed} onChange={handleChange} error={errors.breed} required placeholder="Enter breed" />
+                <InputField label="Color" name="color" value={formData.color} onChange={handleChange} placeholder="e.g., Golden, Black & White" />
                 <ButtonGroup name="gender" required options={[{value: 'male', label: 'Male'}, {value: 'female', label: 'Female'}]} />
-                <InputField label="Date of Birth" name="dateOfBirth" type="date" />
+                <InputField label="Date of Birth" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} type="date" />
                 <div className="grid grid-cols-2 gap-3">
-                  <InputField label="Age" name="age" required placeholder="e.g., 2y" />
-                  <InputField label="Weight" name="weight" required placeholder="e.g., 8kg" />
+                  <InputField label="Age" name="age" value={formData.age} onChange={handleChange} error={errors.age} required placeholder="e.g., 2y" />
+                  <InputField label="Weight" name="weight" value={formData.weight} onChange={handleChange} error={errors.weight} required placeholder="e.g., 8kg" />
                 </div>
               </div>
 
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg">Medical Information</h3>
-                <TextareaField label="Allergies" name="allergies" placeholder="List any known allergies" />
-                <TextareaField label="Current Medications" name="medications" placeholder="List current medications" />
+                <TextareaField label="Allergies" name="allergies" value={formData.allergies} onChange={handleChange} placeholder="List any known allergies" />
+                <TextareaField label="Current Medications" name="medications" value={formData.medications} onChange={handleChange} placeholder="List current medications" />
               </div>
 
-              <TextareaField label="Additional Notes" name="notes" rows={3} placeholder="Any other important information about your pet" />
-            </div>
+              <TextareaField label="Additional Notes" name="notes" value={formData.notes} onChange={handleChange} rows={3} placeholder="Any other important information about your pet" />
 
-            <div className="flex gap-3 pt-6 mt-6 border-t border-gray-100">
-              <button onClick={handleCancel} className="px-6 py-3 border border-gray-300 text-gray-700 rounded-2xl hover:bg-gray-50 transition">
-                Cancel
-              </button>
-              <button onClick={handleSubmit} className="px-6 py-3 bg-primary text-white rounded-2xl hover:bg-[#FEA08E] transition">
-                Add Pet
-              </button>
-            </div>
+              <div className="flex gap-3 pt-6 mt-6 border-t border-gray-100">
+                <button type="button" onClick={handleCancel} className="px-6 py-3 border border-gray-300 text-gray-700 rounded-2xl hover:bg-gray-50 transition">
+                  Cancel
+                </button>
+                <button type="submit" className="px-6 py-3 bg-primary text-white rounded-2xl hover:bg-[#FEA08E] transition">
+                  Add Pet
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>

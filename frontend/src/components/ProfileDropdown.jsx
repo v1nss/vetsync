@@ -50,11 +50,11 @@ export default function ProfileDropdown() {
 
         {/* Dropdown Menu */}
         {isOpen && (
-          <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-50">
+          <div className="absolute right-0 mt-2 w-68 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-50">
             {/* User Info Section */}
             <div className="px-4 py-3 border-b border-gray-100">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-lg bg-linear-to-br from-primary to-primary/80 overflow-hidden">
+                <div className="w-10 h-10 border border-gray-300 rounded-full flex items-center justify-center overflow-hidden">
                   {user.profile_image_url?.link ? (
                     <img
                       src={user.profile_image_url.link}
