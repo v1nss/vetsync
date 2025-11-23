@@ -2,13 +2,73 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaChevronLeft } from 'react-icons/fa';
 import Navbar from '../../components/Navbar';
+import { registerPet } from '../../global/api/pet';
+import React from 'react';
+import { useAuth } from '../../context/AuthContext';
+
+const InputField = ({ label, name, value, onChange, error, required, ...props }) => (
+  <div>
+    <label className={`block text-sm font-medium text-gray-700 mb-2 ${required ? 'label-required' : ''}`}>
+      {label}
+    </label>
+    <input
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl"
+      {...props}
+    />
+    {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+  </div>
+);
+
+const TextareaField = ({ label, name, value, onChange, rows = 2, ...props }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+    <textarea
+      name={name}
+      value={value}
+      onChange={onChange}
+      rows={rows}
+      className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl resize-none"
+      {...props}
+    />
+  </div>
+);
+
+const ButtonGroup = ({ options, name, required, formData, handleChange, errors }) => (
+  <div>
+    <label className={`block text-sm font-medium text-gray-700 mb-2 ${required ? 'label-required' : ''}`}>
+      {name === 'species' ? 'Species' : name === 'gender' ? 'Gender' : name}
+    </label>
+    <div className="grid grid-cols-2 gap-3">
+      {options.map(opt => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => handleChange({ target: { name, value: opt.value }})}
+          className={`px-4 py-3 rounded-2xl transition ${
+            formData[name] === opt.value
+              ? 'bg-primary text-white'
+              : 'bg-white border border-gray-300 hover:bg-gray-50'
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+    {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
+  </div>
+);
 
 export default function AddPetPage() {
+  const {token} = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '', breed: '', gender: '', age: '', weight: '', color: '', species: '',
     dateOfBirth: '', allergies: '', medications: '', notes: '', image: null
   });
+  const [petProfile, setPetProfile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [errors, setErrors] = useState({});
 
@@ -20,12 +80,26 @@ export default function AddPetPage() {
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg"]
+
+    if (!file) {
+      // setErrorMessage
+      return;
+    }
+
+    if (!allowedTypes.includes(file.type)) {
+      // setErrorMessage("Invalid file type. Only PNG, JPG, and JPEG are allowed.");
+      e.target.value = ""; // Reset the input field
+      return;
+    }
+
     if (file) {
-      setFormData(prev => ({ ...prev, image: file }));
+      setPetProfile(file);
       const reader = new FileReader();
-      reader.onloadend = () => setPreview(reader.result);
+      reader.onloadend = () => {
+        setPreview(reader.result);
+      };
       reader.readAsDataURL(file);
-      if (errors.image) setErrors(prev => ({ ...prev, image: '' }));
     }
   };
 
@@ -37,78 +111,44 @@ export default function AddPetPage() {
     if (!formData.gender) newErrors.gender = 'Gender is required';
     if (!formData.age.trim()) newErrors.age = 'Age is required';
     if (!formData.weight.trim()) newErrors.weight = 'Weight is required';
-    if (!formData.image) newErrors.image = 'Pet photo is required';
+    if (!petProfile) newErrors.image = 'Pet photo is required';
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     const newErrors = validate();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    // TODO: Submit to backend
-    console.log('Pet data:', formData);
-    navigate('/pet-owner/pets');
+
+    try {
+      var data = new FormData()
+      data.append('pet', JSON.stringify(formData));
+
+      if (petProfile) {
+        data.append('file', petProfile); 
+      }
+         for (let [key, value] of data.entries()) {
+        console.log(key, value);
+    }
+      const res = await registerPet(token, data);
+      // TODO: Submit to backend
+          for (let [key, value] of data.entries()) {
+        console.log(key, value);
+        }
+      console.log("pet created Succesfully: ", res.data)
+      navigate('/pet-owner/pets');
+    } catch (err) {
+      console.error("Registration error:", err.response?.data || err.message);
+    }
+
   };
 
   const handleCancel = () => navigate('/pets');
 
-  const InputField = ({ label, name, value, onChange, error, required, ...props }) => (
-    <div>
-      <label className={`block text-sm font-medium text-gray-700 mb-2 ${required ? 'label-required' : ''}`}>
-        {label}
-      </label>
-      <input
-        name={name}
-        value={value}
-        onChange={onChange}
-        className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl"
-        {...props}
-      />
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
-    </div>
-  );
 
-  const TextareaField = ({ label, name, value, onChange, rows = 2, ...props }) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
-      <textarea
-        name={name}
-        value={value}
-        onChange={onChange}
-        rows={rows}
-        className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl resize-none"
-        {...props}
-      />
-    </div>
-  );
-
-  const ButtonGroup = ({ options, name, required }) => (
-    <div>
-      <label className={`block text-sm font-medium text-gray-700 mb-2 ${required ? 'label-required' : ''}`}>
-        {name === 'species' ? 'Species' : name === 'gender' ? 'Gender' : name}
-      </label>
-      <div className="grid grid-cols-2 gap-3">
-        {options.map(opt => (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => handleChange({ target: { name, value: opt.value }})}
-            className={`px-4 py-3 rounded-2xl transition ${
-              formData[name] === opt.value
-                ? 'bg-primary text-white'
-                : 'bg-white border border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-      {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
-    </div>
-  );
 
   return (
     <>
@@ -149,10 +189,24 @@ export default function AddPetPage() {
           <div className="space-y-4">
             <h3 className="font-semibold text-lg">Basic Information</h3>
             <InputField label="Pet Name" name="name" value={formData.name} onChange={handleChange} error={errors.name} required placeholder="Enter pet name" />
-            <ButtonGroup name="species" required options={[{value: 'dog', label: 'Dog'}, {value: 'cat', label: 'Cat'}]} />
+            <ButtonGroup 
+              name="species" 
+              required 
+              options={[{value: 'dog', label: 'Dog'}, {value: 'cat', label: 'Cat'}]}
+              formData={formData}
+              handleChange={handleChange}
+              errors={errors}
+            />            
             <InputField label="Breed" name="breed" value={formData.breed} onChange={handleChange} error={errors.breed} required placeholder="Enter breed" />
             <InputField label="Color" name="color" value={formData.color} onChange={handleChange} placeholder="e.g., Golden, Black & White" />
-            <ButtonGroup name="gender" required options={[{value: 'male', label: 'Male'}, {value: 'female', label: 'Female'}]} />
+            <ButtonGroup 
+              name="gender" 
+              required 
+              options={[{value: 'male', label: 'Male'}, {value: 'female', label: 'Female'}]}
+              formData={formData}
+              handleChange={handleChange}
+              errors={errors}
+            />            
             <InputField label="Date of Birth" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} type="date" />
             <div className="grid grid-cols-2 gap-3">
               <InputField label="Age" name="age" value={formData.age} onChange={handleChange} error={errors.age} required placeholder="e.g., 2y" />
@@ -213,10 +267,24 @@ export default function AddPetPage() {
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg">Basic Information</h3>
                 <InputField label="Pet Name" name="name" value={formData.name} onChange={handleChange} error={errors.name} required placeholder="Enter pet name" />
-                <ButtonGroup name="species" required options={[{value: 'dog', label: 'Dog'}, {value: 'cat', label: 'Cat'}]} />
+                <ButtonGroup 
+                  name="species" 
+                  required 
+                  options={[{value: 'dog', label: 'Dog'}, {value: 'cat', label: 'Cat'}]}
+                  formData={formData}
+                  handleChange={handleChange}
+                  errors={errors}
+                />                
                 <InputField label="Breed" name="breed" value={formData.breed} onChange={handleChange} error={errors.breed} required placeholder="Enter breed" />
                 <InputField label="Color" name="color" value={formData.color} onChange={handleChange} placeholder="e.g., Golden, Black & White" />
-                <ButtonGroup name="gender" required options={[{value: 'male', label: 'Male'}, {value: 'female', label: 'Female'}]} />
+                <ButtonGroup 
+                  name="gender" 
+                  required 
+                  options={[{value: 'male', label: 'Male'}, {value: 'female', label: 'Female'}]}
+                  formData={formData}
+                  handleChange={handleChange}
+                  errors={errors}
+                />                
                 <InputField label="Date of Birth" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} type="date" />
                 <div className="grid grid-cols-2 gap-3">
                   <InputField label="Age" name="age" value={formData.age} onChange={handleChange} error={errors.age} required placeholder="e.g., 2y" />

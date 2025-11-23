@@ -34,11 +34,11 @@ const Pet = sequelize.define("Pet", {
     allowNull: true,
   },
   gender: {
-    type: DataTypes.ENUM("Male", "Female"),
+    type: DataTypes.ENUM("male", "female"),
     allowNull: false,
   },
   profileURL: {
-    type: DataTypes.STRING,
+    type: DataTypes.JSON,
     allowNull: true,
   },
 }, {

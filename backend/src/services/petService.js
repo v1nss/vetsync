@@ -1,9 +1,29 @@
+import { uploadFiles } from "../../global/utils/drive.js";
 import Pet from "../models/petModel.js";
 
 export const createPetService = async (owner_id, petData) => {
+
+  const { body, file } = petData;
+  const petInfo = JSON.parse(body.pet);
+  
+  let petProfile = null;
+  if (file) {
+    const { id: fileId, name: fileName } = await uploadFiles(
+      file,
+      process.env.GDRIVE_FOLDER_ID
+    );
+
+    petProfile = {
+      id: fileId,
+      name: fileName,
+      link: `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`,
+    }
+  }
+
   return await Pet.create({
     owner_id,
-    ...petData,
+    ...petInfo,
+    profileURL: petProfile,
   });
 };
 

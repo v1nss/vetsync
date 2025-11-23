@@ -9,9 +9,8 @@ import {
 export const createPet = async (req, res) => {
   try {
     const owner_id = req.user.id; // from JWT
-    const petData = req.body;
 
-    const newPet = await createPetService(owner_id, petData);
+    const newPet = await createPetService(owner_id, req);
     res.status(201).json({ message: "Pet created successfully", pet: newPet });
   } catch (error) {
     res

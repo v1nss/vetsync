@@ -1,4 +1,5 @@
 import express from "express";
+import upload from '../../global/config/multer.js'
 import {
   createPet,
   getMyPets,
@@ -10,9 +11,10 @@ import { verifyToken, verifyOwner } from "../../global/middleware/authMiddleware
 
 const router = express.Router();
 
-router.post("/", verifyToken, verifyOwner, createPet);
+router.post("/register", upload.single('file'), verifyToken, verifyOwner, createPet);
 
 router.get("/", verifyToken, verifyOwner, getMyPets);
+
 router.get("/:pet_id", verifyToken, verifyOwner, getPetById);
 
 router.patch("/:pet_id", verifyToken, verifyOwner, updatePet);
