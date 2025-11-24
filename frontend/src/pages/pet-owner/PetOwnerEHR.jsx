@@ -123,9 +123,17 @@ export default function PetOwnerEHR() {
                 <div className="bg-linear-to-r from-primary to-[#FEA08E] rounded-xl p-6 mb-6">
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center">
-                      <span className="text-2xl font-bold text-primary">
-                        {selectedPet.name.charAt(0)}
-                      </span>
+                      {selectedPet.profileURL?.link ? (
+                        <img
+                          src={selectedPet.profileURL.link}
+                          alt={selectedPet.name}
+                          className="w-full h-full object-cover rounded-2xl"
+                        />
+                      ) : (
+                        <span className="text-2xl font-bold text-white">
+                          {selectedPet.name.charAt(0)}
+                        </span>
+                      )}
                     </div>
                     <div className="text-white">
                       <h2 className="text-2xl font-bold mb-1">{selectedPet.name}</h2>
