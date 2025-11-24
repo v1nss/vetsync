@@ -4,6 +4,7 @@ import { FaChevronLeft, FaEye, FaEyeSlash, FaCamera, FaUser } from "react-icons/
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { registerUser, checkEmailExists } from "../global/api/user";
+import SuccessModal from "../components/SuccessModal";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -12,6 +13,10 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
   const [profilePreview, setProfilePreview] = useState(null);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [errors, setErrors] = useState({});
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [user, setUser] = useState({
     full_name: "",
@@ -23,84 +28,112 @@ export default function RegisterPage() {
 
   const handleRoleChange = (role) => {
     setUserType(role);
-    setUser(prev => ({ ...prev, user_type: role })); 
-    chooseRole(role);
-  };
-
-  const chooseRole = (role) => {
-    if (role === "pet_owner") {
-      console.log("Pet Owner selected");
-    } else if (role === "clinic_admin") {
-      console.log("Clinic Admin selected");
-    }
+    setUser(prev => ({ ...prev, user_type: role }));
   };
 
   const handleOnChange = (e) => {
     const { name, value } = e.target;
     setUser((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleProfilePictureChange = (e) => {
     const file = e.target.files[0];
-    const allowedTypes = ["image/png", "image/jpeg", "image/jpg"]
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
 
-    if (!file) {
-      // setErrorMessage
-      return;
-    }
+    if (!file) return;
 
     if (!allowedTypes.includes(file.type)) {
-      // setErrorMessage("Invalid file type. Only PNG, JPG, and JPEG are allowed.");
-      e.target.value = ""; // Reset the input field
+      setErrors(prev => ({ ...prev, 
+        profilePicture: "Invalid file type. Only PNG, JPG, and JPEG are allowed." 
+      }));
+      e.target.value = "";
       return;
     }
 
-    if (file) {
-      setProfilePicture(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfilePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+    if (file.size > 5000000) {
+      setErrors(prev => ({ ...prev, profilePicture: "File must be less than 5MB" }));
+      e.target.value = "";
+      return;
     }
+
+    setProfilePicture(file);
+    setErrors(prev => ({ ...prev, profilePicture: "" }));
+    
+    const reader = new FileReader();
+    reader.onloadend = () => { setProfilePreview(reader.result); };
+    reader.readAsDataURL(file);
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!user.full_name.trim() || user.full_name.trim().length < 2) 
+      newErrors.full_name = "Full name must be at least 2 characters";
+    if (!user.email.trim()) newErrors.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) 
+      newErrors.email = "Invalid email format";
+    if (!user.password) newErrors.password = "Password is required";
+    else if (user.password.length < 8) newErrors.password = "Minimum 8 characters";
+    else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(user.password)) 
+      newErrors.password = "Must contain uppercase, lowercase, and number";
+    if (user.password !== confirmPassword) 
+      newErrors.confirmPassword = "Passwords do not match";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const emailExists = await checkEmailExists(user.email);
-    if (emailExists) {
-      alert("Email is already registered. Please use a different email.");
-      return;
+    if (!validateForm()) return;
+    
+    setIsSubmitting(true);
+
+    try {
+      // Check email exists with proper error handling
+      const emailExists = await checkEmailExists(user.email);
+      if (emailExists) {
+        setErrors({ email: "Email already registered" });
+        setIsSubmitting(false);
+        return;
+      }
+    } catch (err) {
+      console.error("Email check error:", err);
+      // Continue with registration even if email check fails
     }
+
     if (user.user_type === "clinic_admin") {
-      // Additional validation for clinic admin can be added here
       navigate("/register-clinic", { state: { user, profilePicture } });
+      setIsSubmitting(false);
       return;
     }
 
     try {
       var formData = new FormData();
-      formData.append('user', JSON.stringify(user)); 
-
-      if (profilePicture) {
-        formData.append('file', profilePicture); 
-      }
-
-      const res = await registerUser(formData);
-      //TODO: this should be redirected to "/"
-      if (res.status === 200) {
-        console.log("Registered:", res.data);
-        navigate("/");
-      }
+      formData.append('user', JSON.stringify(user));
+      if (profilePicture) formData.append('file', profilePicture);
+      
+      await registerUser(formData);
+      setShowSuccessModal(true); // This should trigger the modal
     } catch (err) {
       console.error("Registration error:", err.response?.data || err.message);
+      setErrors({ submit: "Registration failed. Please try again." });
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const handleModalClose = () => {
+    setShowSuccessModal(false);
+    navigate(user.user_type === "clinic_admin" ? "/register-clinic" : "/");
+  };
+
 
   const handleBack = () => {
     setUserType("");
     setProfilePicture(null);
     setProfilePreview(null);
+    setConfirmPassword("");
+    setErrors({});
     setUser({
       full_name: "",
       email: "",
@@ -112,7 +145,7 @@ export default function RegisterPage() {
 
   return (
     <section className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="bg-white sm:p-8 rounded-2xl sm:shadow-lg w-full max-w-lg">
+      <div className="bg-white sm:p-8 p-6 rounded-2xl sm:shadow-lg w-full max-w-lg">
         <img src="/vetsync-logo-wname.png" alt="VetSync Logo" className="h-12 mx-auto my-8" />
         
         {/* Role Selection Step */}
@@ -180,28 +213,40 @@ export default function RegisterPage() {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} method="POST">
+            {/* General error message */}
+            {errors.submit && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-sm">
+                {errors.submit}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit}>
               {/* Profile Picture Upload */}
-              <div className="mb-6 flex justify-center">
-                <div className="relative">
-                  <div className="w-24 h-24 rounded-full border-2 border-gray-300 overflow-hidden bg-gray-100 flex items-center justify-center">
-                    {profilePreview ? (
-                      <img src={profilePreview} alt="Profile Preview" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-gray-400 text-3xl"><FaUser /></span>
-                    )}
+              <div className="mb-6">
+                <div className="flex justify-center">
+                  <div className="relative">
+                    <div className="w-24 h-24 rounded-full border-2 border-gray-300 overflow-hidden bg-gray-100 flex items-center justify-center">
+                      {profilePreview ? (
+                        <img src={profilePreview} alt="Profile Preview" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-gray-400 text-3xl"><FaUser /></span>
+                      )}
+                    </div>
+                    <label htmlFor="profile-picture" className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary/80 transition">
+                      <FaCamera className="text-sm" />
+                    </label>
+                    <input
+                      type="file"
+                      id="profile-picture"
+                      accept="image/*"
+                      onChange={handleProfilePictureChange}
+                      className="hidden"
+                    />
                   </div>
-                  <label htmlFor="profile-picture" className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary/80 transition">
-                    <FaCamera className="text-sm" />
-                  </label>
-                  <input
-                    type="file"
-                    id="profile-picture"
-                    accept="image/*"
-                    onChange={handleProfilePictureChange}
-                    className="hidden"
-                  />
                 </div>
+                {errors.profilePicture && (
+                  <p className="text-red-500 text-xs text-center mt-2">{errors.profilePicture}</p>
+                )}
               </div>
 
               <div className="mb-4">
@@ -209,76 +254,39 @@ export default function RegisterPage() {
                   Full Name
                 </label>
                 <input
-                  required
                   type="text"
                   id="name"
-                  className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl"
+                  className={`focus:outline-none w-full text-sm px-4 py-3 border rounded-2xl ${ errors.full_name ? 'border-red-500' : 'border-gray-300' }`}
                   placeholder="Enter your full name"
                   onChange={handleOnChange}
                   name="full_name"
                   value={user.full_name}
                 />
+                {errors.full_name && ( <p className="text-red-500 text-xs mt-1">{errors.full_name}</p> )}
               </div>
 
-              {/* Clinic Name - Only shown for Clinic Admin */}
-              {/* {userType === "clinic_admin" && (
-                <div>
-                  <div className="mb-4">
-                    <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="clinic_name">
-                      Clinic Name
-                    </label>
-                    <input
-                      required
-                      type="text"
-                      id="clinic_name"
-                      className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl"
-                      placeholder="Enter your clinic name"
-                      onChange={handleOnChange}
-                      name="clinic_name"
-                      value={user.clinic_name}
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="clinic_address">
-                      Clinic Address
-                    </label>
-                    <input
-                      required
-                      type="text"
-                      id="clinic_address"
-                      className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl"
-                      placeholder="Enter your clinic address"
-                      onChange={handleOnChange}
-                      name="clinic_address"
-                      value={user.clinic_address}
-                    />
-                  </div>
-                </div>
-              )} */}
-
               <div className="mb-4">
-                <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="email">
-                  Email
-                </label>
+                <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="email">Email</label>
                 <input
-                  required
                   type="email"
                   id="email"
-                  className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl"
+                  className={`focus:outline-none w-full text-sm px-4 py-3 border rounded-2xl ${ errors.email ? 'border-red-500' : 'border-gray-300' }`}
                   placeholder="Enter your email"
                   onChange={handleOnChange}
                   name="email"
                   value={user.email}
                 />
+                {errors.email && ( <p className="text-red-500 text-xs mt-1">{errors.email}</p> )}
               </div>
 
-              <div className="mb-4 relative">
+              <div className="mb-4">
                 <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="password">
                   Create Password
                 </label>
-                <div className="flex items-center w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl">
+                <div className={`flex items-center w-full text-sm px-4 py-3 border rounded-2xl ${
+                  errors.password ? 'border-red-500' : 'border-gray-300'
+                }`}>
                   <input
-                    required
                     type={showPassword ? "text" : "password"}
                     id="password"
                     className="focus:outline-none w-full outline-none text-sm"
@@ -295,19 +303,27 @@ export default function RegisterPage() {
                     {showPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
                   </button>
                 </div>
+                {errors.password && ( <p className="text-red-500 text-xs mt-1">{errors.password}</p> )}
+                <p className="text-xs text-gray-500 mt-1">At least 8 characters with uppercase, lowercase, and number</p>
               </div>
 
               <div className="mb-8">
                 <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="confirm-password">
                   Confirm Password
                 </label>
-                <div className="flex items-center w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl">
+                <div className={`flex items-center w-full text-sm px-4 py-3 border rounded-2xl ${ errors.confirmPassword ? 'border-red-500' : 'border-gray-300' }`}>
                   <input
-                    required
                     type={showConfirmPassword ? "text" : "password"}
                     id="confirm-password"
                     className="focus:outline-none w-full outline-none text-sm"
                     placeholder="Confirm your password"
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      if (errors.confirmPassword) {
+                        setErrors(prev => ({ ...prev, confirmPassword: "" }));
+                      }
+                    }}
                   />
                   <button
                     type="button"
@@ -317,13 +333,15 @@ export default function RegisterPage() {
                     {showConfirmPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
                   </button>
                 </div>
+                {errors.confirmPassword && ( <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p> )}
               </div>
 
               <button 
                 type="submit" 
-                className="w-full bg-primary text-white py-3 rounded-2xl hover:bg-[#FEA08E] transition"
+                disabled={isSubmitting}
+                className="w-full bg-primary text-white py-3 rounded-2xl hover:bg-[#FEA08E] transition disabled:opacity-50"
               >
-                Register
+                {isSubmitting ? "Registering..." : "Register"}
               </button>
 
               <div className="text-center mt-4">
@@ -335,6 +353,13 @@ export default function RegisterPage() {
           </div>
         )}
       </div>
+
+      {/* Success Modal */}
+      <SuccessModal 
+        isOpen={showSuccessModal} 
+        onClose={handleModalClose}
+        userType={userType}
+      />
     </section>
   );
 }
