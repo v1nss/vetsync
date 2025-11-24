@@ -13,7 +13,7 @@ export default function PetItem({ pet, variant = 'card', isSelected, onClick }) 
         }`}
       >
         <div className="w-14 h-14 bg-gray-200 rounded-xl overflow-hidden">
-          <img src={pet.image} alt={pet.name} className="w-full h-full object-cover" />
+          <img src={pet.profileURL?.link} alt={pet.name} className="w-full h-full object-cover" />
         </div>
         <div className="flex-1 text-left">
           <div className="flex items-center gap-2">
@@ -29,7 +29,7 @@ export default function PetItem({ pet, variant = 'card', isSelected, onClick }) 
   return (
     <button onClick={onClick} className="text-left hover:opacity-80 transition">
       <div className="w-full aspect-square bg-gray-200 rounded-2xl mb-2 overflow-hidden">
-        <img src={pet.image} alt={pet.name} className="w-full h-full object-cover" />
+        <img src={pet.profileURL?.link} alt={pet.name} className="w-full h-full object-cover" />
       </div>
       <div className="flex items-center gap-1">
         <span className="font-medium">{pet.name}</span>

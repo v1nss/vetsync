@@ -26,7 +26,7 @@ export default function PetDetail({ pet }) {
     <div className="p-4 max-w-2xl mx-auto md:p-0">
       {/* Pet Image */}
       <div className="w-full aspect-square bg-gray-200 rounded-2xl overflow-hidden mb-4 sm:max-w-xs sm:mx-auto md:mb-6">
-        <img src={pet.image} alt={pet.name} className="w-full h-full object-cover" />
+        <img src={pet.profileURL?.link} alt={pet.name} className="w-full h-full object-cover" />
       </div>
 
       {/* Pet Name & Breed */}

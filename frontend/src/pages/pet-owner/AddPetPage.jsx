@@ -130,15 +130,8 @@ export default function AddPetPage() {
       if (petProfile) {
         data.append('file', petProfile); 
       }
-         for (let [key, value] of data.entries()) {
-        console.log(key, value);
-    }
       const res = await registerPet(token, data);
-      // TODO: Submit to backend
-          for (let [key, value] of data.entries()) {
-        console.log(key, value);
-        }
-      console.log("pet created Succesfully: ", res.data)
+      console.log("pet created Succesfully: ", res)
       navigate('/pet-owner/pets');
     } catch (err) {
       console.error("Registration error:", err.response?.data || err.message);

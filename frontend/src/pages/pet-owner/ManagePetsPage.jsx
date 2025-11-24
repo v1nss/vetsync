@@ -1,18 +1,43 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaPlus, FaChevronLeft } from 'react-icons/fa';
 import PetItem from '../../components/PetItem';
 import PetDetail from '../../components/PetDetail';
 import Navbar from '../../components/Navbar';
+import { useAuth } from '../../context/AuthContext';
+import { fetchAllPetsById } from '../../global/api/pet';
 
 export default function ManagePetsPage() {
+  const { token } = useAuth();
   const navigate = useNavigate();
-  const [selected, setSelected] = useState(null);
-  const [pets] = useState([
-    { id: 1, name: 'Max', image: '/pet1.jpg', age: '3 years old', gender: 'male', breed: 'Pure Labrador', ageValue: '2y', weight: '8kg' },
-    { id: 2, name: 'Mimi', image: '/pet2.jpg', age: '2 years old', gender: 'female', breed: 'Persian Cat', ageValue: '2y', weight: '4kg' },
-    { id: 3, name: 'Bruno', image: '/pet3.jpg', age: '4 years old', gender: 'male', breed: 'Husky', ageValue: '4y', weight: '12kg' }
-  ]);
+  const [selected, setSelected] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [pets, setPets] = useState(null)
+
+  useEffect(() => {
+
+    const fetchAllPets = async () => {
+      setLoading(true);
+      setSelected(null);
+      try {
+        const res = await fetchAllPetsById(token);
+        console.log(res)
+        if (!res) {
+          console.log("no pets exist");
+          setPets(null);
+          setIsPending(false);
+        } else {
+          setPets(res);
+        }
+      } catch (err) {
+        console.error("Unable to get pets by ID:", err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllPets()
+  }, [token])
 
   const handleAddPet = () => navigate('add');
 
@@ -45,8 +70,8 @@ export default function ManagePetsPage() {
               </div>
             </div>
             <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {pets.map(pet => (
-                <PetItem key={pet.id} pet={pet} variant="card" onClick={() => setSelected(pet)} />
+              {pets?.map(pet => (
+                <PetItem key={pet.pet_id} pet={pet} variant="card" onClick={() => setSelected(pet)} />
               ))}
               <button
                 onClick={handleAddPet}
@@ -101,12 +126,12 @@ export default function ManagePetsPage() {
             <div className="col-span-4 bg-white rounded-2xl p-6 border border-gray-200">
               <h2 className="font-semibold text-lg mb-4">Your Pets</h2>
               <div className="space-y-3">
-                {pets.map(pet => (
+                {pets?.map(pet => (
                   <PetItem
-                    key={pet.id}
+                    key={pet.pet_id}
                     pet={pet}
                     variant="list"
-                    isSelected={selected?.id === pet.id}
+                    isSelected={selected?.pet_id === pet.pet_id}
                     onClick={() => setSelected(pet)}
                   />
                 ))}

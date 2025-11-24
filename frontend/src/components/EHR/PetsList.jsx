@@ -25,15 +25,23 @@ export default function PetsList({ pets, searchTerm, setSearchTerm, onSelect }) 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {pets.map((pet) => (
           <button
-            key={pet.id}
+            key={pet.pet_id}
             onClick={() => onSelect(pet)}
             className="text-left p-4 rounded-xl border border-gray-200 hover:border-primary hover:bg-primary/5 transition-all"
           >
             <div className="flex items-start gap-4">
               <div className="w-16 h-16 bg-linear-to-br from-primary to-[#FEA08E] rounded-2xl flex items-center justify-center shrink-0">
-                <span className="text-2xl font-bold text-white">
-                  {pet.name.charAt(0)}
-                </span>
+                {pet.profileURL?.link ? (
+                  <img
+                    src={pet.profileURL.link}
+                    alt={pet.name}
+                    className="w-full h-full object-cover rounded-2xl"
+                  />
+                ) : (
+                  <span className="text-2xl font-bold text-white">
+                    {pet.name.charAt(0)}
+                  </span>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-gray-900 text-lg mb-1 truncate">
@@ -43,7 +51,7 @@ export default function PetsList({ pets, searchTerm, setSearchTerm, onSelect }) 
                   {pet.species} • {pet.breed}
                 </p>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span>ID: {pet.id}</span>
+                  <span>ID: {pet.pet_id}</span>
                   <span>•</span>
                   <span>{pet.age}</span>
                 </div>

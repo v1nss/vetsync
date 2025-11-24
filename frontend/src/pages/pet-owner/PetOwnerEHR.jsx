@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiSearch, FiChevronRight, FiCalendar } from "react-icons/fi";
 import { RiMicroscopeLine, RiSyringeLine } from "react-icons/ri";
 import { FaPrescription } from "react-icons/fa";
@@ -9,13 +9,42 @@ import AppointmentHistory from "../../components/EHR/pet-owner/AppointmentsHisto
 import LabResults from "../../components/EHR/pet-owner/LabResults";
 import VaccineRecords from "../../components/EHR/pet-owner/VaccineRecords";
 import Prescriptions from "../../components/EHR/pet-owner/Prescriptions";
+import { useAuth } from "../../context/AuthContext";
+import { fetchAllPetsById } from "../../global/api/pet";
 
 export default function PetOwnerEHR() {
+  const { token } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPet, setSelectedPet] = useState(null);
   const [activeTab, setActiveTab] = useState("appointments");
+  const [loading, setLoading] = useState(true);
+  const [pets, setPets] = useState([])
 
-  const filteredPets = petsData.filter((pet) => {
+  useEffect(() => {
+    const fetchAllPets = async () => {
+      setLoading(true);
+      // setSelected(null);
+      try {
+        const res = await fetchAllPetsById(token);
+        console.log(res)
+        if (!res) {
+          console.log("no pets exist");
+          setPets(null);
+          setIsPending(false);
+        } else {
+          setPets(res);
+        }
+      } catch (err) {
+        console.error("Unable to get pets by ID:", err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllPets()
+  }, [token])
+
+  const filteredPets = pets.filter((pet) => {
     const query = searchTerm.toLowerCase();
     return (
       pet.name.toLowerCase().includes(query) ||

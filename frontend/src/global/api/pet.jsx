@@ -17,3 +17,18 @@ export const registerPet = async (token, petData) => {
         throw err;
     }
 }
+
+export const fetchAllPetsById = async (token) => {
+    try {
+        const res = await axios.get(`${BASE_URL}/pets`, {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        })
+        console.log("All pets successfully fetched by User ID", res)
+        return res.data
+    } catch (err) {
+        console.error("Unable to fetch Pets by User ID", err.message)
+        throw err;
+    }
+}
