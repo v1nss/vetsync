@@ -29,7 +29,7 @@ export const refreshAuthToken = async () => {
 
     try {
         const res = await axios.post(`${BASE_URL}/auth/refresh-token`, 
-            { }, // TO BE FIXED
+            { refreshToken }, // TO BE FIXED
             { withCredentials: true }
         );
 

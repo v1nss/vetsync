@@ -19,7 +19,7 @@ import { useAuth } from "../../context/AuthContext";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   // const [pets] = useState([
   //   { id: 1, name: "Max", image: "🐕", gender: "male" },
   //   { id: 2, name: "Mimi", image: "🐱", gender: "female" },
@@ -34,7 +34,7 @@ export default function SettingsPage() {
         setLoading(true);
         // setSelected(null);
         try {
-          const res = await fetchAllPetsById();
+          const res = await fetchAllPetsById(token);
           console.log(res)
           if (!res) {
             console.log("no pets exist");
@@ -233,7 +233,7 @@ export default function SettingsPage() {
                   <div className="space-y-2">
                     {pets.map((pet) => (
                       <PetCard 
-                        key={pet.id} 
+                        key={pet.pet_id} 
                         pet={pet} 
                         onClick={() => navigate("/pet-owner/pets")}
                         className="w-full flex items-center gap-3 rounded-xl p-2"

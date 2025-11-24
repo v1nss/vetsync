@@ -26,7 +26,7 @@ export const generateRefreshTokenService = async (refreshToken) => {
 
   if (!refreshToken) throw new Error('No refresh token provided');
   
-    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     const user = await User.findByPk(decoded.id);
     if (!user) throw new Error("User not found");
 
