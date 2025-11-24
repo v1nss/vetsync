@@ -28,12 +28,15 @@ export const refreshAuthToken = async () => {
     }
 
     try {
-        const res = await axios.post(`${BASE_URL}/auth/refresh-token`, 
-            { }, // TO BE FIXED
-            { withCredentials: true }
+        const res = await axios.post( `${BASE_URL}/auth/refresh-token`,
+            { refreshToken }, 
+            {
+                headers: { "Content-Type": "application/json" },
+                withCredentials: true 
+            }
         );
 
-        const {token} = res.data;
+        const { token } = res.data;
         saveToken(token);
         return token;
     } catch (err) {

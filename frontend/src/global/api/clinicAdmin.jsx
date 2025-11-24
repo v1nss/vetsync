@@ -1,12 +1,8 @@
-import axios from "axios";
+import axiosInstance from '../../utils/axiosInstance.js';
 
-const BASE_URL = import.meta.env.VITE_BACKEND_URL;
-
-export const fetchMyClinic = async (token) => {
+export const fetchMyClinic = async () => {
   try {
-    const res = await axios.get(`${BASE_URL}/clinics/my-clinic`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await axiosInstance.get(`/clinics/my-clinic`);
     return res.data.clinic;
   } catch (err) {
     console.error("Unable to fetch clinic", err.message);

@@ -1,24 +1,13 @@
-import axios from 'axios';
+import axiosInstance from '../../utils/axiosInstance.js';
 
-const BASE_URL = import.meta.env.VITE_BACKEND_URL;
-
-// export const loginUser = async (email, password) => {
-//     try {
-//         const res = await axios.post(`${BASE_URL}/auth/login`, { email, password });
-//         return res.data;
-//     } catch (err) {
-//         console.error('Login failed:', err.message);
-//         throw err;
-//     }
-// };
-
-export const fetchUserData = async (id, token) => {
+export const fetchUserData = async (id, token = null) => {
     try {
-        const res = await axios.get(`${BASE_URL}/users/${id}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const config = {};
+        // If token is explicitly provided, use it (for initial login)
+        if (token) {
+            config.headers = { Authorization: `Bearer ${token}` };
+        }
+        const res = await axiosInstance.get(`/users/${id}`, config);
         return res.data;
     } catch (err) {
         console.error('Failed to fetch user data:', err.message);
@@ -28,7 +17,7 @@ export const fetchUserData = async (id, token) => {
 
 export const registerUser = async (userData) => {
     try {
-        const res = await axios.post(`${BASE_URL}/users/register`, userData, {
+        const res = await axiosInstance.post(`/users/register`, userData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -43,7 +32,7 @@ export const registerUser = async (userData) => {
 
 export const checkEmailExists = async (email) => {
     try {
-        const res = await axios.put(`${BASE_URL}/users/email-check`, { email });
+        const res = await axiosInstance.put(`/users/email-check`, { email });
         return res.data.exists;
     } catch (err) {
         console.error('Email check failed:', err.message);

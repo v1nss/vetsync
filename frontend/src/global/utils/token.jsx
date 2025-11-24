@@ -1,11 +1,11 @@
 
 
 export const saveToken = (token) => {
-    document.cookie = `authToken=${token}; path=/; max-age=${60 * 60 * 24 * 7}`; // 7 days
+    document.cookie = `authToken=${token}; path=/; SameSite=Strict; max-age=${60 * 15}`; // 15 minutes
 };
 
 export const saveRefreshToken = (refreshToken) => {
-    document.cookie = `refreshToken=${refreshToken}; path=/; secure; SameSite=Strict; max-age=604800`; // 7 days
+    document.cookie = `refreshToken=${refreshToken}; path=/; SameSite=Strict; max-age=604800`; // 7 days
 };
 
 export const getToken = () => {
@@ -18,8 +18,6 @@ export const getRefreshToken = () => {
     const cookies = document.cookie.split('; ');
     const refreshTokenCookie = cookies.find((cookie) =>
       cookie.trim().startsWith("refreshToken="));
-
-    console.log("Retrieved Refresh Token:", refreshTokenCookie.split('=')[1] ); //debuggin log
     return refreshTokenCookie ? decodeURIComponent(refreshTokenCookie.split("=")[1]) : null;
 };
 

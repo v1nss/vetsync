@@ -9,11 +9,9 @@ import AppointmentHistory from "../../components/EHR/pet-owner/AppointmentsHisto
 import LabResults from "../../components/EHR/pet-owner/LabResults";
 import VaccineRecords from "../../components/EHR/pet-owner/VaccineRecords";
 import Prescriptions from "../../components/EHR/pet-owner/Prescriptions";
-import { useAuth } from "../../context/AuthContext";
 import { fetchAllPetsById } from "../../global/api/pet";
 
 export default function PetOwnerEHR() {
-  const { token } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPet, setSelectedPet] = useState(null);
   const [activeTab, setActiveTab] = useState("appointments");
@@ -25,7 +23,7 @@ export default function PetOwnerEHR() {
       setLoading(true);
       // setSelected(null);
       try {
-        const res = await fetchAllPetsById(token);
+        const res = await fetchAllPetsById();
         console.log(res)
         if (!res) {
           console.log("no pets exist");
@@ -42,7 +40,7 @@ export default function PetOwnerEHR() {
     };
 
     fetchAllPets()
-  }, [token])
+  }, [])
 
   const filteredPets = pets.filter((pet) => {
     const query = searchTerm.toLowerCase();

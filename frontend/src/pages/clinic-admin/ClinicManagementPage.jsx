@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FaEdit, FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock, FaImage, FaSave, FaTimes, FaPlus, FaCamera, FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { useAuth } from "../../context/AuthContext";
 import { fetchMyClinic } from "../../global/api/clinicAdmin";
 
 export default function ClinicManagementPage() {
-  const { token } = useAuth();
   const [clinic, setClinic] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -13,12 +11,11 @@ export default function ClinicManagementPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
-    if (!token) return;
-    fetchMyClinic(token)
+    fetchMyClinic()
       .then(data => { setClinic(data); setEditedClinic(data); })
       .catch(err => console.error("Failed to fetch clinic data:", err))
       .finally(() => setLoading(false));
-  }, [token]);
+  }, []);
 
   const handleEdit = () => { setIsEditing(true); setEditedClinic({ ...clinic }); };
   const handleCancel = () => { setIsEditing(false); setEditedClinic({ ...clinic }); };

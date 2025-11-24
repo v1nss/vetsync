@@ -4,12 +4,10 @@ import Sidebar from "../../components/Sidebar";
 import { FaPaw, FaNotesMedical, FaClinicMedical, FaUserMd, FaCog } from "react-icons/fa";
 import { IoMenu } from "react-icons/io5";
 import { BiSolidDashboard } from "react-icons/bi";
-import { useAuth } from "../../context/AuthContext";
 import { fetchMyClinic } from "../../global/api/clinicAdmin";
 
 export default function ClinicAdminLayout() {
   const [isOpen, setIsOpen] = useState(true);
-  const {token} = useAuth();
 
   const clinicAdminLinks = [
     { name: "Dashboard", icon: <BiSolidDashboard />, path: "/clinic-admin/dashboard" },
@@ -25,10 +23,9 @@ export default function ClinicAdminLayout() {
   };
 
   useEffect(() => {
-    if (!token) return;
-    fetchMyClinic(token)
+    fetchMyClinic()
       .catch(err => console.error("Failed to fetch clinic data:", err));
-  }, [token]);
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-gray-50">

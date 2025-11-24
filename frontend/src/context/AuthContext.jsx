@@ -28,7 +28,6 @@ export const AuthProvider = ({ children }) => {
           const existingRefreshToken = getRefreshToken();
 
           if (!existingToken && !existingRefreshToken) {
-            console.log("No existing token, returning early.");
             setLoading(false);
             return;
           }
@@ -39,7 +38,6 @@ export const AuthProvider = ({ children }) => {
               const isExpired = storedUser.exp * 1000 < Date.now();
               if (isExpired) {
                 if (existingRefreshToken) {
-                  console.log("Token expired, attempting to refresh.");
                   const newToken = await refreshAuthToken();
                   const newUser = JSON.parse(atob(newToken.split(".")[1]));
                   const fullUserData = await fetchUserData(newUser.id, newToken);
@@ -53,7 +51,6 @@ export const AuthProvider = ({ children }) => {
                   setIsAuthenticated(true);
                   setToken(newToken);
                 } else {
-                  console.log("No refresh token available, cannot refresh.");
                   logout(); 
                 }
               } else {
@@ -111,7 +108,6 @@ export const AuthProvider = ({ children }) => {
         saveToken(authToken);
         setIsAuthenticated(true);
         setRole(fullUserData.user_type);
-        console.log(userData)
       } catch (err) {
         console.error("Error fetching full user data:", err);
         logout();
@@ -140,7 +136,6 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  // console.log("context:", context);
   if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };

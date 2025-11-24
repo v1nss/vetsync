@@ -5,7 +5,7 @@ import { useAuth } from "./AuthContext";
 export const ClinicStatusContext = createContext();
 
 export const ClinicStatusProvider = ({ children }) => {
-  const { role, user, token } = useAuth();
+  const { role, user } = useAuth();
   const [isPending, setIsPending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [clinic, setClinic] = useState(null);
@@ -25,7 +25,7 @@ export const ClinicStatusProvider = ({ children }) => {
       }
 
       try {
-        const res = await fetchClinicByOwnerId(user.id, token);
+        const res = await fetchClinicByOwnerId(user.id);
 
         if (!res || !res.clinic) {
           console.log("Clinic does not exist");
@@ -43,7 +43,7 @@ export const ClinicStatusProvider = ({ children }) => {
     };
 
     initializeClinicStatus();
-  }, [user, role, token]);
+  }, [user, role]);
 
   return (
     <ClinicStatusContext.Provider

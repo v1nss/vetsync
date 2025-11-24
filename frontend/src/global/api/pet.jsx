@@ -1,12 +1,9 @@
-import axios from 'axios';
+import axiosInstance from '../../utils/axiosInstance.js';
 
-const BASE_URL = import.meta.env.VITE_BACKEND_URL;
-
-export const registerPet = async (token, petData) => {
+export const registerPet = async (petData) => {
     try {
-        const res = await axios.post(`${BASE_URL}/pets/register`, petData, {
+        const res = await axiosInstance.post(`/pets/register`, petData, {
             headers: {
-                "Authorization": `Bearer ${token}`,
                 "Content-Type": "multipart/form-data"
             },
         })
@@ -18,13 +15,9 @@ export const registerPet = async (token, petData) => {
     }
 }
 
-export const fetchAllPetsById = async (token) => {
+export const fetchAllPetsById = async () => {
     try {
-        const res = await axios.get(`${BASE_URL}/pets`, {
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
-        })
+        const res = await axiosInstance.get(`/pets`)
         console.log("All pets successfully fetched by User ID", res)
         return res.data
     } catch (err) {

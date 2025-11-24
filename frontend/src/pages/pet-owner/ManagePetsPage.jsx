@@ -4,11 +4,9 @@ import { FaSearch, FaPlus, FaChevronLeft } from 'react-icons/fa';
 import PetItem from '../../components/PetItem';
 import PetDetail from '../../components/PetDetail';
 import Navbar from '../../components/Navbar';
-import { useAuth } from '../../context/AuthContext';
 import { fetchAllPetsById } from '../../global/api/pet';
 
 export default function ManagePetsPage() {
-  const { token } = useAuth();
   const navigate = useNavigate();
   const [selected, setSelected] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,7 +18,7 @@ export default function ManagePetsPage() {
       setLoading(true);
       setSelected(null);
       try {
-        const res = await fetchAllPetsById(token);
+        const res = await fetchAllPetsById();
         console.log(res)
         if (!res) {
           console.log("no pets exist");
@@ -37,7 +35,7 @@ export default function ManagePetsPage() {
     };
 
     fetchAllPets()
-  }, [token])
+  }, [])
 
   const handleAddPet = () => navigate('add');
 

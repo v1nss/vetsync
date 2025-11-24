@@ -4,7 +4,6 @@ import { FaChevronLeft } from 'react-icons/fa';
 import Navbar from '../../components/Navbar';
 import { registerPet } from '../../global/api/pet';
 import React from 'react';
-import { useAuth } from '../../context/AuthContext';
 
 const InputField = ({ label, name, value, onChange, error, required, ...props }) => (
   <div>
@@ -62,7 +61,6 @@ const ButtonGroup = ({ options, name, required, formData, handleChange, errors }
 );
 
 export default function AddPetPage() {
-  const {token} = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '', breed: '', gender: '', age: '', weight: '', color: '', species: '',
@@ -130,7 +128,7 @@ export default function AddPetPage() {
       if (petProfile) {
         data.append('file', petProfile); 
       }
-      const res = await registerPet(token, data);
+      const res = await registerPet(data);
       console.log("pet created Succesfully: ", res)
       navigate('/pet-owner/pets');
     } catch (err) {

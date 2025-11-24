@@ -1,12 +1,8 @@
-import axios from "axios";
+import axiosInstance from '../../utils/axiosInstance.js';
 
-const BASE_URL = import.meta.env.VITE_BACKEND_URL;
-
-export const fetchAllClinics = async (token, status="*") => {
+export const fetchAllClinics = async (status="*") => {
   try {
-    const res = await axios.get(`${BASE_URL}/system-admin/clinics?status=${status}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await axiosInstance.get(`/system-admin/clinics?status=${status}`);
     return res.data.clinics;
   } catch (err) {
     console.error("Unable to fetch clinics", err.message);
@@ -14,14 +10,11 @@ export const fetchAllClinics = async (token, status="*") => {
   }
 };
 
-export const updateClinicStatus = async (token, clinicId, status) => {
+export const updateClinicStatus = async (clinicId, status) => {
   try {
-    const res = await axios.patch(
-      `${BASE_URL}/system-admin/clinics/${clinicId}/status`,
-      { status },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
+    const res = await axiosInstance.patch(
+      `/system-admin/clinics/${clinicId}/status`,
+      { status }
     );
     return res.data;
   } catch (err) {

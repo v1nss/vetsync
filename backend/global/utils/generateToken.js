@@ -11,7 +11,7 @@ export const generateToken = (payload) => {
       userType: payload.user_type, // Ensure userType is included
     },
     process.env.JWT_SECRET,
-    { expiresIn: "1h" }
+    { expiresIn: "15m" }
   );
 };
 

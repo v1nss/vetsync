@@ -4,11 +4,9 @@ import Pagination from '../../components/Pagination';
 import ClinicTable from '../../components/clinic/ClinicTable';
 import ClinicMobileCards from '../../components/clinic/ClinicMobileCards';
 import ReviewModal from '../../components/clinic/ReviewModal';
-import { useAuth } from '../../context/AuthContext';
 import { fetchAllClinics, updateClinicStatus } from '../../global/api/systemAdmin';
 
 export default function ClinicManagementPage() {
-  const {token} = useAuth();
   const [clinics, setClinics] = useState([]);
   const [filteredClinics, setFilteredClinics] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -25,7 +23,7 @@ export default function ClinicManagementPage() {
 useEffect(() => {
   const getClinics = async () => {
     try {
-      const data = await fetchAllClinics(token);
+      const data = await fetchAllClinics();
       setClinics(Array.isArray(data) ? data : []); // <-- ensures array
       setFilteredClinics(Array.isArray(data) ? data : []);
       // console.log(data)
@@ -37,7 +35,7 @@ useEffect(() => {
     }
   };
   getClinics();
-}, [token]);
+}, []);
 
   useEffect(() => {
     let result = clinics;
@@ -61,7 +59,7 @@ useEffect(() => {
   const handleStatusUpdate = async (clinicId, newStatus) => {
     setLoading(true);
     try {
-      await updateClinicStatus(token, clinicId, newStatus);
+      await updateClinicStatus(clinicId, newStatus);
       
       // Update the local state after successful API call
       setClinics(prev =>

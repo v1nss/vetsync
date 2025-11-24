@@ -190,7 +190,7 @@ export default function RegisterClinicPage() {
       );
       login(user, token);
       // register the clinic (only after user is registered and logged in)
-      const clinicResponse = await registerClinic(formData, token);
+      const clinicResponse = await registerClinic(formData);
 
       setSubmitStatus("submitted");
     } catch (err) {
