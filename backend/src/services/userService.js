@@ -7,11 +7,11 @@ import { uploadFiles } from "../../global/utils/drive.js";
 
 export const registerUser = async (userData) => {
   const { body, file } = userData;
-
+  console.log("Received body: ", file);
   // Parse the user JSON sent in form-data
   const user = JSON.parse(body.user);
+  console.log("Parsed user data: ", user);
   const { full_name, email, password, user_type, address, clinic_name } = user;
-
   // Check if email already exists
   const existing = await User.findOne({ where: { email } });
   if (existing) throw new Error("Email already registered");

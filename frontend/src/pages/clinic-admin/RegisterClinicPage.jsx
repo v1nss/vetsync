@@ -180,14 +180,14 @@ export default function RegisterClinicPage() {
     };
 
     try {
+      var userData = new FormData();
+      userData.append('user', JSON.stringify(updatedUserData));
+      if (receivedUserData.profilePicture) userData.append('file', receivedUserData.profilePicture);
       // register user
-      const registerResponse = await registerUser(updatedUserData);
+      const registerResponse = await registerUser(userData);
 
       // automatically log in the user
-      const data = await loginUser(
-        updatedUserData.email,
-        updatedUserData.password
-      );
+      login(receivedUserData.user.email, receivedUserData.user.password);
       // login returns user object through context
       // register the clinic (only after user is registered and logged in)
       const clinicResponse = await registerClinic(formData);

@@ -8,6 +8,7 @@ import {
 
 export const register = async (req, res) => {
   try {
+    console.log("HELO ", req.body)
     const user = await registerUser(req);
     res.status(201).json({ message: "User registered successfully", user });
   } catch (err) {
