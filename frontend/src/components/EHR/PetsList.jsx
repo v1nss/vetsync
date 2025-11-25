@@ -1,6 +1,39 @@
 import { FiSearch, FiChevronRight } from "react-icons/fi";
 
 export default function PetsList({ pets, searchTerm, setSearchTerm, onSelect }) {
+  // Calculate age from birthdate
+  const calculateAge = (birthdate) => {
+    if (!birthdate) return "Age unknown";
+    
+    const birth = new Date(birthdate);
+    const today = new Date();
+    
+    let years = today.getFullYear() - birth.getFullYear();
+    let months = today.getMonth() - birth.getMonth();
+    
+    // Adjust if birthday hasn't occurred this year
+    if (months < 0 || (months === 0 && today.getDate() < birth.getDate())) {
+      years--;
+      months += 12;
+    }
+    
+    // Adjust months if day hasn't occurred this month
+    if (today.getDate() < birth.getDate()) {
+      months--;
+    }
+    
+    // Format the age string
+    if (years === 0 && months === 0) {
+      return "Less than 1 month";
+    } else if (years === 0) {
+      return `${months} ${months === 1 ? 'month' : 'months'} old`;
+    } else if (months === 0) {
+      return `${years} ${years === 1 ? 'year' : 'years'} old`;
+    } else {
+      return `${years} ${years === 1 ? 'yr' : 'yrs'}, ${months} ${months === 1 ? 'mo' : 'mos'}`;
+    }
+  };
+
   return (
     <div className="p-4">
       <div className="mb-6">
@@ -47,13 +80,15 @@ export default function PetsList({ pets, searchTerm, setSearchTerm, onSelect }) 
                 <h3 className="font-semibold text-gray-900 text-lg mb-1 truncate">
                   {pet.name}
                 </h3>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm capitalize text-gray-600 mb-2">
                   {pet.species} • {pet.breed}
                 </p>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <span>ID: {pet.pet_id}</span>
                   <span>•</span>
-                  <span>{pet.age}</span>
+                  <span>{calculateAge(pet.birthdate)}</span>
+                  <span>•</span>
+                  <span>{pet.gender}</span>
                 </div>
               </div>
               <FiChevronRight className="text-gray-400 mt-5" />
