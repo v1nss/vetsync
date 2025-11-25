@@ -28,11 +28,12 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Don't intercept errors from login or refresh endpoints
-    const isLoginRequest = originalRequest.url?.includes('/auth/login');
-    const isRefreshRequest = originalRequest.url?.includes('/auth/refresh-token');
+    // Don't intercept errors from auth endpoints
+    const isAuthEndpoint = originalRequest.url?.includes('/auth/login') ||
+                           originalRequest.url?.includes('/auth/refresh-token') ||
+                           originalRequest.url?.includes('/auth/me');
     
-    if (isLoginRequest || isRefreshRequest) {
+    if (isAuthEndpoint) {
       return Promise.reject(error);
     }
 
@@ -58,11 +59,6 @@ api.interceptors.response.use(
         return api(originalRequest); // Retry original request
       } catch (refreshError) {
         processQueue(refreshError, null);
-        
-        // Redirect to login if refresh fails
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
         
         return Promise.reject(refreshError);
       } finally {
