@@ -192,7 +192,7 @@ export default function RegisterClinicPage() {
 
       // Step 2: Automatically log in the user
       await login(receivedUserData.user.email, receivedUserData.user.password);
-      navigate("/clinic-admin/pending");
+      
       // Step 3: Register the clinic with images
       const clinicFormData = new FormData();
       clinicFormData.append('clinic', JSON.stringify(formData));
@@ -210,6 +210,11 @@ export default function RegisterClinicPage() {
       const clinicResponse = await registerClinic(clinicFormData);
 
       setSubmitStatus("submitted");
+      
+      // Step 4: Navigate to pending page AFTER clinic is registered
+      setTimeout(() => {
+        navigate("/clinic-admin/pending", { replace: true });
+      }, 1000);
     } catch (err) {
       console.error("Error during registration process:", err);
       setSubmitStatus(null);

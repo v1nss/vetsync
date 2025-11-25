@@ -12,7 +12,7 @@ const uploadMultipleFiles = async (files, folderId) => {
   return uploadedFiles.map(file => ({
     id: file.id,
     name: file.name,
-    // Primary link - Googleusercontent (most reliable for embedding)
+    // Primary link - Googleusercontent 
     link: `https://lh3.googleusercontent.com/d/${file.id}`,
     // Alternative links for fallback
     viewLink: file.webViewLink,
@@ -29,9 +29,9 @@ export const registerNewClinic = async (req, res) => {
     const adminUserId = req.user.id; // from JWT
     const clinicData = JSON.parse(req.body.clinic || '{}');
     
-    // Google Drive folder IDs (you should configure these in your .env file)
-    const CLINIC_IMAGES_FOLDER_ID = process.env.CLINIC_IMAGES_FOLDER_ID || '1uXnEOyxKvuF_lW5UvGrINl14dj8-iNY6';
-    const DOCUMENT_IMAGES_FOLDER_ID = process.env.DOCUMENT_IMAGES_FOLDER_ID || '1nMs4emTaVxXOsQLvee3BYUCMY789wSWF';
+    // Google Drive folder IDs
+    const CLINIC_IMAGES_FOLDER_ID = process.env.CLINIC_IMAGES_FOLDER_ID;
+    const DOCUMENT_IMAGES_FOLDER_ID = process.env.DOCUMENT_IMAGES_FOLDER_ID;
     
     // Upload clinic images if provided
     let clinicImages = [];
@@ -75,8 +75,8 @@ export const updateClinicDetails = async (req, res) => {
     const currentClinic = await getClinicByOwnerId(adminUserId);
     
     // Google Drive folder IDs
-    const CLINIC_IMAGES_FOLDER_ID = process.env.CLINIC_IMAGES_FOLDER_ID || '1uXnEOyxKvuF_lW5UvGrINl14dj8-iNY6';
-    const DOCUMENT_IMAGES_FOLDER_ID = process.env.DOCUMENT_IMAGES_FOLDER_ID || '1nMs4emTaVxXOsQLvee3BYUCMY789wSWF';
+    const CLINIC_IMAGES_FOLDER_ID = process.env.CLINIC_IMAGES_FOLDER_ID;
+    const DOCUMENT_IMAGES_FOLDER_ID = process.env.DOCUMENT_IMAGES_FOLDER_ID;
     
     // Find deleted clinic images
     const deletedClinicImageIds = (currentClinic.clinic_images || [])
@@ -141,9 +141,25 @@ export const fetchClinicByOwnerId = async (req, res) => {
     const ownerId = req.params.ownerId
     const clinic = await getClinicByOwnerId(ownerId);
 
-    res.status(200).json({message: "Clinic fetched successfully", clinic: clinic})
+    if (!clinic) {
+      return res.status(200).json({
+        message: "No clinic registered yet", 
+        clinic: null,
+        hasClinic: false
+      });
+    }
+
+    res.status(200).json({
+      message: "Clinic fetched successfully", 
+      clinic: clinic,
+      hasClinic: true
+    });
   } catch (err) {
-    console.error ("Unable to fetch Clinic Data using Owner ID")
+    console.error("Unable to fetch Clinic Data using Owner ID", err.message);
+    res.status(500).json({ 
+      message: "Error fetching clinic", 
+      error: err.message 
+    });
   }
 }
 
@@ -153,10 +169,19 @@ export const fetchMyClinic = async (req, res) => {
     const clinic = await getClinicByOwnerId(ownerId);
 
     if (!clinic) {
-      return res.status(404).json({ message: "Clinic not found" });
+      // Not an error - admin just hasn't registered a clinic yet
+      return res.status(200).json({ 
+        message: "No clinic registered yet", 
+        clinic: null,
+        hasClinic: false 
+      });
     }
 
-    res.status(200).json({ message: "Clinic fetched successfully", clinic: clinic });
+    res.status(200).json({ 
+      message: "Clinic fetched successfully", 
+      clinic: clinic,
+      hasClinic: true 
+    });
   } catch (err) {
     console.error("Unable to fetch Clinic Data", err.message);
     res.status(500).json({ message: "Error fetching clinic", error: err.message });

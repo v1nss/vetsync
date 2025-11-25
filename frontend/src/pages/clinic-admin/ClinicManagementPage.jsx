@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { FaEdit, FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock, FaImage, FaSave, FaTimes, FaPlus, FaCamera, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaEdit, FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock, FaImage, FaSave, FaTimes, FaPlus, FaCamera, FaChevronLeft, FaChevronRight, FaExpand, FaClinicMedical } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import { fetchMyClinic, updateClinic } from "../../global/api/clinicAdmin";
 import DriveImage from "../../components/DriveImage";
+import ImageViewerModal from "../../components/ImageViewerModal";
 
 export default function ClinicManagementPage() {
   const { token } = useAuth();
@@ -13,15 +14,21 @@ export default function ClinicManagementPage() {
   const [newService, setNewService] = useState("");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentDocImageIndex, setCurrentDocImageIndex] = useState(0);
+  
+  // Full-screen image viewer
+  const [viewerImages, setViewerImages] = useState(null);
+  const [viewerIndex, setViewerIndex] = useState(null);
 
   useEffect(() => {
     fetchMyClinic()
       .then(data => { 
-        setClinic(data); 
-        setEditedClinic(data); 
-        // Reset image indices when data loads
-        setCurrentImageIndex(0);
-        setCurrentDocImageIndex(0);
+        if (data) {
+          setClinic(data); 
+          setEditedClinic(data); 
+          // Reset image indices when data loads
+          setCurrentImageIndex(0);
+          setCurrentDocImageIndex(0);
+        }
       })
       .catch(err => console.error("Failed to fetch clinic data:", err))
       .finally(() => setLoading(false));
@@ -43,6 +50,16 @@ export default function ClinicManagementPage() {
     } finally {
       setLoading(false);
     }
+  };
+  
+  const openImageViewer = (images, index) => {
+    setViewerImages(images);
+    setViewerIndex(index);
+  };
+  
+  const closeImageViewer = () => {
+    setViewerImages(null);
+    setViewerIndex(null);
   };
 
   const handleInputChange = (field, value) => setEditedClinic(prev => ({ ...prev, [field]: value }));
@@ -187,14 +204,21 @@ export default function ClinicManagementPage() {
                     Clinic Photos
                   </h3>
                 </div>
-                <div className="relative aspect-square">
+                <div className="relative aspect-square group">
                   {currentData?.clinic_images && currentData.clinic_images.length > 0 ? (
                     <>
                       <DriveImage 
                         image={currentData.clinic_images[currentImageIndex]} 
                         alt={currentData.clinic_images[currentImageIndex]?.name || 'Clinic image'} 
-                        className="w-full h-full object-cover" 
+                        className="w-full h-full object-cover cursor-pointer" 
                       />
+                      {/* Full Screen Button */}
+                      <button
+                        onClick={() => openImageViewer(currentData.clinic_images, currentImageIndex)}
+                        className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-lg transition opacity-0 group-hover:opacity-100"
+                      >
+                        <FaExpand />
+                      </button>
                       {currentData.clinic_images.length > 1 && (
                         <>
                           <button 
@@ -478,6 +502,14 @@ export default function ClinicManagementPage() {
           </div>
         </div>
       </div>
+      
+      {/* Full-Screen Image Viewer */}
+      <ImageViewerModal
+        images={viewerImages}
+        currentIndex={viewerIndex}
+        onClose={closeImageViewer}
+        onNavigate={setViewerIndex}
+      />
     </main>
   );
 }
