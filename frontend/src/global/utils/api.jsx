@@ -28,6 +28,14 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Don't intercept errors from login or refresh endpoints
+    const isLoginRequest = originalRequest.url?.includes('/auth/login');
+    const isRefreshRequest = originalRequest.url?.includes('/auth/refresh-token');
+    
+    if (isLoginRequest || isRefreshRequest) {
+      return Promise.reject(error);
+    }
+
     // If error is 401 and we haven't tried to refresh yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {

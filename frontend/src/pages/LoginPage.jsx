@@ -1,12 +1,8 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaEye, FaEyeSlash } from "react-icons/fa";
-
-// import {useAuth} from "../context/AuthContext.jsx";
-import { loginUser } from "../global/api/auth.jsx";
-import { checkEmailExists } from "../global/api/user.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 export default function LoginPage() {
@@ -48,18 +44,10 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            // Check if email exists first
-            const emailExists = await checkEmailExists(email);
-            if (!emailExists) {
-                setErrors({ email: "Email not registered. Please sign up first." });
-                setIsLoading(false);
-                return;
-            }
-
-            // const { user, token } = await loginUser(email, password);
+            // Attempt login
             const user = await login(email, password);
-            // console.log("Logged in user:", user?.user_type);
             
+            // Navigate based on user type
             switch (user.user_type) {
                 case "clinic_admin":
                     navigate("/admin/clinic", { replace: true });
@@ -84,16 +72,14 @@ export default function LoginPage() {
                 const status = err.response.status;
                 const data = err.response.data;
                 
-                if (status === 400) {
-                    errorMessage = data?.message || data?.error || "Invalid credentials. Please check your email and password.";
-                } else if (status === 401) {
-                    errorMessage = "Invalid email or password.";
+                if (status === 400 || status === 401) {
+                    errorMessage = data?.error || data?.message || "Invalid email or password.";
                 } else if (status === 404) {
-                    errorMessage = "Account not found. Please check your email.";
+                    errorMessage = data?.error || data?.message || "Account not found.";
                 } else if (status === 500) {
                     errorMessage = "Server error. Please try again later.";
                 } else {
-                    errorMessage = data?.message || data?.error || "Login failed. Please try again.";
+                    errorMessage = data?.error || data?.message || "Login failed. Please try again.";
                 }
             } else if (err.request) {
                 // Request made but no response
@@ -104,7 +90,6 @@ export default function LoginPage() {
             }
             
             setLoginError(errorMessage);
-        } finally {
             setIsLoading(false);
         }
     };
