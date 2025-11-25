@@ -66,7 +66,7 @@ export default function AddPetPage() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '', breed: '', gender: '', age: '', weight: '', color: '', species: '',
-    dateOfBirth: '', allergies: '', medications: '', notes: '', image: null
+    birthdate: '', allergies: '', medications: '', notes: '', image: null
   });
   const [petProfile, setPetProfile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -200,7 +200,7 @@ export default function AddPetPage() {
               handleChange={handleChange}
               errors={errors}
             />            
-            <InputField label="Date of Birth" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} type="date" />
+            <InputField label="Date of Birth" name="birthdate" value={formData.birthdate} onChange={handleChange} type="date" />
             <div className="grid grid-cols-2 gap-3">
               <InputField label="Age" name="age" value={formData.age} onChange={handleChange} error={errors.age} required placeholder="e.g., 2y" />
               <InputField label="Weight" name="weight" value={formData.weight} onChange={handleChange} error={errors.weight} required placeholder="e.g., 8kg" />
@@ -278,7 +278,7 @@ export default function AddPetPage() {
                   handleChange={handleChange}
                   errors={errors}
                 />                
-                <InputField label="Date of Birth" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} type="date" />
+                <InputField label="Date of Birth" name="birthdate" value={formData.birthdate} onChange={handleChange} type="date" />
                 <div className="grid grid-cols-2 gap-3">
                   <InputField label="Age" name="age" value={formData.age} onChange={handleChange} error={errors.age} required placeholder="e.g., 2y" />
                   <InputField label="Weight" name="weight" value={formData.weight} onChange={handleChange} error={errors.weight} required placeholder="e.g., 8kg" />

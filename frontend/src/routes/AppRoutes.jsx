@@ -27,6 +27,8 @@ import ClinicAdminLayout from "../pages/clinic-admin/ClinicAdminLayout";
 import VetProManagementPage from "../pages/clinic-admin/VetProManagementPage";
 import ClinicAdminEHRPage from "../pages/clinic-admin/ClinicAdminEHRPage";
 import SystemAdminLayout from "../pages/system-admin/SystemAdminLayout";
+import RejectedClinicPage from "../pages/clinic-admin/RejectedClinicPage";
+import EditClinicPage from "../pages/clinic-admin/EditClinicPage";
 
 // Public routes (no auth required)
 const PublicRoute = () => {
@@ -56,7 +58,7 @@ const PetOwnerRoute = () => {
 };
 
 const ClinicAdminRoute = () => {
-  const { isPending, loading: clinicLoading } = useContext(ClinicStatusContext);
+  const { isRejected, isPending, loading: clinicLoading } = useContext(ClinicStatusContext);
   const { role, loading: authLoading } = useAuth();
   const location = useLocation();
 
@@ -67,6 +69,8 @@ const ClinicAdminRoute = () => {
 
   if (role === "clinic_admin" && isPending && location.pathname !== "/clinic-admin/pending") {
     return <Navigate to="/clinic-admin/pending" replace />;
+  } else if (role === "clinic_admin" && isRejected && location.pathname !== "/clinic-admin/rejected") {
+    return <Navigate to="/clinic-admin/rejected" replace />;
   }
 
   return role === "clinic_admin" ? <Outlet /> : <Navigate to="/unauthorized" replace />;
@@ -156,6 +160,8 @@ const AppRoutes = () => (
                     <Route path="register-vet" element={<RegisterVetProPage />} />
                 </Route>
                 <Route path="pending" element={<PendingClinicPage />} />
+                <Route path="rejected" element={<RejectedClinicPage />} />
+                <Route path="clinic/edit" element={<EditClinicPage />} />
             </Route>
 
             {/* Vet Professional Routes */}
