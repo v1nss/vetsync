@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FaSearch,
   FaChevronRight,
@@ -14,15 +14,53 @@ import {
 } from "react-icons/fa";
 import Navbar from "../../components/Navbar";
 import { useNavigate } from "react-router";
+import { fetchAllPetsById } from "../../global/api/pet";
+import { useAuth } from "../../context/AuthContext";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
+  const { user, token } = useAuth();
+  
+  // Get full name with fallback
+  const fullName = user?.full_name || user?.email || 'User';
 
-  const [pets] = useState([
-    { id: 1, name: "Max", image: "🐕", gender: "male" },
-    { id: 2, name: "Mimi", image: "🐱", gender: "female" },
-    { id: 3, name: "Bruno", image: "🐕", gender: "male" },
-  ]);
+  // Get initials from name
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    return name
+      .split(" ")
+      .map(n => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const [loading, setLoading] = useState(true);
+  const [pets, setPets] = useState([])
+  
+    useEffect(() => {
+      const fetchAllPets = async () => {
+        setLoading(true);
+        // setSelected(null);
+        try {
+          const res = await fetchAllPetsById(token);
+          console.log(res)
+          if (!res) {
+            console.log("no pets exist");
+            setPets(null);
+            setIsPending(false);
+          } else {
+            setPets(res);
+          }
+        } catch (err) {
+          console.error("Unable to get pets by ID:", err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchAllPets()
+    }, [])
 
   const settingsOptions = [
     { icon: FaBell, label: "Notifications", section: "other" },
@@ -36,10 +74,20 @@ export default function SettingsPage() {
   // Reusable Components
   const ProfileButton = ({ className = "" }) => (
     <button className={`w-full flex items-center hover:bg-gray-50 rounded-2xl transition ${className}`}>
-      <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-gray-200"></div>
+      <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-lg">
+        {user?.profile_image_url?.link ? (
+          <img
+            src={user.profile_image_url.link}
+            alt={fullName}
+            className="w-full h-full object-cover rounded-full"
+          />
+        ) : (
+          getInitials(fullName)
+        )}
+      </div>
       <div className="flex-1 text-left ml-3 lg:ml-4">
-        <p className="font-semibold lg:text-lg">John Doe</p>
-        <p className="text-sm text-gray-500">Pet Owner</p>
+        <p className="font-semibold lg:text-lg">{fullName}</p>
+        <p className="text-sm text-gray-500">{user?.user_type?.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}</p>
       </div>
       <FaChevronRight className="text-gray-400 text-sm" />
     </button>
@@ -47,12 +95,22 @@ export default function SettingsPage() {
 
   const PetCard = ({ pet, onClick, className = "" }) => (
     <button
-      key={pet.id}
+      key={pet.pet_id}
       onClick={onClick}
       className={`hover:opacity-80 lg:hover:bg-gray-50 transition ${className}`}
     >
       <div className="w-full aspect-square lg:w-16 lg:h-16 lg:aspect-auto bg-gray-100 rounded-2xl lg:rounded-xl mb-4 lg:mb-0 flex items-center justify-center">
-        <img src={pet.image} alt={pet.name} />
+        {pet.profileURL?.link ? (
+          <img
+            src={pet.profileURL.link}
+            alt={pet.name}
+            className="w-full h-full object-cover rounded-2xl"
+          />
+        ) : (
+          <span className="text-2xl font-bold text-white">
+            {pet.name.charAt(0)}
+          </span>
+        )}
       </div>
       <div className="flex items-center justify-center lg:justify-start gap-1 lg:gap-2 lg:flex-1">
         <span className="text-sm lg:text-base font-medium">{pet.name}</span>
@@ -120,7 +178,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   {pets.map((pet) => (
-                    <PetCard key={pet.id} pet={pet} className="text-center" />
+                    <PetCard key={pet.pet_id} pet={pet} className="text-center" />
                   ))}
                 </div>
               </div>
@@ -180,7 +238,7 @@ export default function SettingsPage() {
                   <div className="space-y-2">
                     {pets.map((pet) => (
                       <PetCard 
-                        key={pet.id} 
+                        key={pet.pet_id} 
                         pet={pet} 
                         onClick={() => navigate("/pet-owner/pets")}
                         className="w-full flex items-center gap-3 rounded-xl p-2"

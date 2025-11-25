@@ -1,4 +1,5 @@
 import express from "express";
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import { syncDB } from "./models/index.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -17,6 +18,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+app.use(cookieParser());
 
 //user Routes
 app.use("/api/users", userRoutes);

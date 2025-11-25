@@ -13,12 +13,11 @@ export default function ClinicManagementPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
-    if (!token) return;
-    fetchMyClinic(token)
+    fetchMyClinic()
       .then(data => { setClinic(data); setEditedClinic(data); })
       .catch(err => console.error("Failed to fetch clinic data:", err))
       .finally(() => setLoading(false));
-  }, [token]);
+  }, []);
 
   const handleEdit = () => { setIsEditing(true); setEditedClinic({ ...clinic }); };
   const handleCancel = () => { setIsEditing(false); setEditedClinic({ ...clinic }); };

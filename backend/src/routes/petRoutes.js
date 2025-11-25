@@ -7,19 +7,19 @@ import {
   deletePet,
   updatePet
 } from "../controllers/petController.js";
-import { verifyToken, verifyOwner } from "../../global/middleware/authMiddleware.js";
+import { authenticate, verifyOwner } from "../../global/middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/register", upload.single('file'), verifyToken, verifyOwner, createPet);
+router.post("/register", upload.single('file'), authenticate, verifyOwner, createPet);
 
-router.get("/", verifyToken, verifyOwner, getMyPets);
+router.get("/", authenticate, verifyOwner, getMyPets);
 
-router.get("/:pet_id", verifyToken, verifyOwner, getPetById);
+router.get("/:pet_id", authenticate, verifyOwner, getPetById);
 
-router.patch("/:pet_id", verifyToken, verifyOwner, updatePet);
+router.patch("/:pet_id", authenticate, verifyOwner, updatePet);
 
-router.delete("/:pet_id", verifyToken, verifyOwner, deletePet);
+router.delete("/:pet_id", authenticate, verifyOwner, deletePet);
 
 
 export default router;

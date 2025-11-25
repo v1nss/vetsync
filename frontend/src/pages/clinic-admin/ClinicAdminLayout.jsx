@@ -25,10 +25,9 @@ export default function ClinicAdminLayout() {
   };
 
   useEffect(() => {
-    if (!token) return;
-    fetchMyClinic(token)
+    fetchMyClinic()
       .catch(err => console.error("Failed to fetch clinic data:", err));
-  }, [token]);
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-gray-50">

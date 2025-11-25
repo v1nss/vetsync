@@ -1,43 +1,41 @@
-import axios from 'axios';
-
-import { saveToken, saveRefreshToken, getRefreshToken } from '../utils/token.jsx';
-
-const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+import api from '../utils/api.jsx';
 
 export const loginUser = async (email, password) => {
     try {
-        const res = await axios.post(`${BASE_URL}/auth/login`, { email, password });
-        const { token, refreshToken, user } = res.data;
-
-        saveToken(token);
-        saveRefreshToken(refreshToken);
-
+        const res = await api.post("/auth/login", { email, password });
         return res.data;
     } catch (err) {
-        console.error('Login failed:', err.message);
+        console.error('Login failed:', err);
+        throw err;
+    }
+};
+
+export const logoutUser = async () => {
+    try {
+        const res = await api.post("/auth/logout");
+        return res.data;
+    } catch (err) {
+        console.error('Logout failed:', err);
         throw err;
     }
 };
 
 export const refreshAuthToken = async () => {
-    const refreshToken = getRefreshToken();
-
-    if (!refreshToken) {
-        console.error("No refresh token available");
-        throw new Error("No refresh token available");
-    }
-
     try {
-        const res = await axios.post(`${BASE_URL}/auth/refresh-token`, 
-            { }, // TO BE FIXED
-            { withCredentials: true }
-        );
-
-        const {token} = res.data;
-        saveToken(token);
-        return token;
+        const res = await api.post("/auth/refresh-token");
+        return res.data;
     } catch (err) {
-        console.error('Token refresh failed:', err.message);
+        console.error('Token refresh failed:', err);
+        throw err;
+    }
+};
+
+export const getCurrentUser = async () => {
+    try {
+        const res = await api.get("/auth/me");
+        return res.data;
+    } catch (err) {
+        console.error('Get current user failed:', err);
         throw err;
     }
 };

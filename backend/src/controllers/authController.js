@@ -1,43 +1,118 @@
-import { loginUser, generateRefreshTokenService } from "../services/authService.js";
+import { loginUser, refreshAccessToken } from "../services/authService.js";
+import User from "../models/users/userModel.js";
 
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const { user, token, refreshToken } = await loginUser({ email, password });
-    console.log("token", token);
-    res.status(200).json({
+
+    // Set httpOnly cookies for security
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    res.cookie("authToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      maxAge: 60 * 60 * 1000, // 1 hour
+    });
+
+    return res.status(200).json({
       message: "Login successful",
-      token,
-      refreshToken,
       user,
     });
   } catch (err) {
-    console.error("Unable to Login User", err.message);
-    res.status(400).json({ error: err.message });
+    console.error("Login error:", err.message);
+    
+    // Send appropriate error messages
+    if (err.message === 'User not found') {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    if (err.message === 'Invalid credentials') {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+    
+    return res.status(400).json({ error: err.message });
   }
 };
 
 export const logout = async (req, res) => {
   try {
+    // Clear auth cookies
+    res.clearCookie("authToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+    });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+    });
+
+    return res.status(200).json({ message: "Logout successful" });
   } catch (err) {
-    console.error("Unable to logout User", err.message);
-    res.status(400).json({ error: err.message });
+    console.error("Logout error:", err.message);
+    return res.status(500).json({ error: "Logout failed" });
   }
-  return;
 };
 
-export const generateRefreshToken = async (req, res) => {
+export const refreshToken = async (req, res) => {
   try {
-    const { refreshToken } = req.body;
+    const refreshToken = req.cookies.refreshToken;
+    
     if (!refreshToken) {
-      return res.status(400).json({ error: "No refresh token provided" });
+      return res.status(401).json({ error: "No refresh token provided" });
     }
 
-    await generateRefreshTokenService(refreshToken);
+    const newAccessToken = await refreshAccessToken(refreshToken);
 
-    return res.status(200).json({ message: "Refresh Token Generated" });
+    // Set new access token cookie
+    res.cookie("authToken", newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      maxAge: 60 * 60 * 1000, // 1 hour
+    });
+
+    return res.status(200).json({ 
+      message: "Token refreshed successfully"
+    });
   } catch (err) {
-    console.error("Unable to generate refresh token", err.message);
-    res.status(400).json({ error: err.message });
+    console.error("Token refresh error:", err.message);
+    
+    // Clear invalid cookies
+    res.clearCookie("authToken");
+    res.clearCookie("refreshToken");
+    
+    return res.status(401).json({ error: err.message });
   }
-}
+};
+
+export const getMe = async (req, res) => {
+  try {
+    // req.user is already attached by authenticate middleware
+    const user = req.user;
+
+    // Return user without password
+    const userResponse = {
+      id: user.id,
+      email: user.email,
+      user_type: user.user_type,
+      full_name: user.full_name,
+      phone_number: user.phone_number,
+      profile_image_url: user.profile_image_url,
+      createdAt: user.createdAt,
+    };
+
+    return res.status(200).json({ user: userResponse });
+  } catch (err) {
+    console.error("Get user error:", err);
+    return res.status(500).json({ message: "Error fetching user" });
+  }
+};

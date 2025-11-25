@@ -1,15 +1,15 @@
 import express from 'express';
-import { verifyToken, verifyClinicAdmin } from '../../global/middleware/authMiddleware.js';
+import { authenticate, verifyClinicAdmin } from '../../global/middleware/authMiddleware.js';
 import { createNewAppointment, acceptAppointmentRequest, completeAppointmentRequest } from '../controllers/appointmentController.js';
 
 const router = express.Router();
 
 // endpoints not finalized yet
 // Create new appointment - only pet owners
-router.post('/create', verifyToken, createNewAppointment);
+router.post('/create', authenticate, createNewAppointment);
 
-router.patch('/accept/:appointmentId', verifyToken, verifyClinicAdmin, acceptAppointmentRequest);
+router.patch('/accept/:appointmentId', authenticate, verifyClinicAdmin, acceptAppointmentRequest);
 
-router.patch('/complete/:appointmentId', verifyToken, completeAppointmentRequest);
+router.patch('/complete/:appointmentId', authenticate, completeAppointmentRequest);
 
 export default router;
