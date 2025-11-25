@@ -26,9 +26,9 @@ export default function ProfileDropdown() {
         {/* Profile Button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center space-x-3 bg-white px-4 py-2 transition-all duration-200"
+          className="flex items-center space-x-3 px-4 py-2 transition-all duration-200"
         >
-          <div className="w-8 h-8 rounded-full flex items-center justify-center font-semibold overflow-hidden">
+          <div className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center font-semibold overflow-hidden">
             {user.profile_image_url?.link ? (
               <img
                 src={user.profile_image_url.link}
