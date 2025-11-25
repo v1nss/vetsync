@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { updateClinic } from "../../global/api/clinic";
+// import { updateClinic } from "../../global/api/clinic";
 import { useAuth } from "../../context/AuthContext";
 import { FaChevronLeft, FaChevronRight, FaCamera, FaTimes } from "react-icons/fa";
 import Navbar from "../../components/Navbar";
@@ -204,7 +204,7 @@ export default function EditClinicPage() {
         clinic_id: existingClinic.clinic_id,
       };
       
-      await updateClinic(clinicDataWithFiles, token);
+      // await updateClinic(clinicDataWithFiles, token);
       
       setSubmitStatus("submitted");
       
