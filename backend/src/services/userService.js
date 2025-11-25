@@ -19,15 +19,21 @@ export const registerUser = async (userData) => {
   // Upload profile image if provided
   let userProfile = null;
   if (file) {
-    const { id: fileId, name: fileName } = await uploadFiles(
+    const uploadedFile = await uploadFiles(
       file,
       process.env.GDRIVE_FOLDER_ID
     );
 
     userProfile = {
-      id: fileId,
-      name: fileName,
-      link: `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`,
+      id: uploadedFile.id,
+      name: uploadedFile.name,
+      // Primary link - Googleusercontent (most reliable)
+      link: `https://lh3.googleusercontent.com/d/${uploadedFile.id}`,
+      // Alternative links for fallback
+      viewLink: uploadedFile.webViewLink,
+      downloadLink: uploadedFile.webContentLink,
+      // Thumbnail for optimization
+      thumbnail: `https://drive.google.com/thumbnail?id=${uploadedFile.id}&sz=w400`
     };
   }
 

@@ -37,6 +37,16 @@ const Clinic = sequelize.define( "Clinic", {
       type: DataTypes.STRING,
       allowNull: true,
     },
+    clinic_images: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      comment: "Array of clinic photo URLs/objects"
+    },
+    document_images: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      comment: "Array of required document URLs/objects (licenses, permits, etc.)"
+    },
     status: {
       type: DataTypes.ENUM("pending", "approved", "rejected"),
       defaultValue: "pending",

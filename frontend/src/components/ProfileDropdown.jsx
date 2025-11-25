@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FaUser, FaCog, FaPaw, FaCalendarAlt, FaSignOutAlt, FaChevronDown } from 'react-icons/fa';
 import { useAuth } from "../context/AuthContext";
 import { Link } from 'react-router';
+import DriveImage from './DriveImage';
 
 export default function ProfileDropdown() {
   const { logout, user } = useAuth();
@@ -43,15 +44,15 @@ export default function ProfileDropdown() {
           className="flex items-center space-x-3 px-4 py-2 transition-all duration-200"
         >
           <div className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center font-semibold overflow-hidden text-sm bg-primary text-white">
-            {user?.profile_image_url?.link ? (
-              <img
-                src={user.profile_image_url.link}
+            {user?.profile_image_url ? (
+              <DriveImage
+                image={user.profile_image_url}
                 alt={fullName}
                 className="w-full h-full object-cover"
+                fallbackIcon={false}
               />
-            ) : (
-              getInitials(fullName)
-            )}
+            ) : null}
+            {!user?.profile_image_url && getInitials(fullName)}
           </div>
           <FaChevronDown 
             className={`text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
@@ -65,15 +66,15 @@ export default function ProfileDropdown() {
             <div className="px-4 py-3 border-b border-gray-100">
               <div className="flex items-center space-x-2">
                 <div className="w-10 h-10 border border-gray-300 rounded-full flex items-center justify-center overflow-hidden bg-primary text-white font-semibold">
-                  {user?.profile_image_url?.link ? (
-                    <img
-                      src={user.profile_image_url.link}
+                  {user?.profile_image_url ? (
+                    <DriveImage
+                      image={user.profile_image_url}
                       alt={fullName}
                       className="w-full h-full object-cover"
+                      fallbackIcon={false}
                     />
-                  ) : (
-                    getInitials(fullName)
-                  )}
+                  ) : null}
+                  {!user?.profile_image_url && getInitials(fullName)}
                 </div>
                 <div>
                   <p className="font-semibold text-gray-800">{fullName}</p>

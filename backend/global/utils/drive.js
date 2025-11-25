@@ -17,18 +17,20 @@ export const uploadFiles = async (file, folder_id) => {
         name: file.originalname,
         parents: [folder_id],
       },
-      fields: "id,name",
+      fields: "id,name,webViewLink,webContentLink",
     });
 
+    // Set file permissions to public
     await drive.permissions.create({
       fileId: data.id,
       requestBody: {
         type: "anyone",
         role: "reader",
-      }
+      },
+      fields: "id"
     });
 
-    // delete the local file after upload
+    // Delete the local file after upload
     fs.unlinkSync(file.path);
 
     return data;
@@ -39,15 +41,32 @@ export const uploadFiles = async (file, folder_id) => {
 };
 
 export const deleteFiles = async (fileID) => {
-    try {
-        const {data} = await google
-            .drive({version: 'v3', auth: authorize})
-            .files.delete({
-                fileId: fileID,
-            });
+  try {
+    const drive = google.drive({ version: 'v3', auth: oauth2Client });
+    
+    await drive.files.delete({
+      fileId: fileID,
+    });
+    
+    console.log(`File ${fileID} deleted from Google Drive`);
+    return { success: true, fileId: fileID };
+  } catch (err) {
+    console.error("Delete file error:", err.message);
+    throw err;
+  }
+};
 
-            return data;
-    } catch (err) {
-        console.log(err.message);
-    }
-}
+// Delete multiple files
+export const deleteMultipleFiles = async (fileIDs) => {
+  if (!fileIDs || fileIDs.length === 0) return [];
+  
+  const deletePromises = fileIDs.map(id => deleteFiles(id));
+  const results = await Promise.allSettled(deletePromises);
+  
+  // Return results with success/failure status
+  return results.map((result, index) => ({
+    fileId: fileIDs[index],
+    success: result.status === 'fulfilled',
+    error: result.reason?.message
+  }));
+};

@@ -5,10 +5,12 @@ import { useAuth } from "./AuthContext";
 export const ClinicStatusContext = createContext();
 
 export const ClinicStatusProvider = ({ children }) => {
-  const { role, user, token } = useAuth();
+  const { role, user } = useAuth();
   const [isPending, setIsPending] = useState(false);
+  const [isRejected, setIsRejected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [clinic, setClinic] = useState(null);
+  const [clinicStatus, setClinicStatus] = useState(null);
 
   useEffect(() => {
     // only fetch once role and user are ready
@@ -25,12 +27,15 @@ export const ClinicStatusProvider = ({ children }) => {
       }
 
       try {
-        const res = await fetchClinicByOwnerId(user.id, token);
+        const res = await fetchClinicByOwnerId(user.id);
 
         if (!res || !res.clinic) {
           console.log("Clinic does not exist");
           setClinic(null);
           setIsPending(false);
+        } else if (res.clinic.status === "rejected") {
+          setIsRejected(true);
+          setClinic(res.clinic);
         } else {
           setClinic(res.clinic);
           setIsPending(res.clinic.status === "pending");
@@ -43,11 +48,12 @@ export const ClinicStatusProvider = ({ children }) => {
     };
 
     initializeClinicStatus();
-  }, [user, role, token]);
+  }, [user, role]);
 
   return (
     <ClinicStatusContext.Provider
       value={{
+        isRejected,
         isPending,
         loading,
         clinic, // optional — might be useful later
