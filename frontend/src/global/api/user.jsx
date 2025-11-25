@@ -1,4 +1,5 @@
 import axios from 'axios';
+import api from '../utils/api.jsx';
 
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -43,7 +44,8 @@ export const registerUser = async (userData) => {
 
 export const checkEmailExists = async (email) => {
     try {
-        const res = await axios.put(`${BASE_URL}/users/email-check`, { email });
+        const res = await axios.put(`${BASE_URL}/users/email-check`, {email} );
+        console.log('Email check response data:', res.data);
         return res.data.exists;
     } catch (err) {
         console.error('Email check failed:', err.message);

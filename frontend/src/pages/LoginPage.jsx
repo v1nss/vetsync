@@ -4,13 +4,14 @@ import { Link } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaEye, FaEyeSlash } from "react-icons/fa";
 
-import {AuthContext} from "../context/AuthContext.jsx"
+// import {useAuth} from "../context/AuthContext.jsx";
 import { loginUser } from "../global/api/auth.jsx";
 import { checkEmailExists } from "../global/api/user.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function LoginPage() {
     const navigate = useNavigate();
-    const { login } = useContext(AuthContext);
+    const { login } = useAuth()
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -55,9 +56,9 @@ export default function LoginPage() {
                 return;
             }
 
-            const { user, token } = await loginUser(email, password);
-            login(user, token);
-            console.log("Logged in user:", user);
+            // const { user, token } = await loginUser(email, password);
+            const user = await login(email, password);
+            // console.log("Logged in user:", user?.user_type);
             
             switch (user.user_type) {
                 case "clinic_admin":

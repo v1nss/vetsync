@@ -130,7 +130,7 @@ export default function AddPetPage() {
       if (petProfile) {
         data.append('file', petProfile); 
       }
-      const res = await registerPet(token, data);
+      const res = await registerPet(data);
       console.log("pet created Succesfully: ", res)
       navigate('/pet-owner/pets');
     } catch (err) {

@@ -25,7 +25,7 @@ export default function PetOwnerEHR() {
       setLoading(true);
       // setSelected(null);
       try {
-        const res = await fetchAllPetsById(token);
+        const res = await fetchAllPetsById();
         console.log(res)
         if (!res) {
           console.log("no pets exist");

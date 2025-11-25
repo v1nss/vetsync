@@ -25,19 +25,19 @@ export default function ClinicManagementPage() {
 useEffect(() => {
   const getClinics = async () => {
     try {
-      const data = await fetchAllClinics(token);
+      const data = await fetchAllClinics();
       setClinics(Array.isArray(data) ? data : []); // <-- ensures array
       setFilteredClinics(Array.isArray(data) ? data : []);
       // console.log(data)
       // console.log(filteredClinics)
     } catch (err) {
-      console.error("Failed to fetch clinics:", err.message);
+      console.error("Failed to fetch clinics:", err);
       setClinics([]);
       setFilteredClinics([]);
     }
   };
   getClinics();
-}, [token]);
+}, []);
 
   useEffect(() => {
     let result = clinics;
@@ -61,7 +61,7 @@ useEffect(() => {
   const handleStatusUpdate = async (clinicId, newStatus) => {
     setLoading(true);
     try {
-      await updateClinicStatus(token, clinicId, newStatus);
+      await updateClinicStatus(clinicId, newStatus);
       
       // Update the local state after successful API call
       setClinics(prev =>

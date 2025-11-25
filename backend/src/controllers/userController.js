@@ -60,7 +60,8 @@ export const checkEmailExists = async (req, res) => {
   try {
     const { email } = req.body;
     const exists = await verifyExistingEmail(email);
-    res.status(200).json({ exists });
+    
+    return res.status(200).json({ exists });
   } catch (err) {
     console.error("Error checking email existence", err.message);
     res.status(500).json({ error: err.message });

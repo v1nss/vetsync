@@ -184,13 +184,13 @@ export default function RegisterClinicPage() {
       const registerResponse = await registerUser(updatedUserData);
 
       // automatically log in the user
-      const { user, token } = await loginUser(
+      const data = await loginUser(
         updatedUserData.email,
         updatedUserData.password
       );
-      login(user, token);
+      // login returns user object through context
       // register the clinic (only after user is registered and logged in)
-      const clinicResponse = await registerClinic(formData, token);
+      const clinicResponse = await registerClinic(formData);
 
       setSubmitStatus("submitted");
     } catch (err) {

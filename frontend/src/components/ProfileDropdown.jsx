@@ -9,6 +9,20 @@ export default function ProfileDropdown() {
   const dropdownRef = useRef(null); 
   //TODO: before the page loads the images should be already loaded 
 
+  // Get full name with fallback
+  const fullName = user?.full_name || user?.email || 'User';
+
+  // Get initials from name
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    return name
+      .split(" ")
+      .map(n => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2); // Limit to 2 characters
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -28,19 +42,15 @@ export default function ProfileDropdown() {
           onClick={() => setIsOpen(!isOpen)}
           className="flex items-center space-x-3 px-4 py-2 transition-all duration-200"
         >
-          <div className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center font-semibold overflow-hidden">
-            {user.profile_image_url?.link ? (
+          <div className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center font-semibold overflow-hidden text-sm bg-primary text-white">
+            {user?.profile_image_url?.link ? (
               <img
                 src={user.profile_image_url.link}
-                alt={user.full_name}
+                alt={fullName}
                 className="w-full h-full object-cover"
               />
             ) : (
-              user.full_name
-                .split(" ")
-                .map(n => n[0])
-                .join("")
-                .toUpperCase()
+              getInitials(fullName)
             )}
           </div>
           <FaChevronDown 
@@ -54,24 +64,20 @@ export default function ProfileDropdown() {
             {/* User Info Section */}
             <div className="px-4 py-3 border-b border-gray-100">
               <div className="flex items-center space-x-2">
-                <div className="w-10 h-10 border border-gray-300 rounded-full flex items-center justify-center overflow-hidden">
-                  {user.profile_image_url?.link ? (
+                <div className="w-10 h-10 border border-gray-300 rounded-full flex items-center justify-center overflow-hidden bg-primary text-white font-semibold">
+                  {user?.profile_image_url?.link ? (
                     <img
                       src={user.profile_image_url.link}
-                      alt={user.full_name}
+                      alt={fullName}
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    user.full_name
-                      .split(" ")
-                      .map(n => n[0])
-                      .join("")
-                      .toUpperCase()
+                    getInitials(fullName)
                   )}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-800">{user.full_name}</p>
-                  <p className="text-sm text-gray-500">{user.email}</p>
+                  <p className="font-semibold text-gray-800">{fullName}</p>
+                  <p className="text-sm text-gray-500">{user?.email}</p>
                 </div>
               </div>
             </div>

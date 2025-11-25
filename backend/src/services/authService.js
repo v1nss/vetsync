@@ -17,27 +17,36 @@ export const loginUser = async ({ email, password }) => {
   const token = generateToken({ id: user.id, user_type: user.user_type });
   const refreshToken = generateRefreshToken({ id: user.id, user_type: user.user_type });
 
-  return { user, token, refreshToken };
+  // Return user without password
+  const userWithoutPassword = {
+    id: user.id,
+    email: user.email,
+    user_type: user.user_type,
+    full_name: user.full_name,
+    phone_number: user.phone_number,
+    profile_image_url: user.profile_image_url,
+    createdAt: user.createdAt,
+  };
+
+  return { user: userWithoutPassword, token, refreshToken };
 };
 
-
-export const generateRefreshTokenService = async (refreshToken) => {
-  // Implementation for refreshing token can be added here
-
+export const refreshAccessToken = async (refreshToken) => {
   if (!refreshToken) throw new Error('No refresh token provided');
-  
+
+  try {
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     const user = await User.findByPk(decoded.id);
-    if (!user) throw new Error("User not found");
+    
+    if (!user) throw new Error('User not found');
 
-   const token = generateToken({ id: user.id, user_type: user.user_type });
-
-  res.cookie('authToken', token, { 
-    httpOnly: true, 
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'Strict',
-    maxAge: 36000000, 
-  });
-
-   return token; 
-}
+    const newAccessToken = generateToken({ id: user.id, user_type: user.user_type });
+    
+    return newAccessToken;
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      throw new Error('Refresh token expired');
+    }
+    throw new Error('Invalid refresh token');
+  }
+};
