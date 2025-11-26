@@ -64,7 +64,7 @@ export default function UserManagementPage() {
     <div>
       <div className="min-h-screen pb-10">
         {/* Header */}
-        <div className="my-6">
+        <div className="mb-6">
           <div className="bg-linear-to-r from-primary to-[#FFB49A] px-4 py-8 sm:px-6 sm:py-10 rounded-2xl">
             <div className="text-white px-2 md:px-6">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
-import { FaClinicMedical, FaUserMd } from "react-icons/fa";
+import { FaClinicMedical, FaUserMd, FaHistory } from "react-icons/fa";
 import { IoMenu } from "react-icons/io5";
 
 export default function SystemAdminLayout() {
@@ -9,7 +9,8 @@ export default function SystemAdminLayout() {
 
   const clinicAdminLinks = [
     { name: "Clinics Management", icon: <FaClinicMedical />, path: "/system-admin/clinics" },
-    { name: "Users Management", icon: <FaUserMd />, path: "/system-admin/users" }
+    { name: "Users Management", icon: <FaUserMd />, path: "/system-admin/users" },
+    { name: "Application Logs", icon: <FaHistory />, path: "/system-admin/logs" }
   ];
 
   return (
@@ -23,7 +24,7 @@ export default function SystemAdminLayout() {
 
       <div className="flex-1 flex flex-col">
         {/* Top Navbar */}
-        <div className="bg-white shadow-sm p-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-white shadow-sm p-4 flex items-center justify-between">
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="text-gray-600 hover:text-gray-800 focus:outline-none md:hidden"
