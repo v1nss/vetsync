@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { fetchMyClinic, updateClinic } from "../../global/api/clinicAdmin";
 import DriveImage from "../../components/DriveImage";
 import ImageViewerModal from "../../components/ImageViewerModal";
+import NotificationModal from "../../components/NotificationModal";
 
 export default function ClinicManagementPage() {
   const { token } = useAuth();
@@ -34,6 +35,12 @@ export default function ClinicManagementPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const [notification, setNotification] = useState({ 
+    isOpen: false, 
+    type: 'success', 
+    title: '', 
+    message: '' 
+  });
   const handleEdit = () => { setIsEditing(true); setEditedClinic({ ...clinic }); };
   const handleCancel = () => { setIsEditing(false); setEditedClinic({ ...clinic }); };
   const handleSave = async () => {
@@ -43,10 +50,24 @@ export default function ClinicManagementPage() {
       setClinic(updatedClinicData);
       setEditedClinic(updatedClinicData);
       setIsEditing(false);
-      alert("Clinic updated successfully!");
+      
+      // Show success notification
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: 'Clinic Updated! 🎉',
+        message: 'Your clinic information has been updated successfully.'
+      });
     } catch (err) { 
       console.error("Failed to update clinic:", err);
-      alert("Failed to update clinic. Please try again.");
+      
+      // Show error notification
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Update Failed',
+        message: 'Failed to update clinic. Please try again.'
+      });
     } finally {
       setLoading(false);
     }
@@ -509,6 +530,14 @@ export default function ClinicManagementPage() {
         currentIndex={viewerIndex}
         onClose={closeImageViewer}
         onNavigate={setViewerIndex}
+      />
+
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ ...notification, isOpen: false })}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
       />
     </main>
   );
