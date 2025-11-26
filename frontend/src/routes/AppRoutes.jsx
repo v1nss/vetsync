@@ -29,6 +29,7 @@ import ClinicAdminEHRPage from "../pages/clinic-admin/ClinicAdminEHRPage";
 import SystemAdminLayout from "../pages/system-admin/SystemAdminLayout";
 import RejectedClinicPage from "../pages/clinic-admin/RejectedClinicPage";
 import EditClinicPage from "../pages/clinic-admin/EditClinicPage";
+import ClinicAppointmentsPage from "../pages/clinic-admin/ClinicAppointmentsPage";
 
 // Public routes (no auth required)
 const PublicRoute = () => {
@@ -159,6 +160,7 @@ const AppRoutes = () => (
                     <Route path="settings" element={<ClinicManagementPage />} />
                     {/* <Route path="register-clinic" element={<RegisterClinicPage />} /> */}
                     <Route path="register-vet" element={<RegisterVetProPage />} />
+                    <Route path="appointments" element={<ClinicAppointmentsPage />} />
                 </Route>
                 <Route path="pending" element={<PendingClinicPage />} />
                 <Route path="rejected" element={<RejectedClinicPage />} />
