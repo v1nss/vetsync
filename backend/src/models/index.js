@@ -8,6 +8,8 @@ import Pet from "./petModel.js";
 import Clinic from "./clinicModel.js";
 import Appointment from "./appointmentModel.js";
 
+import ApprovalLog from "./approvalLogsModel.js";
+
 // Sync all models with the database
 const syncDB = async () => {
   try {
@@ -27,5 +29,6 @@ export {
   Pet,
   Clinic,
   Appointment,
+  ApprovalLog,
   syncDB,
 };

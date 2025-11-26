@@ -1,6 +1,6 @@
 import express from 'express';
 import { login, logout, refreshToken, getMe } from '../controllers/authController.js';
-import { authenticate } from '../../global/middleware/authMiddleware.js';
+import { authenticate, refreshAuthenticate } from '../../global/middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -10,6 +10,6 @@ router.post('/logout', logout);
 router.post('/refresh-token', refreshToken);
 
 // Protected routes
-router.get('/me', authenticate, getMe);
+router.get('/me', refreshAuthenticate, getMe);
 
 export default router;

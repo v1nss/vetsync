@@ -1,30 +1,39 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useContext } from 'react';
+import { useNavigate, } from 'react-router-dom';
 import { FaTimesCircle, FaEdit, FaExclamationTriangle } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import { fetchMyClinic } from '../../global/api/clinicAdmin';
 import ClinicAdminNavbar from '../../components/ClinicAdminNavbar';
+import { ClinicStatusContext } from '../../context/ClinicStatusContext';
 
 export default function RejectedClinicPage() {
   const navigate = useNavigate();
+  const { clinic, isRejected } = useContext(ClinicStatusContext);
   const { user } = useAuth();
-  const [clinic, setClinic] = useState(null);
+  // const [clinic, setClinic] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchClinicDetails();
-  }, []);
-
-  const fetchClinicDetails = async () => {
-    try {
-      const response = await fetchMyClinic(); // No parameters needed
-      setClinic(response);
-    } catch (error) {
-      console.error('Error fetching clinic:', error);
-    } finally {
-      setLoading(false);
+    if (!isRejected) {
+      navigate('/');
     }
-  };
+  }, [isRejected, navigate]);
+  // useEffect(() => {
+  //   fetchClinicDetails();
+  // }, []);
+
+  // const fetchClinicDetails = async () => {
+  //   try {
+  //     const response = await fetchMyClinic(); // No parameters needed
+  //     setClinic(response);
+  //   } catch (error) {
+  //     console.error('Error fetching clinic:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+// if (clinic) setLoading(false);
 
 const handleEditClinic = () => {
   // Use absolute path starting with /
@@ -36,16 +45,16 @@ const handleEditClinic = () => {
   });
 };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <ClinicAdminNavbar />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-gray-600">Loading...</div>
-        </main>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="min-h-screen bg-gray-50 flex flex-col">
+  //       <ClinicAdminNavbar />
+  //       <main className="flex-1 flex items-center justify-center">
+  //         <div className="text-gray-600">Loading...</div>
+  //       </main>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">

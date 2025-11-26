@@ -44,8 +44,9 @@ export const updateClinic = async (clinicId, clinicData, newImages = { clinicIma
         'Content-Type': 'multipart/form-data'
       }
     });
-    
+    console.log(res.data.clinic);
     return res.data.clinic;
+    
   } catch (err) {
     console.error("Unable to update clinic", err);
     throw err;
