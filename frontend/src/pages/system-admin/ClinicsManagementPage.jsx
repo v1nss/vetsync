@@ -4,6 +4,7 @@ import Pagination from '../../components/Pagination';
 import ClinicTable from '../../components/clinic/ClinicTable';
 import ClinicMobileCards from '../../components/clinic/ClinicMobileCards';
 import ReviewModal from '../../components/clinic/ReviewModal';
+import ClinicApprovalLogsModal from '../../components/clinic/ClinicApprovalLogsModal';
 import { useAuth } from '../../context/AuthContext';
 import { fetchAllClinics, updateClinicStatus } from '../../global/api/systemAdmin';
 
@@ -14,6 +15,7 @@ export default function ClinicManagementPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
   const [selectedClinic, setSelectedClinic] = useState(null);
+  const [selectedLogsClinic, setSelectedLogsClinic] = useState(null);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const clinicsPerPage = 10;
@@ -177,15 +179,17 @@ useEffect(() => {
         </div>
 
         {/* Clinics Table/Cards */}
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-14">
+        <div className="overflow-hidden mb-14">
           <ClinicTable
             clinics={currentClinics}
             onReview={setSelectedClinic}
+            onViewLogs={setSelectedLogsClinic}
             getStatusBadge={getStatusBadge}
           />
           <ClinicMobileCards
             clinics={currentClinics}
             onReview={setSelectedClinic}
+            onViewLogs={setSelectedLogsClinic}
             getStatusBadge={getStatusBadge}
           />
         </div>
@@ -207,6 +211,12 @@ useEffect(() => {
         onStatusUpdate={handleStatusUpdate}
         loading={loading}
         getStatusBadge={getStatusBadge}
+      />
+
+      {/* Approval Logs Modal */}
+      <ClinicApprovalLogsModal
+        clinic={selectedLogsClinic}
+        onClose={() => setSelectedLogsClinic(null)}
       />
     </div>
   );

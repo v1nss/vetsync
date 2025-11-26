@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
-import { FaClinicMedical, FaUserMd, FaHistory } from "react-icons/fa";
+import { FaClinicMedical, FaUserMd } from "react-icons/fa";
 import { IoMenu } from "react-icons/io5";
 
 export default function SystemAdminLayout() {
@@ -10,7 +10,6 @@ export default function SystemAdminLayout() {
   const clinicAdminLinks = [
     { name: "Clinics Management", icon: <FaClinicMedical />, path: "/system-admin/clinics" },
     { name: "Users Management", icon: <FaUserMd />, path: "/system-admin/users" },
-    { name: "Application Logs", icon: <FaHistory />, path: "/system-admin/logs" }
   ];
 
   return (

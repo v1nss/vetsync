@@ -1,3 +1,5 @@
+import { FaEye } from "react-icons/fa";
+
 export default function UserTable({ users, onViewDetails }) {
   return (
     <div className="hidden lg:block overflow-x-auto max-w-full">
@@ -66,12 +68,22 @@ export default function UserTable({ users, onViewDetails }) {
                   </span>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <button
-                    onClick={() => onViewDetails(user)}
-                    className="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary/80 transition"
-                  >
-                    View Details
-                  </button>
+                  {/* View Details Button */}
+                  <div className="relative group">
+                    <button
+                      onClick={() => onViewDetails(user)}
+                      className="p-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white transition-all duration-200 hover:shadow-lg hover:scale-105 active:scale-95"
+                      aria-label="View Details"
+                    >
+                      <FaEye className="w-4 h-4" />
+                    </button>
+                    {/* Tooltip */}
+                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none">
+                      View Details
+                      {/* Tooltip arrow */}
+                      <span className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-gray-900"></span>
+                    </span>
+                  </div>
                 </td>
               </tr>
             ))
