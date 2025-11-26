@@ -1,11 +1,11 @@
 import React from 'react';
 import { FaClock } from 'react-icons/fa';
-import Navbar from '../../components/Navbar';
+import ClinicAdminNavbar from '../../components/ClinicAdminNavbar';
 
 export default function PendingClinicPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Navbar />
+      <ClinicAdminNavbar />
 
       <main className="flex-1 flex flex-col items-center justify-center text-center px-6">
         <div className="bg-white rounded-2xl shadow-lg p-8 max-w-lg border border-gray-200">

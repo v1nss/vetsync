@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaTimesCircle, FaEdit, FaExclamationTriangle } from 'react-icons/fa';
-import Navbar from '../../components/Navbar';
 import { useAuth } from '../../context/AuthContext';
-import { fetchClinicByOwnerId } from '../../global/api/clinic';
+import { fetchMyClinic } from '../../global/api/clinicAdmin';
+import ClinicAdminNavbar from '../../components/ClinicAdminNavbar';
 
 export default function RejectedClinicPage() {
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ export default function RejectedClinicPage() {
 
   const fetchClinicDetails = async () => {
     try {
-      const response = await fetchClinicByOwnerId(user.id);
+      const response = await fetchMyClinic(); // No parameters needed
       setClinic(response);
     } catch (error) {
       console.error('Error fetching clinic:', error);
@@ -28,18 +28,18 @@ export default function RejectedClinicPage() {
 
   const handleEditClinic = () => {
     // Navigate to edit clinic page with current clinic data
-    navigate('clinic-admin/clinic/edit', { 
-      state: { 
-        clinic: clinic,
-        isResubmission: true 
-      } 
+    navigate('/clinic-admin/clinic/edit', { 
+      // state: { 
+      //   clinic: clinic,
+      //   isResubmission: true 
+      // } 
     });
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Navbar />
+        <ClinicAdminNavbar />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-gray-600">Loading...</div>
         </main>
@@ -49,7 +49,7 @@ export default function RejectedClinicPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Navbar />
+      <ClinicAdminNavbar />
 
       <main className="flex-1 flex flex-col items-center justify-center text-center px-6 py-12">
         <div className="bg-white rounded-2xl shadow-lg p-8 max-w-2xl w-full border border-red-200">
