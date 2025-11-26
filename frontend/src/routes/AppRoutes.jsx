@@ -61,6 +61,7 @@ const ClinicAdminRoute = () => {
   const { isRejected, isPending, loading: clinicLoading } = useContext(ClinicStatusContext);
   const { role, loading: authLoading } = useAuth();
   const location = useLocation();
+  const isEditPage = location.pathname === "/clinic-admin/clinic/edit";
 
   // Wait for both auth and clinic status to be ready
   if (authLoading || clinicLoading) {
@@ -69,7 +70,7 @@ const ClinicAdminRoute = () => {
 
   if (role === "clinic_admin" && isPending && location.pathname !== "/clinic-admin/pending") {
     return <Navigate to="/clinic-admin/pending" replace />;
-  } else if (role === "clinic_admin" && isRejected && location.pathname !== "/clinic-admin/rejected") {
+  } else if (role === "clinic_admin" && isRejected && !isEditPage && location.pathname !== "/clinic-admin/rejected") {
     return <Navigate to="/clinic-admin/rejected" replace />;
   }
 

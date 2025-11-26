@@ -3,7 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 // import { updateClinic } from "../../global/api/clinic";
 import { useAuth } from "../../context/AuthContext";
 import { FaChevronLeft, FaChevronRight, FaCamera, FaTimes } from "react-icons/fa";
-import Navbar from "../../components/Navbar";
+import { fetchMyClinic } from "../../global/api/clinicAdmin";
+import ClinicAdminNavbar from "../../components/ClinicAdminNavbar";
 
 const Input = ({ label, name, type = "text", placeholder, required, value, onChange, error }) => (
   <div>
@@ -22,9 +23,41 @@ export default function EditClinicPage() {
   const isResubmission = location.state?.isResubmission;
 
   useEffect(() => {
-    if (!existingClinic) {
-      navigate("/admin/clinic");
-    }
+    const loadClinicData = async () => {
+      try {
+        let clinic = existingClinic;
+        
+        if (!clinic) {
+          clinic = await fetchMyClinic();
+        }
+        
+        setFormData({
+          name: clinic?.name || "",
+          address: clinic?.address || "",
+          city: clinic?.city || "",
+          state: clinic?.state || "",
+          zipCode: clinic?.zipCode || "",
+          contact_number: clinic?.contact_number || "",
+          email: clinic?.email || "",
+          hours: clinic?.hours || "",
+          description: clinic?.description || "",
+        });
+
+        setExistingImages({
+          pictures: clinic?.images || [],
+          license: clinic?.license || null,
+        });
+
+      } catch (error) {
+        console.error("Failed to load clinic data:", error);
+        // Redirect to rejected page instead
+        navigate("/clinic-admin/rejected");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadClinicData();
   }, [existingClinic, navigate]);
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -223,7 +256,7 @@ export default function EditClinicPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Navbar />
+      <ClinicAdminNavbar />
       
       <main className="flex-1 flex items-center justify-center py-8 px-4">
         <div className="bg-white sm:p-8 rounded-2xl sm:shadow-lg w-full max-w-xl">

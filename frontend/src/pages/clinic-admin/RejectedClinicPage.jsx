@@ -26,15 +26,15 @@ export default function RejectedClinicPage() {
     }
   };
 
-  const handleEditClinic = () => {
-    // Navigate to edit clinic page with current clinic data
-    navigate('/clinic-admin/clinic/edit', { 
-      // state: { 
-      //   clinic: clinic,
-      //   isResubmission: true 
-      // } 
-    });
-  };
+const handleEditClinic = () => {
+  // Use absolute path starting with /
+  navigate('/clinic-admin/clinic/edit', { 
+    state: { 
+      clinic: clinic,
+      isResubmission: true 
+    } 
+  });
+};
 
   if (loading) {
     return (
