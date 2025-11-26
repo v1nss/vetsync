@@ -65,8 +65,10 @@ export const getAllClinics = async (status) => {
       address: c.address,
       contact_number: c.contact_number,
       email: c.email,
+      description: c.description,
       status: c.status,
-      images: c.images || [],
+      clinic_images: c.clinic_images || [],
+      document_images: c.document_images || [],
       owner: c.owner
         ? {
             id: c.owner.id,

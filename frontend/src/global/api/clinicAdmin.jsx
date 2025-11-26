@@ -10,6 +10,48 @@ export const fetchMyClinic = async () => {
   }
 };
 
+export const updateClinic = async (clinicId, clinicData, newImages = { clinicImages: [], documentImages: [] }) => {
+  try {
+    const formData = new FormData();
+    
+    // Separate new images from existing images
+    const existingClinicImages = (clinicData.clinic_images || []).filter(img => !img.isNew);
+    const existingDocImages = (clinicData.document_images || []).filter(img => !img.isNew);
+    
+    // Prepare clinic data without the file objects
+    const dataToSend = {
+      ...clinicData,
+      clinic_images: existingClinicImages,
+      document_images: existingDocImages
+    };
+    
+    formData.append('clinic', JSON.stringify(dataToSend));
+    
+    // Append new clinic image files
+    const newClinicImgs = (clinicData.clinic_images || []).filter(img => img.isNew && img.file);
+    newClinicImgs.forEach(img => {
+      formData.append('clinicImages', img.file);
+    });
+    
+    // Append new document image files
+    const newDocImgs = (clinicData.document_images || []).filter(img => img.isNew && img.file);
+    newDocImgs.forEach(img => {
+      formData.append('documentImages', img.file);
+    });
+    
+    const res = await api.patch(`/clinics/update/${clinicId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    
+    return res.data.clinic;
+  } catch (err) {
+    console.error("Unable to update clinic", err);
+    throw err;
+  }
+};
+
 // export const fetchClinicStats = async (token) => {
 //   try {
 //     const res = await axios.get(`${BASE_URL}/clinic-admin/my-clinic/stats`, {

@@ -16,6 +16,7 @@ import Navbar from "../../components/Navbar";
 import { useNavigate } from "react-router";
 import { fetchAllPetsById } from "../../global/api/pet";
 import { useAuth } from "../../context/AuthContext";
+import DriveImage from "../../components/DriveImage";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -74,16 +75,16 @@ export default function SettingsPage() {
   // Reusable Components
   const ProfileButton = ({ className = "" }) => (
     <button className={`w-full flex items-center hover:bg-gray-50 rounded-2xl transition ${className}`}>
-      <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-lg">
-        {user?.profile_image_url?.link ? (
-          <img
-            src={user.profile_image_url.link}
+      <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-lg overflow-hidden">
+        {user?.profile_image_url ? (
+          <DriveImage
+            image={user.profile_image_url}
             alt={fullName}
-            className="w-full h-full object-cover rounded-full"
+            className="w-full h-full object-cover"
+            fallbackIcon={false}
           />
-        ) : (
-          getInitials(fullName)
-        )}
+        ) : null}
+        {!user?.profile_image_url && getInitials(fullName)}
       </div>
       <div className="flex-1 text-left ml-3 lg:ml-4">
         <p className="font-semibold lg:text-lg">{fullName}</p>

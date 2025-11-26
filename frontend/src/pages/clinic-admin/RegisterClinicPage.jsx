@@ -37,13 +37,13 @@ export default function RegisterClinicPage() {
   });
 
   const [files, setFiles] = useState({
-    pictures: [],
-    license: null,
+    clinicImages: [],
+    documentImages: [],
   });
 
   const [previews, setPreviews] = useState({
-    pictures: [],
-    license: null,
+    clinicImages: [],
+    documentImages: [],
   });
 
   const [errors, setErrors] = useState({});
@@ -55,77 +55,79 @@ export default function RegisterClinicPage() {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleMultipleFileChange = (e) => {
+  // Handle multiple image uploads for clinic photos and documents
+  const handleMultipleFileChange = (e, imageType) => {
     const selectedFiles = Array.from(e.target.files);
-    const remaining = 10 - files.pictures.length;
+    const currentFiles = files[imageType];
+    const maxImages = 10;
+    const remaining = maxImages - currentFiles.length;
     
     if (selectedFiles.length > remaining) {
       setErrors((prev) => ({
         ...prev,
-        pictures: `You can only upload ${remaining} more image(s). Maximum is 10 images.`,
+        [imageType]: `You can only upload ${remaining} more image(s). Maximum is ${maxImages} images.`,
       }));
       return;
     }
 
-    selectedFiles.forEach((file) => {
+    // Validate file sizes and types
+    const validFiles = [];
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    
+    for (const file of selectedFiles) {
       if (file.size > 5000000) {
         setErrors((prev) => ({
           ...prev,
-          pictures: "File size must be less than 5MB",
+          [imageType]: `File "${file.name}" is too large. Maximum size is 5MB.`,
         }));
         return;
       }
+      
+      if (!allowedTypes.includes(file.type)) {
+        setErrors((prev) => ({
+          ...prev,
+          [imageType]: `File "${file.name}" is not a valid image type. Use JPG, PNG, or WEBP.`,
+        }));
+        return;
+      }
+      
+      validFiles.push(file);
+    }
+
+    // Create preview URLs for valid files
+    validFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviews((prev) => ({
           ...prev,
-          pictures: [...prev.pictures, reader.result],
+          [imageType]: [...prev[imageType], reader.result],
         }));
       };
       reader.readAsDataURL(file);
     });
 
+    // Update files state
     setFiles((prev) => ({
       ...prev,
-      pictures: [...prev.pictures, ...selectedFiles],
+      [imageType]: [...prev[imageType], ...validFiles],
     }));
     
-    if (errors.pictures) setErrors((prev) => ({ ...prev, pictures: "" }));
-  };
-
-  const removePicture = (index) => {
-    setFiles((prev) => ({
-      ...prev,
-      pictures: prev.pictures.filter((_, i) => i !== index),
-    }));
-    setPreviews((prev) => ({
-      ...prev,
-      pictures: prev.pictures.filter((_, i) => i !== index),
-    }));
-  };
-
-  const handleFileChange = (e, type) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5000000) {
-        setErrors((prev) => ({
-          ...prev,
-          [type]: "File size must be less than 5MB",
-        }));
-        return;
-      }
-      setFiles((prev) => ({ ...prev, [type]: file }));
-      const reader = new FileReader();
-      reader.onloadend = () =>
-        setPreviews((prev) => ({ ...prev, [type]: reader.result }));
-      reader.readAsDataURL(file);
-      if (errors[type]) setErrors((prev) => ({ ...prev, [type]: "" }));
+    // Clear errors
+    if (errors[imageType]) {
+      setErrors((prev) => ({ ...prev, [imageType]: "" }));
     }
   };
 
-  const removeFile = (type) => {
-    setFiles((prev) => ({ ...prev, [type]: null }));
-    setPreviews((prev) => ({ ...prev, [type]: null }));
+  // Remove a specific image
+  const removeImage = (imageType, index) => {
+    setFiles((prev) => ({
+      ...prev,
+      [imageType]: prev[imageType].filter((_, i) => i !== index),
+    }));
+    setPreviews((prev) => ({
+      ...prev,
+      [imageType]: prev[imageType].filter((_, i) => i !== index),
+    }));
   };
 
   const validateStep = (step) => {
@@ -180,22 +182,43 @@ export default function RegisterClinicPage() {
     };
 
     try {
+      // Step 1: Register user
       var userData = new FormData();
       userData.append('user', JSON.stringify(updatedUserData));
-      if (receivedUserData.profilePicture) userData.append('file', receivedUserData.profilePicture);
-      // register user
+      if (receivedUserData.profilePicture) {
+        userData.append('file', receivedUserData.profilePicture);
+      }
       const registerResponse = await registerUser(userData);
 
-      // automatically log in the user
-      login(receivedUserData.user.email, receivedUserData.user.password);
-      // login returns user object through context
-      // register the clinic (only after user is registered and logged in)
-      const clinicResponse = await registerClinic(formData);
+      // Step 2: Automatically log in the user
+      await login(receivedUserData.user.email, receivedUserData.user.password);
+      
+      // Step 3: Register the clinic with images
+      const clinicFormData = new FormData();
+      clinicFormData.append('clinic', JSON.stringify(formData));
+      
+      // Append clinic images
+      files.clinicImages.forEach((file, index) => {
+        clinicFormData.append('clinicImages', file);
+      });
+      
+      // Append document images
+      files.documentImages.forEach((file, index) => {
+        clinicFormData.append('documentImages', file);
+      });
+      
+      const clinicResponse = await registerClinic(clinicFormData);
 
       setSubmitStatus("submitted");
+      
+      // Step 4: Navigate to pending page AFTER clinic is registered
+      setTimeout(() => {
+        navigate("/clinic-admin/pending", { replace: true });
+      }, 1000);
     } catch (err) {
-      console.error("Error during registration process:", err.message);
+      console.error("Error during registration process:", err);
       setSubmitStatus(null);
+      setErrors({ submit: err.message || "Registration failed. Please try again." });
     }
   };
 
@@ -261,61 +284,115 @@ export default function RegisterClinicPage() {
           )}
 
           {currentStep === 3 && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <h3 className="text-lg font-semibold mb-4">Documents & Photos</h3>
+              
+              {/* Clinic Photos Section */}
               <div>
-                <label className="block text-sm text-gray-700 mb-2">Clinic Photos (Max 10)</label>
-                {previews.pictures.length > 0 && (
-                  <div className="grid grid-cols-3 gap-3 mb-3">
-                    {previews.pictures.map((p, i) => (
-                      <div key={i} className="relative group border-2 border-gray-200 rounded-xl overflow-hidden hover:border-primary transition-all">
-                        <img src={p} alt={`Clinic ${i + 1}`} className="w-full aspect-square object-cover" />
-                        <div className="absolute inset-0 group-hover:bg-black/30 transition-all flex items-center justify-center">
-                          <button type="button" onClick={() => removePicture(i)}
-                            className="opacity-0 group-hover:opacity-100 bg-white text-red-500 p-2 rounded-full hover:bg-red-500 hover:text-white transition-all transform scale-90 group-hover:scale-100">
-                            <FaTimes className="text-sm" />
-                          </button>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Clinic Photos (Optional - Max 10)
+                </label>
+                <p className="text-xs text-gray-500 mb-3">
+                  Upload images of your clinic facility, waiting room, examination rooms, etc.
+                </p>
+                {previews.clinicImages.length > 0 && (
+                  <div className="flex gap-3 mb-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                    {previews.clinicImages.map((preview, index) => (
+                      <div key={index} className="relative shrink-0 w-32 h-32 border-2 border-gray-200 rounded-xl overflow-hidden">
+                        <button 
+                          type="button" 
+                          onClick={() => removeImage('clinicImages', index)}
+                          className="absolute top-1 right-1 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-all shadow-md z-10"
+                        >
+                          <FaTimes className="text-xs" />
+                        </button>
+                        <img src={preview} alt={`Clinic ${index + 1}`} className="w-full h-full object-cover" />
+                        <div className="absolute bottom-1 right-1 bg-black bg-opacity-60 text-white text-xs px-2 py-0.5 rounded-full">
+                          {index + 1}
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
-                {previews.pictures.length < 10 && (
-                  <div className="border border-gray-300 rounded-2xl p-6 text-center">
-                    <input type="file" accept="image/*" multiple onChange={handleMultipleFileChange} className="hidden" id="pictures" />
-                    <label htmlFor="pictures" className="cursor-pointer">
+                {previews.clinicImages.length < 10 && (
+                  <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:border-primary transition-all">
+                    <input 
+                      type="file" 
+                      accept="image/jpeg,image/jpg,image/png,image/webp" 
+                      multiple 
+                      onChange={(e) => handleMultipleFileChange(e, 'clinicImages')} 
+                      className="hidden" 
+                      id="clinicImages" 
+                    />
+                    <label htmlFor="clinicImages" className="cursor-pointer">
                       <FaCamera className="text-3xl text-gray-400 mx-auto mb-2" />
                       <p className="text-sm text-gray-600 mb-2">
-                        {previews.pictures.length === 0 ? "Upload clinic photos" : `Add more (${10 - previews.pictures.length} left)`}
+                        {previews.clinicImages.length === 0 
+                          ? "Upload clinic photos" 
+                          : `Add more photos (${10 - previews.clinicImages.length} remaining)`}
                       </p>
                       <span className="inline-block px-4 py-2 bg-primary text-white text-sm rounded-2xl hover:bg-[#FEA08E] transition">
                         Choose Files
                       </span>
+                      <p className="text-xs text-gray-400 mt-2">JPG, PNG, WEBP - Max 5MB each</p>
                     </label>
                   </div>
                 )}
-                {errors.pictures && <p className="text-red-500 text-xs mt-1">{errors.pictures}</p>}
+                {errors.clinicImages && <p className="text-red-500 text-xs mt-1">{errors.clinicImages}</p>}
               </div>
               
+              {/* Document Images Section */}
               <div>
-                <label className="block text-sm text-gray-700 mb-2">License/Permit (Optional)</label>
-                {previews.license ? (
-                  <div className="border border-gray-300 rounded-2xl p-4">
-                    <img src={previews.license} alt="License" className="w-full h-48 object-cover rounded-2xl mb-3" />
-                    <button type="button" onClick={() => removeFile("license")}
-                      className="w-full py-2 text-sm text-red-600 border border-red-600 rounded-2xl hover:bg-red-50">Remove</button>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Required Documents (Optional - Max 10)
+                </label>
+                <p className="text-xs text-gray-500 mb-3">
+                  Upload business licenses, permits, certifications, insurance documents, etc.
+                </p>
+                {previews.documentImages.length > 0 && (
+                  <div className="flex gap-3 mb-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-blue-100">
+                    {previews.documentImages.map((preview, index) => (
+                      <div key={index} className="relative shrink-0 w-32 h-32 border-2 border-blue-200 rounded-xl overflow-hidden">
+                        <button 
+                          type="button" 
+                          onClick={() => removeImage('documentImages', index)}
+                          className="absolute top-1 right-1 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-all shadow-md z-10"
+                        >
+                          <FaTimes className="text-xs" />
+                        </button>
+                        <img src={preview} alt={`Document ${index + 1}`} className="w-full h-full object-cover" />
+                        <div className="absolute bottom-1 right-1 bg-blue-500 bg-opacity-90 text-white text-xs px-2 py-0.5 rounded-full">
+                          Doc {index + 1}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ) : (
-                  <div className="border border-gray-300 rounded-2xl p-6 text-center">
-                    <input type="file" accept="image/*,application/pdf" onChange={(e) => handleFileChange(e, "license")} className="hidden" id="license" />
-                    <label htmlFor="license" className="cursor-pointer">
-                      <FaCamera className="text-3xl text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600 mb-2">Upload license/permit</p>
-                      <span className="inline-block px-4 py-2 bg-primary text-white text-sm rounded-2xl hover:bg-[#FEA08E] transition">Choose File</span>
+                )}
+                {previews.documentImages.length < 10 && (
+                  <div className="border-2 border-dashed border-blue-300 rounded-2xl p-6 text-center hover:border-blue-500 transition-all">
+                    <input 
+                      type="file" 
+                      accept="image/jpeg,image/jpg,image/png,image/webp" 
+                      multiple 
+                      onChange={(e) => handleMultipleFileChange(e, 'documentImages')} 
+                      className="hidden" 
+                      id="documentImages" 
+                    />
+                    <label htmlFor="documentImages" className="cursor-pointer">
+                      <FaCamera className="text-3xl text-blue-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-600 mb-2">
+                        {previews.documentImages.length === 0 
+                          ? "Upload required documents" 
+                          : `Add more documents (${10 - previews.documentImages.length} remaining)`}
+                      </p>
+                      <span className="inline-block px-4 py-2 bg-blue-500 text-white text-sm rounded-2xl hover:bg-blue-600 transition">
+                        Choose Files
+                      </span>
+                      <p className="text-xs text-gray-400 mt-2">JPG, PNG, WEBP - Max 5MB each</p>
                     </label>
                   </div>
                 )}
-                {errors.license && <p className="text-red-500 text-xs mt-1">{errors.license}</p>}
+                {errors.documentImages && <p className="text-red-500 text-xs mt-1">{errors.documentImages}</p>}
               </div>
 
               {submitStatus === "pending" && (

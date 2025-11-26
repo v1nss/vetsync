@@ -7,7 +7,7 @@ import { fetchClinicByOwnerId } from '../../global/api/clinic';
 
 export default function RejectedClinicPage() {
   const navigate = useNavigate();
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [clinic, setClinic] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -17,7 +17,7 @@ export default function RejectedClinicPage() {
 
   const fetchClinicDetails = async () => {
     try {
-      const response = await fetchClinicByOwnerId(user.id, token);
+      const response = await fetchClinicByOwnerId(user.id);
       setClinic(response);
     } catch (error) {
       console.error('Error fetching clinic:', error);

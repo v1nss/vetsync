@@ -1,11 +1,29 @@
-import {  FaCheckCircle, FaTimesCircle, FaUser, FaBuilding, FaImage } from 'react-icons/fa';
+import {  FaCheckCircle, FaTimesCircle, FaUser, FaBuilding, FaImage, FaChevronLeft, FaChevronRight, FaFileAlt, FaExpand } from 'react-icons/fa';
 import RejectionModal from './RejectionModal';
 import { useState } from 'react';
+import DriveImage from '../DriveImage';
+import ImageViewerModal from '../ImageViewerModal';
 
 export default function ReviewModal({ clinic, onClose, onStatusUpdate, loading, getStatusBadge }) {
   const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [currentClinicImageIndex, setCurrentClinicImageIndex] = useState(0);
+  const [currentDocImageIndex, setCurrentDocImageIndex] = useState(0);
+  
+  // Full-screen image viewer states
+  const [viewerImages, setViewerImages] = useState(null);
+  const [viewerIndex, setViewerIndex] = useState(null);
 
   if (!clinic) return null;
+  
+  const openImageViewer = (images, index) => {
+    setViewerImages(images);
+    setViewerIndex(index);
+  };
+  
+  const closeImageViewer = () => {
+    setViewerImages(null);
+    setViewerIndex(null);
+  };
 
   const handleReject = () => {
     setShowRejectionModal(true);
@@ -47,33 +65,141 @@ export default function ReviewModal({ clinic, onClose, onStatusUpdate, loading, 
                 {getStatusBadge(clinic.status)}
               </div>
 
-              {/* Clinic Images */}
-              <div>
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <FaImage className="text-primary" />
-                  Clinic Images
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {clinic.images && clinic.images.length > 0 ? (
-                    clinic.images.map((img, idx) => (
-                      <div key={idx} className="aspect-square rounded-xl overflow-hidden border border-gray-200">
-                        <img src={img} alt={`Clinic ${idx + 1}`} className="w-full h-full object-cover" />
+              {/* Clinic Images Carousel */}
+              {clinic.clinic_images && clinic.clinic_images.length > 0 && (
+                <div>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <FaImage className="text-primary" />
+                    Clinic Photos ({clinic.clinic_images.length})
+                  </h3>
+                  <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+                    <div className="relative aspect-video bg-gray-100 group cursor-pointer">
+                      <DriveImage 
+                        image={clinic.clinic_images[currentClinicImageIndex]} 
+                        alt={clinic.clinic_images[currentClinicImageIndex]?.name || `Clinic image ${currentClinicImageIndex + 1}`}
+                        className="w-full h-full object-cover" 
+                      />
+                      {/* Full Screen Button */}
+                      <button
+                        onClick={() => openImageViewer(clinic.clinic_images, currentClinicImageIndex)}
+                        className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-lg transition opacity-0 group-hover:opacity-100"
+                      >
+                        <FaExpand />
+                      </button>
+                      {clinic.clinic_images.length > 1 && (
+                        <>
+                          <button 
+                            onClick={() => setCurrentClinicImageIndex((prev) => 
+                              (prev - 1 + clinic.clinic_images.length) % clinic.clinic_images.length
+                            )} 
+                            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition"
+                          >
+                            <FaChevronLeft />
+                          </button>
+                          <button 
+                            onClick={() => setCurrentClinicImageIndex((prev) => 
+                              (prev + 1) % clinic.clinic_images.length
+                            )} 
+                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition"
+                          >
+                            <FaChevronRight />
+                          </button>
+                          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                            {currentClinicImageIndex + 1} / {clinic.clinic_images.length}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <div className="p-3 bg-gray-50 border-t border-gray-200">
+                      <div className="flex gap-2 overflow-x-auto pb-1">
+                        {clinic.clinic_images.map((image, idx) => (
+                          <div 
+                            key={image?.id || idx} 
+                            onClick={() => setCurrentClinicImageIndex(idx)}
+                            className="shrink-0"
+                          >
+                            <DriveImage 
+                              image={image} 
+                              alt={image?.name || `Thumbnail ${idx + 1}`}
+                              className={`w-16 h-16 object-cover rounded-lg cursor-pointer transition ${
+                                idx === currentClinicImageIndex ? 'ring-2 ring-primary' : 'opacity-60 hover:opacity-100'
+                              }`}
+                            />
+                          </div>
+                        ))}
                       </div>
-                    ))
-                  ) : (
-                    <>
-                      {[1, 2, 3].map((i) => (
-                        <div
-                          key={i}
-                          className="aspect-square rounded-xl bg-gray-100 flex items-center justify-center border border-gray-200"
-                        >
-                          <FaImage className="text-gray-400 text-3xl" />
-                        </div>
-                      ))}
-                    </>
-                  )}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Document Images Carousel */}
+              {clinic.document_images && clinic.document_images.length > 0 && (
+                <div>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <FaFileAlt className="text-blue-500" />
+                    Required Documents ({clinic.document_images.length})
+                  </h3>
+                  <div className="bg-white border border-blue-200 rounded-2xl overflow-hidden">
+                    <div className="relative aspect-video bg-blue-50 group cursor-pointer">
+                      <DriveImage 
+                        image={clinic.document_images[currentDocImageIndex]} 
+                        alt={clinic.document_images[currentDocImageIndex]?.name || `Document ${currentDocImageIndex + 1}`}
+                        className="w-full h-full object-cover" 
+                      />
+                      {/* Full Screen Button */}
+                      <button
+                        onClick={() => openImageViewer(clinic.document_images, currentDocImageIndex)}
+                        className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-lg transition opacity-0 group-hover:opacity-100"
+                      >
+                        <FaExpand />
+                      </button>
+                      {clinic.document_images.length > 1 && (
+                        <>
+                          <button 
+                            onClick={() => setCurrentDocImageIndex((prev) => 
+                              (prev - 1 + clinic.document_images.length) % clinic.document_images.length
+                            )} 
+                            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition"
+                          >
+                            <FaChevronLeft />
+                          </button>
+                          <button 
+                            onClick={() => setCurrentDocImageIndex((prev) => 
+                              (prev + 1) % clinic.document_images.length
+                            )} 
+                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition"
+                          >
+                            <FaChevronRight />
+                          </button>
+                          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                            {currentDocImageIndex + 1} / {clinic.document_images.length}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <div className="p-3 bg-blue-50 border-t border-blue-200">
+                      <div className="flex gap-2 overflow-x-auto pb-1">
+                        {clinic.document_images.map((image, idx) => (
+                          <div 
+                            key={image?.id || idx} 
+                            onClick={() => setCurrentDocImageIndex(idx)}
+                            className="shrink-0"
+                          >
+                            <DriveImage 
+                              image={image} 
+                              alt={image?.name || `Doc thumbnail ${idx + 1}`}
+                              className={`w-16 h-16 object-cover rounded-lg cursor-pointer transition ${
+                                idx === currentDocImageIndex ? 'ring-2 ring-blue-500' : 'opacity-60 hover:opacity-100'
+                              }`}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Clinic Details */}
               <div>
@@ -112,6 +238,16 @@ export default function ReviewModal({ clinic, onClose, onStatusUpdate, loading, 
                       </div>
                     </div>
                   </div>
+                  {clinic.description && (
+                    <div>
+                      <label className="text-xs sm:text-sm font-medium text-gray-600 block mb-1">
+                        Description
+                      </label>
+                      <div className="text-sm sm:text-base text-gray-900 wrap-break-words">
+                        {clinic.description}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -182,6 +318,14 @@ export default function ReviewModal({ clinic, onClose, onStatusUpdate, loading, 
         onClose={() => setShowRejectionModal(false)}
         onConfirm={handleConfirmRejection}
         loading={loading}
+      />
+      
+      {/* Full-Screen Image Viewer */}
+      <ImageViewerModal
+        images={viewerImages}
+        currentIndex={viewerIndex}
+        onClose={closeImageViewer}
+        onNavigate={setViewerIndex}
       />
     </>
   );
