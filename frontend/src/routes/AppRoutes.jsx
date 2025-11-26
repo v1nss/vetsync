@@ -29,7 +29,6 @@ import ClinicAdminEHRPage from "../pages/clinic-admin/ClinicAdminEHRPage";
 import SystemAdminLayout from "../pages/system-admin/SystemAdminLayout";
 import RejectedClinicPage from "../pages/clinic-admin/RejectedClinicPage";
 import EditClinicPage from "../pages/clinic-admin/EditClinicPage";
-import LogsPage from "../pages/system-admin/LogsPage";
 
 // Public routes (no auth required)
 const PublicRoute = () => {
@@ -178,7 +177,6 @@ const AppRoutes = () => (
                     <Route index element={<Navigate to="clinics" replace />} />
                     <Route path="clinics" element={<ClinicsManagementPage />} />
                     <Route path="users" element={<UserManagementPage />} />
-                    <Route path="logs" element={<LogsPage />} />
                 </Route>
             </Route>
         </Route>

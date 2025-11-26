@@ -1,8 +1,8 @@
-import { FaEye, FaEnvelope, FaPhone, FaMapMarkerAlt, FaUser, FaBuilding } from 'react-icons/fa';
+import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaUser, FaBuilding } from 'react-icons/fa';
 
-export default function ClinicMobileCards({ clinics, onReview, getStatusBadge }) {
+export default function ClinicMobileCards({ clinics, onReview, onViewLogs, getStatusBadge }) {
   return (
-    <div className="lg:hidden p-4 space-y-4">
+    <div className="lg:hidden space-y-4">
       {clinics.length === 0 ? (
         <div className="px-6 py-12 text-center text-gray-500">
           No clinics found matching your criteria
@@ -46,13 +46,20 @@ export default function ClinicMobileCards({ clinics, onReview, getStatusBadge })
               )}
             </div>
 
-            <button
-              onClick={() => onReview(clinic)}
-              className="w-full bg-primary text-white px-4 py-2 rounded-xl hover:bg-primary/90 font-medium flex items-center justify-center gap-2"
-            >
-              <FaEye />
-              Review Clinic
-            </button>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => onReview(clinic)}
+                className="w-full bg-primary text-white px-4 py-2 rounded-xl hover:bg-primary/90 font-medium flex items-center justify-center gap-2"
+              >
+                Review Clinic
+              </button>
+              <button
+                onClick={() => onViewLogs(clinic)}
+                className="w-full bg-primary text-white px-4 py-2 rounded-xl hover:bg-primary/90 font-medium flex items-center justify-center gap-2"
+              >
+                Approval Logs
+              </button>
+            </div>
           </div>
         ))
       )}
