@@ -1,8 +1,22 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import { FaClock } from 'react-icons/fa';
 import ClinicAdminNavbar from '../../components/ClinicAdminNavbar';
+import {ClinicStatusContext} from '../../context/ClinicStatusContext';
+import { useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 
 export default function PendingClinicPage() {
+  const navigate = useNavigate();
+  const { isPending } = useContext(ClinicStatusContext);
+  console.log("Clinic pending status:", isPending);
+
+   useEffect(() => {
+    if (!isPending) {
+      navigate('/');
+    }
+  }, [isPending, navigate]);
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <ClinicAdminNavbar />
