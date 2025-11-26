@@ -5,8 +5,9 @@ import ClinicTable from '../../components/clinic/ClinicTable';
 import ClinicMobileCards from '../../components/clinic/ClinicMobileCards';
 import ReviewModal from '../../components/clinic/ReviewModal';
 import ClinicApprovalLogsModal from '../../components/clinic/ClinicApprovalLogsModal';
+import NotificationModal from '../../components/NotificationModal';
 import { useAuth } from '../../context/AuthContext';
-import { fetchAllClinics, updateClinicStatus } from '../../global/api/systemAdmin';
+import { fetchAllClinics, updateClinicStatus, createApprovalLog } from '../../global/api/systemAdmin';
 
 export default function ClinicManagementPage() {
   const {token} = useAuth();
@@ -18,6 +19,12 @@ export default function ClinicManagementPage() {
   const [selectedLogsClinic, setSelectedLogsClinic] = useState(null);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [notification, setNotification] = useState({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    message: ''
+  });
   const clinicsPerPage = 10;
   const totalPages = Math.ceil(filteredClinics.length / clinicsPerPage);
   const indexOfLastClinic = currentPage * clinicsPerPage;
@@ -60,11 +67,25 @@ useEffect(() => {
     setFilteredClinics(result);
   }, [searchQuery, activeFilter, clinics]);
 
-  const handleStatusUpdate = async (clinicId, newStatus) => {
+  const handleStatusUpdate = async (clinicId, newStatus, remarks) => {
     setLoading(true);
     try {
-      await updateClinicStatus(clinicId, newStatus);
+      // Create approval log for both approved and rejected actions
+      // Ensure remarks is always a non-empty string
+      const logRemarks = remarks?.trim() || 
+        (newStatus === 'approved' 
+          ? 'Clinic application approved' 
+          : 'Clinic application rejected');
       
+      const logPayload = {
+        clinic_id: clinicId,
+        remarks: logRemarks,
+        action: newStatus
+      };
+      await createApprovalLog(logPayload);
+
+      await updateClinicStatus(clinicId, newStatus);
+
       // Update the local state after successful API call
       setClinics(prev =>
         prev.map(c =>
@@ -73,9 +94,26 @@ useEffect(() => {
       );
       
       setSelectedClinic(null);
+
+      // Show success notification
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: newStatus === 'approved' ? 'Clinic Approved! ✅' : 'Clinic Rejected',
+        message: newStatus === 'approved' 
+          ? 'The clinic has been successfully approved and is now active.'
+          : 'The clinic has been rejected. The clinic admin has been notified.'
+      });
     } catch (err) {
       console.error("Failed to update clinic status:", err.message);
-      alert(`Failed to update clinic status: ${err.message}`);
+      
+      // Show error notification
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Update Failed',
+        message: err.response?.data?.message || err.message || 'Failed to update clinic status. Please try again.'
+      });
     } finally {
       setLoading(false);
     }
@@ -217,6 +255,15 @@ useEffect(() => {
       <ClinicApprovalLogsModal
         clinic={selectedLogsClinic}
         onClose={() => setSelectedLogsClinic(null)}
+      />
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ ...notification, isOpen: false })}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
       />
     </div>
   );

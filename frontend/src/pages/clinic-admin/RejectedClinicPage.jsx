@@ -3,6 +3,7 @@ import { useNavigate, } from 'react-router-dom';
 import { FaTimesCircle, FaEdit, FaExclamationTriangle } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import { fetchMyClinic } from '../../global/api/clinicAdmin';
+import { fetchApprovalLogsByClinicId } from '../../global/api/systemAdmin';
 import ClinicAdminNavbar from '../../components/ClinicAdminNavbar';
 import { ClinicStatusContext } from '../../context/ClinicStatusContext';
 
@@ -10,14 +11,42 @@ export default function RejectedClinicPage() {
   const navigate = useNavigate();
   const { clinic, isRejected } = useContext(ClinicStatusContext);
   const { user } = useAuth();
-  // const [clinic, setClinic] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [latestRejectionLog, setLatestRejectionLog] = useState(null);
+  const [logsLoading, setLogsLoading] = useState(true);
 
   useEffect(() => {
     if (!isRejected) {
       navigate('/');
     }
   }, [isRejected, navigate]);
+
+  useEffect(() => {
+    const fetchLatestRejectionLog = async () => {
+      if (!clinic?.clinic_id) {
+        setLogsLoading(false);
+        return;
+      }
+
+      try {
+        setLogsLoading(true);
+        const logs = await fetchApprovalLogsByClinicId(clinic.clinic_id);
+        
+        // Find the latest rejection log
+        const rejectionLogs = logs.filter(log => log.action === 'rejected');
+        if (rejectionLogs.length > 0) {
+          // Logs are already sorted by timestamp DESC, so first one is latest
+          setLatestRejectionLog(rejectionLogs[0]);
+        }
+      } catch (error) {
+        console.error('Error fetching approval logs:', error);
+      } finally {
+        setLogsLoading(false);
+      }
+    };
+
+    fetchLatestRejectionLog();
+  }, [clinic?.clinic_id]);
   // useEffect(() => {
   //   fetchClinicDetails();
   // }, []);
@@ -84,9 +113,36 @@ const handleEditClinic = () => {
                 <h3 className="font-semibold text-red-800 mb-2">
                   Reason for Rejection
                 </h3>
-                <p className="text-red-700 text-sm leading-relaxed whitespace-pre-wrap">
-                  {clinic?.rejection_remarks || 'No specific remarks provided. Please contact support for more information.'}
-                </p>
+                {logsLoading ? (
+                  <div className="flex items-center gap-2 text-red-700 text-sm">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                    <span>Loading rejection remarks...</span>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-red-700 text-sm leading-relaxed whitespace-pre-wrap">
+                      {latestRejectionLog?.remarks || clinic?.rejection_remarks || 'No specific remarks provided. Please contact support for more information.'}
+                    </p>
+                    {latestRejectionLog && (
+                      <div className="mt-3 pt-3 border-t border-red-300">
+                        <p className="text-xs text-red-600">
+                          <span className="font-medium">Rejected on:</span> {new Date(latestRejectionLog.timestamp).toLocaleString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                        {latestRejectionLog.User && (
+                          <p className="text-xs text-red-600 mt-1">
+                            <span className="font-medium">Reviewed by:</span> {latestRejectionLog.User.full_name}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </div>

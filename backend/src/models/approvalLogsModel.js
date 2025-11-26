@@ -42,7 +42,7 @@ const ApprovalLog = sequelize.define( "ApprovalLog", {
     timestamps: false,
   });
 
-ApprovalLog.belongsTo(User, { foreignKey: "system_admin_id" });
+ApprovalLog.belongsTo(User, { foreignKey: "system_admin_id", as: 'User' });
 ApprovalLog.belongsTo(Clinic, { foreignKey: "clinic_id" });
 
 export default ApprovalLog;

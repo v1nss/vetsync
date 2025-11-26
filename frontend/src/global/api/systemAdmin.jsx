@@ -22,3 +22,24 @@ export const updateClinicStatus = async (clinicId, status) => {
     throw err;
   }
 };
+
+export const createApprovalLog = async (logData) => {
+  try {
+    console.log("Creating approval log with data:", logData);
+    const res = await api.post(`/approval-logs/create`, logData);
+    return res.data;
+  } catch (err) {
+    console.error("Unable to create approval log", err);
+    throw err;
+  }
+};
+
+export const fetchApprovalLogsByClinicId = async (clinicId) => {
+  try {
+    const res = await api.get(`/approval-logs/clinic/${clinicId}`);
+    return res.data.logs;
+  } catch (err) {
+    console.error("Unable to fetch approval logs", err);
+    throw err;
+  }
+};

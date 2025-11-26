@@ -1,69 +1,122 @@
+import { useState, useEffect } from "react";
 import { FaTimes, FaCheckCircle, FaTimesCircle, FaClock, FaFileAlt } from "react-icons/fa";
+import { fetchApprovalLogsByClinicId } from "../../global/api/systemAdmin";
 
 export default function ClinicApprovalLogsModal({ clinic, onClose }) {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (clinic?.clinic_id) {
+      const fetchLogs = async () => {
+        try {
+          setLoading(true);
+          const approvalLogs = await fetchApprovalLogsByClinicId(clinic.clinic_id);
+          setLogs(approvalLogs || []);
+        } catch (err) {
+          console.error("Failed to fetch approval logs:", err);
+          setError("Failed to load approval logs");
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchLogs();
+    }
+  }, [clinic?.clinic_id]);
+
   if (!clinic) return null;
 
   const formatDate = (date) => {
     if (!date) return 'N/A';
-    return new Date(date).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      return new Date(date).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      return 'N/A';
+    }
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
+  const getStatusIcon = (action) => {
+    switch (action) {
       case 'approved':
         return <FaCheckCircle className="text-green-600 text-2xl" />;
       case 'rejected':
         return <FaTimesCircle className="text-red-600 text-2xl" />;
-      case 'pending':
-        return <FaClock className="text-yellow-600 text-2xl" />;
       default:
         return <FaFileAlt className="text-gray-600 text-2xl" />;
     }
   };
 
-  const timeline = [
-    {
-      status: 'submitted',
-      label: 'Application Submitted',
-      date: clinic.created_at,
-      icon: <FaFileAlt className="text-blue-600 text-xl" />,
-      color: 'blue',
-      show: true
-    },
-    {
-      status: 'pending',
-      label: 'Pending Review',
-      date: clinic.created_at,
-      icon: <FaClock className="text-yellow-600 text-xl" />,
-      color: 'yellow',
-      show: clinic.status === 'pending' || clinic.status === 'approved' || clinic.status === 'rejected'
-    },
-    {
-      status: 'rejected',
-      label: 'Application Rejected',
-      date: clinic.rejected_at,
-      icon: <FaTimesCircle className="text-red-600 text-xl" />,
-      color: 'red',
-      remarks: clinic.rejection_remarks,
-      show: clinic.status === 'rejected'
-    },
-    {
-      status: 'approved',
-      label: 'Application Approved',
-      date: clinic.approved_at,
-      icon: <FaCheckCircle className="text-green-600 text-xl" />,
-      color: 'green',
-      show: clinic.status === 'approved'
+  const getActionColor = (action) => {
+    switch (action) {
+      case 'approved':
+        return 'green';
+      case 'rejected':
+        return 'red';
+      default:
+        return 'gray';
     }
-  ];
+  };
 
-  const visibleTimeline = timeline.filter(item => item.show);
+  // Build timeline from logs and clinic data
+  const buildTimeline = () => {
+    const timeline = [];
+    
+    // Add initial submission (if clinic has created_at)
+    if (clinic.created_at) {
+      timeline.push({
+        id: 'submitted',
+        status: 'submitted',
+        label: 'Application Submitted',
+        date: clinic.created_at,
+        icon: <FaFileAlt className="text-blue-600 text-xl" />,
+        color: 'blue',
+        remarks: null,
+        adminName: null,
+      });
+    }
+
+    // Add pending status if clinic is still pending
+    if (clinic.status === 'pending' && logs.length === 0) {
+      timeline.push({
+        id: 'pending',
+        status: 'pending',
+        label: 'Pending Review',
+        date: clinic.created_at || new Date(),
+        icon: <FaClock className="text-yellow-600 text-xl" />,
+        color: 'yellow',
+        remarks: null,
+        adminName: null,
+      });
+    }
+
+    // Add approval logs
+    logs.forEach((log) => {
+      timeline.push({
+        id: log.id,
+        status: log.action,
+        label: log.action === 'approved' ? 'Application Approved' : 'Application Rejected',
+        date: log.timestamp,
+        icon: log.action === 'approved' 
+          ? <FaCheckCircle className="text-green-600 text-xl" />
+          : <FaTimesCircle className="text-red-600 text-xl" />,
+        color: getActionColor(log.action),
+        remarks: log.remarks,
+        adminName: log.User?.full_name || 'System Admin',
+        adminEmail: log.User?.email || null,
+      });
+    });
+
+    return timeline;
+  };
+
+  const timeline = buildTimeline();
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -111,64 +164,100 @@ export default function ClinicApprovalLogsModal({ clinic, onClose }) {
         <div className="p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-6">Application Timeline</h3>
           
-          <div className="relative">
-            {/* Timeline Line */}
-            <div className="absolute left-[15px] top-0 bottom-0 w-0.5 bg-gray-200"></div>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <p className="ml-3 text-gray-600">Loading approval logs...</p>
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          ) : timeline.length === 0 ? (
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center">
+              <FaFileAlt className="text-gray-400 text-4xl mx-auto mb-3" />
+              <p className="text-gray-600">No approval logs found</p>
+            </div>
+          ) : (
+            <div className="relative">
+              {/* Timeline Line */}
+              <div className="absolute left-[15px] top-0 bottom-0 w-0.5 bg-gray-200"></div>
 
-            {/* Timeline Items */}
-            <div className="space-y-6">
-              {visibleTimeline.map((item, index) => (
-                <div key={item.status} className="relative flex gap-4">
-                  {/* Icon */}
-                  <div className={`relative shrink-0 w-8 h-8 rounded-full bg-white border-2 flex items-center justify-center ${
-                    item.color === 'blue' ? 'border-blue-600' :
-                    item.color === 'yellow' ? 'border-yellow-600' :
-                    item.color === 'red' ? 'border-red-600' :
-                    'border-green-600'
-                  }`}>
-                    {item.icon}
-                  </div>
+              {/* Timeline Items */}
+              <div className="space-y-6">
+                {timeline.map((item, index) => (
+                  <div key={item.id || index} className="relative flex gap-4">
+                    {/* Icon */}
+                    <div className={`relative shrink-0 w-8 h-8 rounded-full bg-white border-2 flex items-center justify-center ${
+                      item.color === 'blue' ? 'border-blue-600' :
+                      item.color === 'yellow' ? 'border-yellow-600' :
+                      item.color === 'red' ? 'border-red-600' :
+                      'border-green-600'
+                    }`}>
+                      {item.icon}
+                    </div>
 
-                  {/* Content */}
-                  <div className="flex-1 pb-6">
-                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-semibold text-gray-900">{item.label}</h4>
-                        <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                          item.color === 'blue' ? 'bg-blue-100 text-blue-700' :
-                          item.color === 'yellow' ? 'bg-yellow-100 text-yellow-700' :
-                          item.color === 'red' ? 'bg-red-100 text-red-700' :
-                          'bg-green-100 text-green-700'
-                        }`}>
-                          {item.status.toUpperCase()}
-                        </span>
+                    {/* Content */}
+                    <div className="flex-1 pb-6">
+                      <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                        <div className="flex items-start justify-between mb-2">
+                          <h4 className="font-semibold text-gray-900">{item.label}</h4>
+                          <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                            item.color === 'blue' ? 'bg-blue-100 text-blue-700' :
+                            item.color === 'yellow' ? 'bg-yellow-100 text-yellow-700' :
+                            item.color === 'red' ? 'bg-red-100 text-red-700' :
+                            'bg-green-100 text-green-700'
+                          }`}>
+                            {item.status.toUpperCase()}
+                          </span>
+                        </div>
+                        
+                        <p className="text-sm text-gray-600 mb-2">
+                          <span className="font-medium">Date:</span> {formatDate(item.date)}
+                        </p>
+
+                        {/* Admin Info for approval/rejection actions */}
+                        {item.adminName && (
+                          <p className="text-sm text-gray-600 mb-2">
+                            <span className="font-medium">Action by:</span> {item.adminName}
+                            {item.adminEmail && <span className="text-gray-500"> ({item.adminEmail})</span>}
+                          </p>
+                        )}
+
+                        {/* Remarks */}
+                        {item.remarks && (
+                          <div className={`mt-3 p-3 border rounded-lg ${
+                            item.status === 'rejected' 
+                              ? 'bg-red-50 border-red-200' 
+                              : 'bg-green-50 border-green-200'
+                          }`}>
+                            <p className={`text-xs font-semibold mb-1 ${
+                              item.status === 'rejected' ? 'text-red-800' : 'text-green-800'
+                            }`}>
+                              {item.status === 'rejected' ? 'Rejection Remarks:' : 'Approval Notes:'}
+                            </p>
+                            <p className={`text-sm ${
+                              item.status === 'rejected' ? 'text-red-700' : 'text-green-700'
+                            }`}>
+                              {item.remarks}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Additional Info for submission */}
+                        {item.status === 'submitted' && (
+                          <div className="mt-3 text-xs text-gray-500">
+                            <p>Owner: {clinic.owner?.name}</p>
+                            <p>Email: {clinic.owner?.email}</p>
+                          </div>
+                        )}
                       </div>
-                      
-                      <p className="text-sm text-gray-600 mb-2">
-                        <span className="font-medium">Date:</span> {formatDate(item.date)}
-                      </p>
-
-                      {/* Rejection Remarks */}
-                      {item.remarks && (
-                        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                          <p className="text-xs font-semibold text-red-800 mb-1">Rejection Remarks:</p>
-                          <p className="text-sm text-red-700">{item.remarks}</p>
-                        </div>
-                      )}
-
-                      {/* Additional Info */}
-                      {item.status === 'submitted' && (
-                        <div className="mt-3 text-xs text-gray-500">
-                          <p>Owner: {clinic.owner?.name}</p>
-                          <p>Email: {clinic.owner?.email}</p>
-                        </div>
-                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Footer */}
