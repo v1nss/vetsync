@@ -1,11 +1,9 @@
 import React, { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { FaSignOutAlt, FaTimes } from "react-icons/fa";
-import { useAuth } from "../context/AuthContext";
 
-export default function Sidebar({ isOpen, setIsOpen, title, links }) {
+export default function Sidebar({ isOpen, setIsOpen, title, links, onLogout }) {
   const location = useLocation();
-  const { logout } = useAuth();
 
   useEffect(() => {
     const handleResize = () => {
@@ -66,7 +64,7 @@ export default function Sidebar({ isOpen, setIsOpen, title, links }) {
       {/* Logout */}
       <div className="p-4 border-t border-gray-200">
         <button
-          onClick={logout}
+          onClick={onLogout}
           className="flex items-center gap-3 text-gray-700 hover:text-primary transition-all"
         >
           <FaSignOutAlt className="text-lg" />

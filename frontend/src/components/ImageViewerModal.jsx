@@ -36,7 +36,7 @@ export default function ImageViewerModal({ images, currentIndex, onClose, onNavi
 
   return (
     <div
-      className="fixed inset-0 bg-black/95 flex items-center justify-center z-[100]"
+      className="fixed inset-0 bg-black/95 flex items-center justify-center z-100"
       onClick={onClose}
       onKeyDown={handleKeyDown}
       tabIndex={0}

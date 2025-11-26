@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import { FaPaw, FaNotesMedical, FaClinicMedical, FaUserMd, FaCog } from "react-icons/fa";
 import { IoMenu } from "react-icons/io5";
 import { BiSolidDashboard } from "react-icons/bi";
 import { useAuth } from "../../context/AuthContext";
 import { fetchMyClinic } from "../../global/api/clinicAdmin";
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 export default function ClinicAdminLayout() {
   const [isOpen, setIsOpen] = useState(true);
-  const {token} = useAuth();
+  const { token, logout } = useAuth();
+  const navigate = useNavigate();
+  
+  // Logout confirmation modal state
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const clinicAdminLinks = [
     { name: "Dashboard", icon: <BiSolidDashboard />, path: "/clinic-admin/dashboard" },
@@ -21,7 +26,14 @@ export default function ClinicAdminLayout() {
   ];
 
   const handleLogout = () => {
-    alert("Logging out...");
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    // Call logout from AuthContext
+    logout();
+    // Navigate to login page
+    navigate("/login");
   };
 
   useEffect(() => {
@@ -56,6 +68,18 @@ export default function ClinicAdminLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={confirmLogout}
+        type="danger"
+        title="Logout Confirmation"
+        message="Are you sure you want to logout? Any unsaved changes will be lost."
+        confirmText="Logout"
+        cancelText="Stay"
+      />
     </div>
   );
 }

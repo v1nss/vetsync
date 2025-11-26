@@ -2,12 +2,29 @@ import { useState, useEffect } from "react";
 import { FaPlus, FaEdit, FaTrash, FaUserMd } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import AddVetModal from "../../components/vet/AddVetModal";
+import NotificationModal from "../../components/NotificationModal";
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 export default function VetProManagementPage() {
   const { token } = useAuth();
   const [vets, setVets] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedVet, setSelectedVet] = useState(null);
+  
+  // Notification state
+  const [notification, setNotification] = useState({ 
+    isOpen: false, 
+    type: 'success', 
+    title: '', 
+    message: '' 
+  });
+
+  // Confirmation modal state
+  const [confirmDelete, setConfirmDelete] = useState({
+    isOpen: false,
+    vetId: null,
+    vetName: ''
+  });
 
   useEffect(() => {
     fetchVets();
@@ -25,6 +42,12 @@ export default function VetProManagementPage() {
       ]);
     } catch (err) {
       console.error("Failed to fetch vets:", err);
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Failed to Load',
+        message: 'Unable to fetch veterinarians. Please try again.'
+      });
     }
   };
 
@@ -33,8 +56,22 @@ export default function VetProManagementPage() {
       // await addVet(token, vetData);
       await fetchVets();
       setIsModalOpen(false);
+      
+      // Show success notification
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: 'Vet Added! 🎉',
+        message: `${vetData.name} has been successfully added to your team.`
+      });
     } catch (err) {
       console.error("Failed to add vet:", err);
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Failed to Add Vet',
+        message: 'Unable to add the veterinarian. Please try again.'
+      });
     }
   };
 
@@ -44,18 +81,56 @@ export default function VetProManagementPage() {
       await fetchVets();
       setIsModalOpen(false);
       setSelectedVet(null);
+      
+      // Show success notification
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: 'Vet Updated! ✅',
+        message: `${vetData.name}'s information has been successfully updated.`
+      });
     } catch (err) {
       console.error("Failed to update vet:", err);
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Update Failed',
+        message: 'Unable to update veterinarian information. Please try again.'
+      });
     }
   };
 
-  const handleDeleteVet = async (vetId) => {
-    if (!confirm("Are you sure you want to remove this vet?")) return;
+  // Open confirmation modal
+  const handleDeleteVet = (vetId) => {
+    const vet = vets.find(v => v.id === vetId);
+    setConfirmDelete({
+      isOpen: true,
+      vetId: vetId,
+      vetName: vet?.name || 'this vet'
+    });
+  };
+
+  // Actual delete function after confirmation
+  const confirmDeleteVet = async () => {
     try {
-      // await deleteVet(token, vetId);
+      // await deleteVet(token, confirmDelete.vetId);
       await fetchVets();
+      
+      // Show success notification
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: 'Vet Removed',
+        message: `${confirmDelete.vetName} has been successfully removed from your team.`
+      });
     } catch (err) {
       console.error("Failed to delete vet:", err);
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Deletion Failed',
+        message: 'Unable to remove the veterinarian. Please try again.'
+      });
     }
   };
 
@@ -71,7 +146,7 @@ export default function VetProManagementPage() {
 
   return (
     <main className="min-h-screen pb-10 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div>
         <div className="flex sm:flex-row flex-col sm:items-center gap-y-4 justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Vet Professionals</h1>
@@ -189,6 +264,25 @@ export default function VetProManagementPage() {
         onClose={closeModal}
         onSubmit={selectedVet ? handleEditVet : handleAddVet}
         vet={selectedVet}
+      />
+
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ ...notification, isOpen: false })}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+      />
+
+      <ConfirmationModal
+        isOpen={confirmDelete.isOpen}
+        onClose={() => setConfirmDelete({ isOpen: false, vetId: null, vetName: '' })}
+        onConfirm={confirmDeleteVet}
+        type="danger"
+        title="Remove Veterinarian?"
+        message={`Are you sure you want to remove ${confirmDelete.vetName}? This action cannot be undone.`}
+        confirmText="Remove"
+        cancelText="Cancel"
       />
     </main>
   );
