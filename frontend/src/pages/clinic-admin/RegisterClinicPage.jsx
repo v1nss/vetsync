@@ -270,7 +270,7 @@ export default function RegisterClinicPage() {
                     {previews.pictures.map((p, i) => (
                       <div key={i} className="relative group border-2 border-gray-200 rounded-xl overflow-hidden hover:border-primary transition-all">
                         <img src={p} alt={`Clinic ${i + 1}`} className="w-full aspect-square object-cover" />
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center">
+                        <div className="absolute inset-0 group-hover:bg-black/30 transition-all flex items-center justify-center">
                           <button type="button" onClick={() => removePicture(i)}
                             className="opacity-0 group-hover:opacity-100 bg-white text-red-500 p-2 rounded-full hover:bg-red-500 hover:text-white transition-all transform scale-90 group-hover:scale-100">
                             <FaTimes className="text-sm" />
