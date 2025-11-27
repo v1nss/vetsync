@@ -1,5 +1,7 @@
 import { getClinicByOwnerId, registerClinic, updateClinic } from "../services/clinicService.js";
 import { uploadFiles, deleteMultipleFiles } from "../../global/utils/drive.js";
+import ClinicAdmin from "../models/users/clinicAdminModel.js";
+import Clinic from "../models/clinicModel.js";
 
 // Helper function to upload multiple files to Google Drive
 const uploadMultipleFiles = async (files, folderId) => {
@@ -48,10 +50,21 @@ export const registerNewClinic = async (req, res) => {
     // Add image data to clinic data
     clinicData.clinic_images = clinicImages;
     clinicData.document_images = documentImages;
+
+      const admin = await ClinicAdmin.findOne({ where: { user_id: adminUserId } });
+  if (!admin) throw new Error("Only clinic admins can register clinics");
+
+//   const { name, address, contact_number, email } = clinicData; //for validation if needed
+
+  const newClinic = await Clinic.create({
+    owner_id: adminUserId,
+    ...clinicData,
+  });
+  // return newClinic;
     
-    const newClinic = await registerClinic(clinicData, adminUserId);
+  //   const newClinic = await registerClinic(clinicData, adminUserId);
     
-    res
+   return res
       .status(201)
       .json({ 
         message: "Clinic registered successfully", 
