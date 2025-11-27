@@ -1,19 +1,19 @@
 import ClinicAdmin from "../models/users/clinicAdminModel.js";
 import Clinic from "../models/clinicModel.js";
 
-// export const registerClinic = async (clinicData, adminUserId) => {
+export const registerClinic = async (clinicData, adminUserId) => {
 
-//   const admin = await ClinicAdmin.findOne({ where: { user_id: adminUserId } });
-//   if (!admin) throw new Error("Only clinic admins can register clinics");
+  const admin = await ClinicAdmin.findOne({ where: { user_id: adminUserId } });
+  if (!admin) throw new Error("Only clinic admins can register clinics");
 
-// //   const { name, address, contact_number, email } = clinicData; //for validation if needed
+//   const { name, address, contact_number, email } = clinicData; //for validation if needed
 
-//   const newClinic = await Clinic.create({
-//     owner_id: adminUserId,
-//     ...clinicData,
-//   });
-//   return newClinic;
-// };
+  const newClinic = await Clinic.create({
+    owner_id: adminUserId,
+    ...clinicData,
+  });
+  return newClinic;
+};
 
 export const updateClinic = async (clinicId, updateData, adminUserId) => {
 
