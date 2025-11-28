@@ -1,5 +1,6 @@
 import ClinicAdmin from "../models/users/clinicAdminModel.js";
 import Clinic from "../models/clinicModel.js";
+import User from "../models/users/userModel.js";
 
 export const registerClinic = async (clinicData, adminUserId) => {
 
@@ -41,3 +42,65 @@ export const getClinicByOwnerId = async (owner_id) => {
 
   return clinic;
 }
+
+export const getAllApprovedClinics = async () => {
+  const clinics = await Clinic.findAll({
+    where: { status: "approved" },
+    include: [
+      {
+        model: User,
+        as: "owner",
+        attributes: ["id", "full_name", "email"], // Only include necessary fields
+      },
+    ],
+    order: [["name", "ASC"]], // Sort by name
+  });
+
+  return clinics;
+};
+
+export const getClinicById = async (clinicId) => {
+  const clinic = await Clinic.findOne({
+    where: { 
+      clinic_id: clinicId,
+      status: "approved" // Only show approved clinics publicly
+    },
+    include: [
+      {
+        model: User,
+        as: "owner",
+        attributes: ["id", "full_name", "email"],
+      },
+    ],
+  });
+
+  if (!clinic) {
+    throw new Error("Clinic not found or not approved");
+  }
+
+  return clinic;
+};
+
+export const searchApprovedClinics = async (searchTerm) => {
+  const { Op } = await import("sequelize");
+  
+  const clinics = await Clinic.findAll({
+    where: {
+      status: "approved",
+      [Op.or]: [
+        { name: { [Op.like]: `%${searchTerm}%` } },
+        { address: { [Op.like]: `%${searchTerm}%` } },
+        { description: { [Op.like]: `%${searchTerm}%` } },
+      ],
+    },
+    include: [
+      {
+        model: User,
+        as: "owner",
+        attributes: ["id", "full_name", "email"],
+      },
+    ],
+  });
+
+  return clinics;
+};

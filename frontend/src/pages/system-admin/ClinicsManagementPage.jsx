@@ -31,22 +31,22 @@ export default function ClinicManagementPage() {
   const indexOfFirstClinic = indexOfLastClinic - clinicsPerPage;
   const currentClinics = filteredClinics.slice(indexOfFirstClinic, indexOfLastClinic);
 
-useEffect(() => {
-  const getClinics = async () => {
-    try {
-      const data = await fetchAllClinics();
-      setClinics(Array.isArray(data) ? data : []); // <-- ensures array
-      setFilteredClinics(Array.isArray(data) ? data : []);
-      // console.log(data)
-      // console.log(filteredClinics)
-    } catch (err) {
-      console.error("Failed to fetch clinics:", err);
-      setClinics([]);
-      setFilteredClinics([]);
-    }
-  };
-  getClinics();
-}, []);
+  useEffect(() => {
+    const getClinics = async () => {
+      try {
+        const data = await fetchAllClinics();
+        setClinics(Array.isArray(data) ? data : []); // <-- ensures array
+        setFilteredClinics(Array.isArray(data) ? data : []);
+        // console.log(data)
+        // console.log(filteredClinics)
+      } catch (err) {
+        console.error("Failed to fetch clinics:", err);
+        setClinics([]);
+        setFilteredClinics([]);
+      }
+    };
+    getClinics();
+  }, []);
 
   useEffect(() => {
     let result = clinics;

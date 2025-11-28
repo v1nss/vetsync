@@ -1,4 +1,4 @@
-import { getClinicByOwnerId, registerClinic, updateClinic } from "../services/clinicService.js";
+import { getClinicByOwnerId, registerClinic, updateClinic, getAllApprovedClinics, getClinicById, searchApprovedClinics } from "../services/clinicService.js";
 import { uploadFiles, deleteMultipleFiles } from "../../global/utils/drive.js";
 
 // Helper function to upload multiple files to Google Drive
@@ -185,5 +185,75 @@ export const fetchMyClinic = async (req, res) => {
   } catch (err) {
     console.error("Unable to fetch Clinic Data", err.message);
     res.status(500).json({ message: "Error fetching clinic", error: err.message });
+  }
+};
+
+export const fetchApprovedClinics = async (req, res) => {
+  try {
+    const clinics = await getAllApprovedClinics();
+
+    res.status(200).json({
+      message: "Approved clinics fetched successfully",
+      clinics: clinics,
+      count: clinics.length,
+    });
+  } catch (err) {
+    console.error("Error fetching approved clinics:", err.message);
+    res.status(500).json({
+      message: "Error fetching approved clinics",
+      error: err.message,
+    });
+  }
+};
+
+export const fetchClinicById = async (req, res) => {
+  try {
+    const clinicId = req.params.clinicId;
+    const clinic = await getClinicById(clinicId);
+
+    res.status(200).json({
+      message: "Clinic fetched successfully",
+      clinic: clinic,
+    });
+  } catch (err) {
+    console.error("Error fetching clinic by ID:", err.message);
+    
+    if (err.message === "Clinic not found or not approved") {
+      return res.status(404).json({
+        message: "Clinic not found",
+        error: err.message,
+      });
+    }
+
+    res.status(500).json({
+      message: "Error fetching clinic",
+      error: err.message,
+    });
+  }
+};
+
+export const searchClinics = async (req, res) => {
+  try {
+    const searchTerm = req.query.search || "";
+
+    if (!searchTerm) {
+      // If no search term, return all approved clinics
+      return fetchApprovedClinics(req, res);
+    }
+
+    const clinics = await searchApprovedClinics(searchTerm);
+
+    res.status(200).json({
+      message: "Search results fetched successfully",
+      clinics: clinics,
+      count: clinics.length,
+      searchTerm: searchTerm,
+    });
+  } catch (err) {
+    console.error("Error searching clinics:", err.message);
+    res.status(500).json({
+      message: "Error searching clinics",
+      error: err.message,
+    });
   }
 };
