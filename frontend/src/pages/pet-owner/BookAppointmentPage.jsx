@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { FaClock, FaChevronLeft, FaCalendarAlt, FaLocationDot, FaPhoneAlt } from "react-icons/fa6";
+import { FaClock, FaCalendarAlt, FaChevronLeft, FaPhoneAlt } from "react-icons/fa";
+import { FaLocationDot } from "react-icons/fa6";
 import { IoCheckmarkCircle } from "react-icons/io5";
 import Navbar from "../../components/Navbar.jsx";
 import { fetchAllPetsById } from "../../global/api/pet";
