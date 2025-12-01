@@ -1,4 +1,5 @@
 import { FaEye } from "react-icons/fa";
+import DriveImage from '../DriveImage';
 
 export default function UserTable({ users, onViewDetails }) {
   return (
@@ -10,7 +11,7 @@ export default function UserTable({ users, onViewDetails }) {
             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Contact</th>
             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Role</th>
             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Joined</th>
-            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+            {/* <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th> */}
             <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
@@ -23,40 +24,48 @@ export default function UserTable({ users, onViewDetails }) {
             </tr>
           ) : (
             users.map((user) => (
-              <tr key={user.user_id} className="hover:bg-gray-50 transition">
+              <tr key={user.id} className="hover:bg-gray-50 transition">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-linear-to-br from-primary to-[#FFB49A] flex items-center justify-center text-white font-semibold">
-                      {user.name.charAt(0)}
+                      {user?.profile_image_url ? (
+                        <DriveImage
+                          image={user.profile_image_url}
+                          alt={user.full_name}
+                          className="w-full h-full object-cover rounded-full"
+                          fallbackIcon={false}
+                        />
+                      ) : null}
+                      {!user?.profile_image_url && user.full_name.charAt(0)}
                     </div>
                     <div>
                       <div className="font-semibold text-gray-900">
-                        {user.name}
+                        {user.full_name}
                       </div>
                       <div className="text-sm text-gray-500">{user.email}</div>
                     </div>
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="text-sm text-gray-900">{user.phone}</div>
+                  <div className="text-sm text-gray-900">{user.phone_numebr || "N/A"}</div>
                 </td>
                 <td className="px-6 py-4">
                   <span
                     className={`px-3 truncate py-1 rounded-xl text-xs font-semibold ${
-                      user.role === "clinic_admin"
+                      user.user_type === "clinic_admin"
                         ? "bg-purple-100 text-purple-700 border border-purple-300"
-                        : user.role === "vet_pro"
+                        : user.user_type === "vet_pro"
                         ? "bg-blue-100 text-blue-700 border border-blue-300"
                         : "bg-gray-100 text-gray-700 border border-gray-300"
                     }`}
                   >
-                    {user.role.toUpperCase().replace("_", " ")}
+                    {user.user_type.toUpperCase().replace("_", " ")}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-600">
-                  {user.joined_date}
+                  {user.createdAt.slice(0, 10)}
                 </td>
-                <td className="px-6 py-4">
+                {/* <td className="px-6 py-4">
                   <span
                     className={`px-3 py-1 rounded-xl text-xs font-semibold ${
                       user.status === "active"
@@ -66,7 +75,7 @@ export default function UserTable({ users, onViewDetails }) {
                   >
                     {user.status.toUpperCase()}
                   </span>
-                </td>
+                </td> */}
                 <td className="px-6 py-4 text-center">
                   {/* View Details Button */}
                   <div className="relative group">

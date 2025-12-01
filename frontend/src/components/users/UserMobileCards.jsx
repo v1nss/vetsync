@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import DriveImage from "../DriveImage";
 import {
   FaSearch,
   FaUser,
@@ -15,16 +16,24 @@ export default function UserMobileCards({ users, onViewDetails }) {
       ) : (
         users.map((user) => (
           <div
-            key={user.user_id}
+            key={user.id}
             className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-linear-to-br from-primary to-[#FFB49A] flex items-center justify-center text-white font-semibold text-lg">
-                  {user.name.charAt(0)}
+                  {user?.profile_image_url ? (
+                      <DriveImage
+                        image={user.profile_image_url}
+                        alt={user.full_name}
+                        className="w-full h-full object-cover rounded-full"
+                        fallbackIcon={false}
+                      />
+                    ) : null}
+                    {!user?.profile_image_url && user.full_name.charAt(0)}
                 </div>
                 <div>
-                  <div className="font-semibold text-gray-900">{user.name}</div>
+                  <div className="font-semibold text-gray-900">{user.full_name}</div>
                   <div className="text-xs text-gray-500">{user.email}</div>
                 </div>
               </div>
@@ -33,27 +42,27 @@ export default function UserMobileCards({ users, onViewDetails }) {
             <div className="space-y-2 mb-3">
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <FaPhone className="text-gray-400" />
-                {user.phone}
+                {user.phone_numebr || "N/A"}
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <FaCalendar className="text-gray-400" />
-                Joined: {user.joined_date}
+                Joined: {user.createdAt.slice(0, 10)}
               </div>
             </div>
 
             <div className="flex items-center justify-between mb-3">
               <span
                 className={`px-3 py-1 rounded-xl text-xs font-semibold ${
-                  user.role === "clinic_admin"
+                  user.user_type === "clinic_admin"
                     ? "bg-purple-100 text-purple-700 border border-purple-300"
                     : user.role === "vet_pro"
                     ? "bg-blue-100 text-blue-700 border border-blue-300"
                     : "bg-gray-100 text-gray-700 border border-gray-300"
                 }`}
               >
-                {user.role.toUpperCase().replace("_", " ")}
+                {user.user_type.toUpperCase().replace("_", " ")}
               </span>
-              <span
+              {/* <span
                 className={`px-3 py-1 rounded-xl text-xs font-semibold ${
                   user.status === "active"
                     ? "bg-green-100 text-green-700 border border-green-300"
@@ -61,7 +70,7 @@ export default function UserMobileCards({ users, onViewDetails }) {
                 }`}
               >
                 {user.status.toUpperCase()}
-              </span>
+              </span> */}
             </div>
 
             <button

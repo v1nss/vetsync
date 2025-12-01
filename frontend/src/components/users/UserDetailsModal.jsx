@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaTimesCircle } from 'react-icons/fa';
+import DriveImage from '../DriveImage';
 
 export default function UserDetailsModal({ user, onClose }) {
   if (!user) return null;
@@ -20,10 +21,18 @@ export default function UserDetailsModal({ user, onClose }) {
         <div className="p-6">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-20 h-20 rounded-full bg-linear-to-br from-primary to-[#FFB49A] flex items-center justify-center text-white font-bold text-3xl">
-              {user.name.charAt(0)}
+              {user?.profile_image_url ? (
+                  <DriveImage
+                    image={user.profile_image_url}
+                    alt={user.full_name}
+                    className="w-full h-full object-cover rounded-full"
+                    fallbackIcon={false}
+                  />
+                ) : null}
+                {!user?.profile_image_url && user.full_name.charAt(0)}
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-900">{user.name}</h3>
+              <h3 className="text-2xl font-bold text-gray-900">{user.full_name}</h3>
               <p className="text-gray-600">{user.email}</p>
             </div>
           </div>
@@ -31,28 +40,28 @@ export default function UserDetailsModal({ user, onClose }) {
           <div className="space-y-4">
             <div className="bg-gray-50 rounded-xl p-4">
               <div className="text-sm text-gray-600 mb-1">User ID</div>
-              <div className="font-semibold text-gray-900">{user.user_id}</div>
+              <div className="font-semibold text-gray-900">{user.id}</div>
             </div>
 
             <div className="bg-gray-50 rounded-xl p-4">
               <div className="text-sm text-gray-600 mb-1">Phone Number</div>
-              <div className="font-semibold text-gray-900">{user.phone}</div>
+              <div className="font-semibold text-gray-900">{user.phone_numebr || "N/A"}</div>
             </div>
 
             <div className="bg-gray-50 rounded-xl p-4">
               <div className="text-sm text-gray-600 mb-1">Role</div>
               <span className={`inline-block px-3 py-1 rounded-xl text-xs font-semibold ${
-                user.role === 'clinic_admin' 
+                user.user_type === 'clinic_admin' 
                   ? 'bg-purple-100 text-purple-700 border border-purple-300'
-                  : user.role === 'vet_pro'
+                  : user.user_type === 'vet_pro'
                   ? 'bg-blue-100 text-blue-700 border border-blue-300'
                   : 'bg-gray-100 text-gray-700 border border-gray-300'
               }`}>
-                {user.role.toUpperCase().replace('_', ' ')}
+                {user.user_type.toUpperCase().replace('_', ' ')}
               </span>
             </div>
 
-            <div className="bg-gray-50 rounded-xl p-4">
+            {/* <div className="bg-gray-50 rounded-xl p-4">
               <div className="text-sm text-gray-600 mb-1">Status</div>
               <span className={`inline-block px-3 py-1 rounded-xl text-xs font-semibold ${
                 user.status === 'active'
@@ -61,11 +70,11 @@ export default function UserDetailsModal({ user, onClose }) {
               }`}>
                 {user.status.toUpperCase()}
               </span>
-            </div>
+            </div> */}
 
             <div className="bg-gray-50 rounded-xl p-4">
               <div className="text-sm text-gray-600 mb-1">Join Date</div>
-              <div className="font-semibold text-gray-900">{user.joined_date}</div>
+              <div className="font-semibold text-gray-900">{user.createdAt.slice(0, 10)}</div>
             </div>
 
             {user.address && (

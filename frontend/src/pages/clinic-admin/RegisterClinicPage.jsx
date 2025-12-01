@@ -208,7 +208,7 @@ export default function RegisterClinicPage() {
       });
       
       const clinicResponse = await registerClinic(clinicFormData);
-
+      
       setSubmitStatus("submitted");
       
       // Step 4: Navigate to pending page AFTER clinic is registered

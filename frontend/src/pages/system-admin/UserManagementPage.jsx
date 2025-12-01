@@ -4,6 +4,7 @@ import UserDetailsModal from "../../components/users/UserDetailsModal";
 import UserMobileCards from "../../components/users/UserMobileCards";
 import UserTable from "../../components/users/UserTable";
 import Pagination from "../../components/Pagination";
+import { fetchAllUsers } from "../../global/api/systemAdmin";
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState([]);
@@ -28,15 +29,27 @@ export default function UserManagementPage() {
       { user_id: 5, name: "Pedro Martinez", email: "pedro.martinez@email.com", phone: "+63 917 567 8901", role: "pet_owner", status: "inactive", joined_date: "2024-01-05", address: "654 Birch Ln, Taguig" },
       { user_id: 6, name: "Dr. Roberto Garcia", email: "roberto.garcia@email.com", phone: "+63 917 678 9012", role: "vet_pro", status: "active", joined_date: "2024-04-01", address: "987 Cedar St, Mandaluyong" }
     ];
-    setUsers(mockUsers);
-    setFilteredUsers(mockUsers);
+
+    const fetchAllUsersData = async () => {
+      setLoading(true);
+      try {
+        const allUsers = await fetchAllUsers();
+        console.log("Fetched users:", allUsers);
+        setUsers(allUsers);
+        setFilteredUsers(allUsers);
+      } catch (err) {
+        console.error("Error fetching users:", err);
+        setLoading(false);
+      }
+    }
+    fetchAllUsersData();
   }, []);
 
   useEffect(() => {
     let result = users;
 
     if (activeFilter !== "all") {
-      result = result.filter((u) => u.role === activeFilter);
+      result = result.filter((u) => u.user_type === activeFilter);
     }
 
     if (searchQuery) {
@@ -55,9 +68,9 @@ export default function UserManagementPage() {
 
   const stats = {
     total: users.length,
-    clinic_admin: users.filter((u) => u.role === "clinic_admin").length,
-    vet_pro: users.filter((u) => u.role === "vet_pro").length,
-    pet_owner: users.filter((u) => u.role === "pet_owner").length,
+    clinic_admin: users.filter((u) => u.user_type === "clinic_admin").length,
+    vet_pro: users.filter((u) => u.user_type === "vet_pro").length,
+    pet_owner: users.filter((u) => u.user_type === "pet_owner").length,
   };
 
   return (

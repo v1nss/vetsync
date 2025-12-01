@@ -12,10 +12,9 @@ export const fetchAllClinics = async (status = "*") => {
 
 export const updateClinicStatus = async (clinicId, status) => {
   try {
-    const res = await api.patch(
-      `/system-admin/clinics/${clinicId}/status`,
-      { status }
-    );
+    const res = await api.patch(`/system-admin/clinics/${clinicId}/status`, {
+      status,
+    });
     return res.data;
   } catch (err) {
     console.error(`Unable to update clinic status to ${status}`, err);
@@ -40,6 +39,16 @@ export const fetchApprovalLogsByClinicId = async (clinicId) => {
     return res.data.logs;
   } catch (err) {
     console.error("Unable to fetch approval logs", err);
+    throw err;
+  }
+};
+
+export const fetchAllUsers = async () => {
+  try {
+    const res = await api.get("/system-admin/users");
+    return res.data.users;
+  } catch (err) {
+    console.error("Unable to fetch users", err);
     throw err;
   }
 };
