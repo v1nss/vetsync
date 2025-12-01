@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { FaCalendarAlt, FaCalendarCheck, FaClock, FaCheckCircle, FaClipboardList } from "react-icons/fa";
+import { useAuth } from "../../context/AuthContext";
+import { Link } from "react-router-dom";
+import { FaCalendarAlt, FaCalendarCheck, FaClock, FaCheckCircle, FaClipboardList, FaBars } from "react-icons/fa";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import NotificationModal from "../../components/NotificationModal";
 import CalendarModal from "../../components/appointments/CalendarModal";
@@ -9,6 +11,7 @@ import AppointmentsFilters from "../../components/appointments/AppointmentsFilte
 import { useVetAppointments } from "../../hooks/useVetAppointments";
 
 export default function VetAppointmentsPage() {
+  const { logout, user } = useAuth();
   const { appointments, stats, markAppointmentComplete } = useVetAppointments();
   const [filteredAppointments, setFilteredAppointments] = useState([]);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
@@ -16,6 +19,7 @@ export default function VetAppointmentsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showCalendar, setShowCalendar] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const [confirmation, setConfirmation] = useState({
     isOpen: false,
@@ -75,72 +79,94 @@ export default function VetAppointmentsPage() {
     setShowDetailsModal(true);
   };
 
+  const statsCards = [
+    { label: "Total Appointments", value: stats.total, icon: FaClipboardList, bgColor: "bg-blue-100", iconColor: "text-blue-600" },
+    { label: "Today's Appointments", value: stats.today, icon: FaCalendarCheck, bgColor: "bg-orange-100", iconColor: "text-orange-600" },
+    { label: "Upcoming", value: stats.upcoming, icon: FaClock, bgColor: "bg-yellow-100", iconColor: "text-yellow-600" },
+    { label: "Completed", value: stats.completed, icon: FaCheckCircle, bgColor: "bg-green-100", iconColor: "text-green-600" }
+  ];
+
   return (
-    <main className="min-h-screen pb-10 bg-gray-50">
-      <div>
+    <main className="min-h-screen pb-20 sm:pb-10 bg-gray-50">
+      {/* Desktop Navbar */}
+      <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-gray-100 hidden sm:block">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link to="/" className="flex items-center">
+              <img className="h-8 w-auto" src="/vetsync-logo-wname.png" alt="VetSync" />
+            </Link>
+            <button
+              onClick={logout}
+              className="text-gray-700 hover:bg-gray-50 hover:text-primary px-4 py-2 rounded-lg text-sm font-medium transition"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile Header */}
+      <div className="sm:hidden sticky top-0 z-40 bg-white border-b border-gray-200">
+        <div className="flex items-center justify-between px-4 h-16">
+          <Link to="/" className="flex items-center">
+            <img className="h-7 w-auto" src="/vetsync-logo-wname.png" alt="VetSync" />
+          </Link>
+          <button
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            className="p-2 rounded-lg hover:bg-gray-100 transition"
+          >
+            <FaBars className="text-xl text-gray-700" />
+          </button>
+        </div>
+        {showMobileMenu && (
+          <div className="border-t border-gray-200 px-4 py-3 bg-white">
+            <button
+              onClick={() => {
+                logout();
+                setShowMobileMenu(false);
+              }}
+              className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition"
+            >
+              Logout
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">My Appointments</h1>
-            <p className="text-gray-600 mt-1">View and manage your assigned appointments</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Appointments</h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">View and manage your assigned appointments</p>
           </div>
           <button
             onClick={() => setShowCalendar(true)}
-            className="flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-xl hover:bg-primary/90 transition"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 bg-primary text-white rounded-xl hover:bg-primary/90 transition text-sm sm:text-base font-medium"
           >
-            <FaCalendarAlt /> View Calendar
+            <FaCalendarAlt className="text-sm sm:text-base" />
+            <span>View Calendar</span>
           </button>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Total Appointments</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+          {statsCards.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <div key={index} className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-4 sm:p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs sm:text-sm text-gray-600 mb-1">{stat.label}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stat.value}</p>
+                  </div>
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 ${stat.bgColor} rounded-lg sm:rounded-xl flex items-center justify-center`}>
+                    <Icon className={`text-xl sm:text-2xl ${stat.iconColor}`} />
+                  </div>
+                </div>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <FaClipboardList className="text-2xl text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Today's Appointments</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.today}</p>
-              </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-                <FaCalendarCheck className="text-2xl text-orange-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Upcoming</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.upcoming}</p>
-              </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-                <FaClock className="text-2xl text-yellow-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Completed</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.completed}</p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <FaCheckCircle className="text-2xl text-green-600" />
-              </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
 
         {/* Filters */}
@@ -152,12 +178,12 @@ export default function VetAppointmentsPage() {
         />
 
         {/* Appointments List */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {filteredAppointments.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
-              <FaCalendarAlt className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No appointments found</h3>
-              <p className="text-gray-600">
+            <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-8 sm:p-12 text-center">
+              <FaCalendarAlt className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4" />
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No appointments found</h3>
+              <p className="text-sm sm:text-base text-gray-600">
                 {statusFilter !== "all" 
                   ? "Try adjusting your filters or search terms" 
                   : "You don't have any appointments assigned yet"}
