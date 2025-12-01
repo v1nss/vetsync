@@ -1,5 +1,5 @@
 import express from "express";
-import { fetchMyClinic, fetchClinicByOwnerId, registerNewClinic, updateClinicDetails } from "../controllers/clinicController.js";
+import { fetchMyClinic, fetchClinicByOwnerId, registerNewClinic, updateClinicDetails, fetchApprovedClinics, fetchClinicById, searchClinics } from "../controllers/clinicController.js";
 import { authenticate, verifyClinicAdmin } from "../../global/middleware/authMiddleware.js";
 import upload from "../../global/config/multer.js";
 
@@ -27,6 +27,12 @@ router.patch("/update/:clinicId",
   ]),
   updateClinicDetails
 )
+
+router.get("/approved", fetchApprovedClinics);
+
+router.get("/search", searchClinics);
+
+router.get("/public/:clinicId", fetchClinicById);
 
 router.get("/get-clinic/:ownerId", authenticate, verifyClinicAdmin, fetchClinicByOwnerId);
 

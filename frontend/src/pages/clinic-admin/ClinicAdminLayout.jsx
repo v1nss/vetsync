@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
-import { FaPaw, FaNotesMedical, FaClinicMedical, FaUserMd, FaCog } from "react-icons/fa";
+import { FaPaw, FaNotesMedical, FaClinicMedical, FaUserMd, FaCalendarAlt, FaCalendar } from "react-icons/fa";
 import { IoMenu } from "react-icons/io5";
 import { BiSolidDashboard } from "react-icons/bi";
 import { useAuth } from "../../context/AuthContext";
@@ -21,6 +21,7 @@ export default function ClinicAdminLayout() {
     { name: "Health Records", icon: <FaNotesMedical />, path: "/clinic-admin/ehr" },
     { name: "Patient Management", icon: <FaPaw />, path: "/clinic-admin/patients" },
     { name: "Clinic Management", icon: <FaClinicMedical />, path: "/clinic-admin/settings" },
+    { name: "Appointments", icon: <FaCalendarAlt />, path: "/clinic-admin/appointments" },
     { name: "Vet Professionals", icon: <FaUserMd />, path: "/clinic-admin/vet-pros" },
     // { name: "Settings", icon: <FaCog />, path: "/clinic-admin/profile-settings" },
   ];

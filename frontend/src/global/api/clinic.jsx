@@ -21,3 +21,38 @@ export const fetchClinicByOwnerId = async (owner_id) => {
         throw err;
     }
 };
+
+// Fetch all approved clinics for public display
+export const fetchApprovedClinics = async () => {
+  try {
+    const response = await api.get('/clinics/approved');
+    return response.data.clinics || [];
+  } catch (error) {
+    console.error('Error fetching approved clinics:', error);
+    throw error;
+  }
+};
+
+// Search clinics by keyword
+export const searchClinics = async (searchTerm) => {
+  try {
+    const response = await api.get('/clinics/search', {
+      params: { search: searchTerm }
+    });
+    return response.data.clinics || [];
+  } catch (error) {
+    console.error('Error searching clinics:', error);
+    throw error;
+  }
+};
+
+// Fetch single clinic details by ID
+export const fetchClinicById = async (clinicId) => {
+  try {
+    const response = await api.get(`/clinics/public/${clinicId}`);
+    return response.data.clinic;
+  } catch (error) {
+    console.error('Error fetching clinic details:', error);
+    throw error;
+  }
+};

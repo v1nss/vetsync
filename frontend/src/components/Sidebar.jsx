@@ -1,9 +1,14 @@
 import React, { useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
 import { Link, useLocation } from "react-router-dom";
 import { FaSignOutAlt, FaTimes } from "react-icons/fa";
+import DriveImage from './DriveImage';
 
 export default function Sidebar({ isOpen, setIsOpen, title, links, onLogout }) {
   const location = useLocation();
+  const { user } = useAuth();
+
+  const fullName = user?.full_name || user?.email || 'User';
 
   useEffect(() => {
     const handleResize = () => {
@@ -40,8 +45,27 @@ export default function Sidebar({ isOpen, setIsOpen, title, links, onLogout }) {
         </button>
       </div>
 
+      {/* User Info */}
+      <div className="flex items-center gap-3 mx-2 my-4 border border-gray-200 rounded-xl py-4 px-2">
+        <div className="w-10 h-10 border border-gray-200 rounded-full flex items-center justify-center font-semibold overflow-hidden text-sm bg-primary text-white">
+          {user?.profile_image_url ? (
+            <DriveImage
+              image={user.profile_image_url}
+              alt={fullName}
+              className="w-full h-full object-cover"
+              fallbackIcon={false}
+            />
+          ) : null}
+          {!user?.profile_image_url && fullName.charAt(0).toUpperCase()}
+        </div>
+        <div>
+          <p className="text-sm font-medium text-gray-900">{user?.full_name || 'Clinic Admin'}</p>
+          <p className="text-[10px] text-gray-500">{user?.email || 'admin@clinic.com'}</p>
+        </div>
+      </div>
+
       {/* Navigation Links */}
-      <nav className="flex-1 mt-4 space-y-1">
+      <nav className="flex-1 space-y-1">
         {links.map((link) => {
           const isActive = location.pathname.startsWith(link.path);
           return (
