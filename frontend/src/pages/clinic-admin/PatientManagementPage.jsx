@@ -1,16 +1,17 @@
 import { useState, useEffect } from "react";
 import { FaSearch, FaPhone, FaEnvelope, FaPaw } from "react-icons/fa";
-import { useAuth } from "../../context/AuthContext";
+import PatientDetailsModal from "../../components/clinic/PatientDetailsModal";
 
 export default function PatientManagementPage() {
-  const { token } = useAuth();
   const [patients, setPatients] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredPatients, setFilteredPatients] = useState([]);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchPatients();
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     if (searchQuery) {
@@ -31,10 +32,7 @@ export default function PatientManagementPage() {
 
   const fetchPatients = async () => {
     try {
-      // const data = await fetchClinicPatients(token);
-      // setPatients(data);
-
-      // Mock data
+      // Mock data with complete pet details
       setPatients([
         {
           id: 1,
@@ -44,9 +42,16 @@ export default function PatientManagementPage() {
           owner_email: "john@email.com",
           species: "Dog",
           breed: "Golden Retriever",
+          color: "Golden",
+          birthday: "2020-03-15",
           age: "4 years",
+          weight: "32 kg",
+          gender: "Male",
           last_visit: "2025-11-15",
           total_visits: 12,
+          medical_notes: "Healthy, up to date on vaccinations. Slight hip dysplasia monitored.",
+          allergies: "None known",
+          medications: "Joint supplement daily"
         },
         {
           id: 2,
@@ -56,9 +61,16 @@ export default function PatientManagementPage() {
           owner_email: "jane@email.com",
           species: "Cat",
           breed: "Persian",
+          color: "White",
+          birthday: "2022-07-22",
           age: "2 years",
+          weight: "4.5 kg",
+          gender: "Female",
           last_visit: "2025-11-10",
           total_visits: 8,
+          medical_notes: "Regular grooming required. Prone to hairballs.",
+          allergies: "Chicken-based foods",
+          medications: "Hairball control supplement"
         },
         {
           id: 3,
@@ -68,9 +80,16 @@ export default function PatientManagementPage() {
           owner_email: "mike@email.com",
           species: "Dog",
           breed: "Beagle",
+          color: "Tri-color (Black, Brown, White)",
+          birthday: "2021-05-10",
           age: "3 years",
+          weight: "12 kg",
+          gender: "Male",
           last_visit: "2025-11-18",
           total_visits: 15,
+          medical_notes: "Very active, maintained healthy weight. Occasional ear infections.",
+          allergies: "Beef",
+          medications: "None currently"
         },
         {
           id: 4,
@@ -80,9 +99,16 @@ export default function PatientManagementPage() {
           owner_email: "sarah@email.com",
           species: "Dog",
           breed: "Poodle",
+          color: "Apricot",
+          birthday: "2019-11-03",
           age: "5 years",
+          weight: "8 kg",
+          gender: "Female",
           last_visit: "2025-11-12",
           total_visits: 20,
+          medical_notes: "Senior wellness plan. Dental cleaning scheduled for next month.",
+          allergies: "None known",
+          medications: "Dental care supplement"
         },
       ]);
     } catch (err) {
@@ -90,31 +116,41 @@ export default function PatientManagementPage() {
     }
   };
 
+  const handlePatientClick = (patient) => {
+    setSelectedPatient(patient);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedPatient(null);
+  };
+
   return (
     <main className="min-h-screen pb-10 bg-gray-50">
       <div>
         <div className="flex sm:flex-row flex-col justify-between gap-y-4 sm:items-center mb-6">
-            <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                    Patient Management
-                </h1>
-                <p className="text-gray-600 mt-1">
-                    View and manage your clinic's patients
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Patient Management
+            </h1>
+            <p className="text-gray-600 mt-1">
+              View and manage your clinic's patients
+            </p>
+          </div>
+          <div className="w-full sm:w-64 bg-white p-4 rounded-xl border border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <FaPaw className="text-primary text-xl" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Total Patients</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {patients.length}
                 </p>
+              </div>
             </div>
-            <div className="w-full sm:w-64 bg-white p-4 rounded-xl border border-gray-200">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                    <FaPaw className="text-primary text-xl" />
-                    </div>
-                    <div>
-                    <p className="text-sm text-gray-600">Total Patients</p>
-                    <p className="text-2xl font-bold text-gray-900">
-                        {patients.length}
-                    </p>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
 
         {/* Search */}
@@ -181,7 +217,11 @@ export default function PatientManagementPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {filteredPatients.map((patient) => (
-                      <tr key={patient.id} className="hover:bg-gray-50">
+                      <tr 
+                        key={patient.id} 
+                        className="hover:bg-blue-50 cursor-pointer transition-colors"
+                        onClick={() => handlePatientClick(patient)}
+                      >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="font-medium text-gray-900">
                             {patient.pet_name}
@@ -228,7 +268,11 @@ export default function PatientManagementPage() {
               {/* Mobile Cards */}
               <div className="md:hidden divide-y divide-gray-200">
                 {filteredPatients.map((patient) => (
-                  <div key={patient.id} className="p-4">
+                  <div 
+                    key={patient.id} 
+                    className="p-4 hover:bg-blue-50 cursor-pointer transition-colors"
+                    onClick={() => handlePatientClick(patient)}
+                  >
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <h3 className="font-semibold text-gray-900">
@@ -277,6 +321,15 @@ export default function PatientManagementPage() {
           )}
         </div>
       </div>
+
+      {/* Patient Details Modal */}
+      {selectedPatient && (
+        <PatientDetailsModal
+          patient={selectedPatient}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+        />
+      )}
     </main>
   );
 }
