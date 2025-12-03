@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { FiChevronLeft, FiEdit2 } from "react-icons/fi";
+import { FiChevronLeft, FiPlus } from "react-icons/fi";
 import { RiMicroscopeLine, RiSyringeLine } from "react-icons/ri";
 import { FaPrescription } from "react-icons/fa";
 import HealthRecordsTable from "./HealthRecordsTable";
 import HealthRecordModal from "./HealthRecordModal.jsx";
+import AddHealthRecordModal from "./AddHealthRecordModal.jsx";
 
 // Mock health records data
 const mockHealthRecords = [
@@ -120,11 +121,32 @@ const mockHealthRecords = [
 
 export default function PatientProfile({ patient, onBack, healthRecords }) {
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [displayHealthRecords, setDisplayHealthRecords] = useState(healthRecords || mockHealthRecords);
 
-  // Use mock data if no data provided
-  const displayHealthRecords = healthRecords || mockHealthRecords;
+  // Handle saving new health record
+  const handleSaveHealthRecord = async (newRecord) => {
+    try {
+      // TODO: Replace with actual API call
+      // const savedRecord = await saveHealthRecord(newRecord);
+      
+      console.log("Saving health record:", newRecord);
+      
+      // Update local state
+      setDisplayHealthRecords(prev => [newRecord, ...prev]);
+      
+      // Close modal
+      setShowAddModal(false);
+      
+      // Show success message (you can use a toast library)
+      alert("Health record added successfully!");
+      
+    } catch (error) {
+      console.error("Error saving health record:", error);
+      alert("Failed to save health record. Please try again.");
+    }
+  };
 
-  // Create pet object for modal (converting patient to pet format)
   const petForModal = {
     name: patient.name,
     species: patient.species,
@@ -170,8 +192,14 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
                   </div>
                 </div>
 
-                <button className="p-2 hover:bg-gray-100 rounded-xl transition">
-                  <FiEdit2 size={18} className="text-gray-600" />
+                {/* Add Health Record Button */}
+                <button 
+                  onClick={() => setShowAddModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium"
+                >
+                  <FiPlus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Add Health Record</span>
+                  <span className="sm:hidden">Add Record</span>
                 </button>
               </div>
 
@@ -250,16 +278,17 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
 
         {/* Health Records Section */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Health Records
-            </h3>
-            <p className="text-sm text-gray-600 mt-1">
-              {displayHealthRecords.length} appointment{displayHealthRecords.length !== 1 ? 's' : ''} on record
-            </p>
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Health Records
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                {displayHealthRecords.length} appointment{displayHealthRecords.length !== 1 ? 's' : ''} on record
+              </p>
+            </div>
           </div>
 
-          {/* Health Records Table */}
           <HealthRecordsTable 
             healthRecords={displayHealthRecords} 
             onRecordClick={setSelectedRecord}
@@ -267,12 +296,21 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
         </div>
       </div>
 
-      {/* Detail Modal */}
+      {/* View Detail Modal */}
       {selectedRecord && (
         <HealthRecordModal
           healthRecord={selectedRecord}
           pet={petForModal}
           onClose={() => setSelectedRecord(null)}
+        />
+      )}
+
+      {/* Add Health Record Modal */}
+      {showAddModal && (
+        <AddHealthRecordModal
+          patient={patient}
+          onClose={() => setShowAddModal(false)}
+          onSave={handleSaveHealthRecord}
         />
       )}
     </>

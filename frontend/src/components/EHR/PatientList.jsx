@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FiSearch, FiFilter, FiPlus } from "react-icons/fi";
+import { FiSearch, FiFilter } from "react-icons/fi";
 import Pagination from '../../components/Pagination';
 import PatientsTable from "./PatientsTable";
 
@@ -74,16 +74,6 @@ export default function PatientList({ patients, onSelect }) {
               <FiFilter size={18} />
               <span className="text-sm font-medium">Filters</span>
             </button>
-
-            {/* Add New Record */}
-            <button
-              className="w-full md:w-fit px-4 py-2.5 bg-primary text-white rounded-xl 
-                        hover:bg-[#FEA08E] transition flex items-center gap-2"
-            >
-              <FiPlus size={18} />
-              <span className="text-sm font-medium">Add Record</span>
-            </button>
-
           </div>
         </div>
       </div>

@@ -1,4 +1,3 @@
-// Main container page
 import React, { useState } from "react";
 import PatientList from "../../components/EHR/PatientList";
 import PatientProfile from "../../components/EHR/PatientProfile";
