@@ -1,14 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FaUser, FaCog, FaPaw, FaCalendarAlt, FaSignOutAlt, FaChevronDown } from 'react-icons/fa';
+import { FaUser, FaCog, FaPaw, FaCalendarAlt, FaSignOutAlt, FaChevronDown, FaFileMedical, FaClinicMedical } from 'react-icons/fa';
 import { useAuth } from "../context/AuthContext";
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 import DriveImage from './DriveImage';
 
 export default function ProfileDropdown() {
   const { logout, user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null); 
-  //TODO: before the page loads the images should be already loaded 
+  const dropdownRef = useRef(null);
+  
+  const userType = user?.user_type;
 
   // Get full name with fallback
   const fullName = user?.full_name || user?.email || 'User';
@@ -21,7 +22,7 @@ export default function ProfileDropdown() {
       .map(n => n[0])
       .join("")
       .toUpperCase()
-      .slice(0, 2); // Limit to 2 characters
+      .slice(0, 2);
   };
 
   useEffect(() => {
@@ -34,6 +35,50 @@ export default function ProfileDropdown() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Get menu items based on user type
+  const getMenuItems = () => {
+    if (userType === 'vet_professional') {
+      return [
+        {
+          to: '/vet/profile',
+          icon: FaUser,
+          label: 'My Profile',
+        },
+        {
+          to: '/vet/appointments',
+          icon: FaCalendarAlt,
+          label: 'Appointments',
+        },
+        {
+          to: '/vet/health-records',
+          icon: FaFileMedical,
+          label: 'Health Records',
+        },
+      ];
+    }
+
+    // Default: pet_owner
+    return [
+      {
+        to: '/pet-owner/settings',
+        icon: FaCog,
+        label: 'Account Settings',
+      },
+      {
+        to: '/pet-owner/pets',
+        icon: FaPaw,
+        label: 'My Pets',
+      },
+      {
+        to: '/pet-owner/appointments',
+        icon: FaCalendarAlt,
+        label: 'Appointments',
+      },
+    ];
+  };
+
+  const menuItems = getMenuItems();
 
   return (
     <div>
@@ -79,39 +124,36 @@ export default function ProfileDropdown() {
                 <div>
                   <p className="font-semibold text-gray-800">{fullName}</p>
                   <p className="text-sm text-gray-500">{user?.email}</p>
+                  {user?.clinic_name && (
+                    <p className="text-xs text-gray-400 mt-0.5">{user.clinic_name}</p>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Menu Items */}
             <div className="py-2">
-              <Link
-                to="/pet-owner/settings"
-                className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-50 transition-colors duration-150"
-              >
-                <FaCog className="text-gray-600 text-lg" />
-                <span className="text-gray-700 font-medium">Account Settings</span>
-              </Link>
-
-              <Link
-                to="/pet-owner/pets"
-                className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-50 transition-colors duration-150"
-              >
-                <FaPaw className="text-gray-600 text-lg" />
-                <span className="text-gray-700 font-medium">My Pets</span>
-              </Link>
-
-              <Link
-                to="/pet-owner/appointments"
-                className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-50 transition-colors duration-150"
-              >
-                <FaCalendarAlt className="text-gray-600 text-lg" />
-                <span className="text-gray-700 font-medium">Appointments</span>
-              </Link>
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    onClick={() => setIsOpen(false)}
+                    className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-50 transition-colors duration-150"
+                  >
+                    <Icon className="text-gray-600 text-lg" />
+                    <span className="text-gray-700 font-medium">{item.label}</span>
+                  </Link>
+                );
+              })}
 
               <div className="border-t border-gray-100 mt-2 pt-2">
                 <button
-                  onClick={logout}
+                  onClick={() => {
+                    setIsOpen(false);
+                    logout();
+                  }}
                   className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-red-50 transition-colors duration-150 text-red-600"
                 >
                   <FaSignOutAlt className="text-lg" />

@@ -9,6 +9,7 @@ import AppointmentDetailsModal from "../../components/appointments/AppointmentDe
 import VetAppointmentCard from "../../components/appointments/VetAppointmentCard";
 import AppointmentsFilters from "../../components/appointments/AppointmentsFilters";
 import { useVetAppointments } from "../../hooks/useVetAppointments";
+import Navbar from "../../components/Navbar";
 
 export default function VetAppointmentsPage() {
   const { logout, user } = useAuth();
@@ -88,50 +89,7 @@ export default function VetAppointmentsPage() {
 
   return (
     <main className="min-h-screen pb-20 sm:pb-10 bg-gray-50">
-      {/* Desktop Navbar */}
-      <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-gray-100 hidden sm:block">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center">
-              <img className="h-8 w-auto" src="/vetsync-logo-wname.png" alt="VetSync" />
-            </Link>
-            <button
-              onClick={logout}
-              className="text-gray-700 hover:bg-gray-50 hover:text-primary px-4 py-2 rounded-lg text-sm font-medium transition"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* Mobile Header */}
-      <div className="sm:hidden sticky top-0 z-40 bg-white border-b border-gray-200">
-        <div className="flex items-center justify-between px-4 h-16">
-          <Link to="/" className="flex items-center">
-            <img className="h-7 w-auto" src="/vetsync-logo-wname.png" alt="VetSync" />
-          </Link>
-          <button
-            onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="p-2 rounded-lg hover:bg-gray-100 transition"
-          >
-            <FaBars className="text-xl text-gray-700" />
-          </button>
-        </div>
-        {showMobileMenu && (
-          <div className="border-t border-gray-200 px-4 py-3 bg-white">
-            <button
-              onClick={() => {
-                logout();
-                setShowMobileMenu(false);
-              }}
-              className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition"
-            >
-              Logout
-            </button>
-          </div>
-        )}
-      </div>
+      <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
         {/* Header */}

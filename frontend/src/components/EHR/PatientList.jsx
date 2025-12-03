@@ -1,155 +1,139 @@
-import React, { useState } from "react";
-import { FiSearch, FiFilter } from "react-icons/fi";
-import Pagination from '../../components/Pagination';
-import PatientsTable from "./PatientsTable";
+import React from "react";
+import { FiSearch, FiChevronRight } from "react-icons/fi";
 
-export default function PatientList({ patients, onSelect }) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+export default function PatientList({ patients, onSelect, searchTerm, setSearchTerm }) {
+  const [localSearchTerm, setLocalSearchTerm] = React.useState(searchTerm || "");
 
-  const normalize = (value) => {
-    if (!value) return "";
-    return String(value).toLowerCase();
+  // Use local search if parent doesn't provide it
+  const search = searchTerm !== undefined ? searchTerm : localSearchTerm;
+  const setSearch = setSearchTerm || setLocalSearchTerm;
+
+  // Calculate age from birthdate
+  const calculateAge = (birthdate) => {
+    if (!birthdate) return "Age unknown";
+    
+    const birth = new Date(birthdate);
+    const today = new Date();
+    
+    let years = today.getFullYear() - birth.getFullYear();
+    let months = today.getMonth() - birth.getMonth();
+    
+    if (months < 0 || (months === 0 && today.getDate() < birth.getDate())) {
+      years--;
+      months += 12;
+    }
+    
+    if (today.getDate() < birth.getDate()) {
+      months--;
+    }
+    
+    if (years === 0 && months === 0) {
+      return "Less than 1 month";
+    } else if (years === 0) {
+      return `${months} ${months === 1 ? 'month' : 'months'} old`;
+    } else if (months === 0) {
+      return `${years} ${years === 1 ? 'year' : 'years'} old`;
+    } else {
+      return `${years} ${years === 1 ? 'yr' : 'yrs'}, ${months} ${months === 1 ? 'mo' : 'mos'}`;
+    }
   };
 
+  // Filter patients by search
   const filteredPatients = patients.filter((patient) => {
-    const query = normalize(searchTerm);
-
-    const fields = [
-      normalize(patient.name),
-      normalize(patient.id),
-      normalize(patient.owner?.name),
-      normalize(patient.owner?.email),
-      normalize(patient.owner?.phone),
-      normalize(patient.species),
-      normalize(patient.breed)
-    ];
-
-    return fields.some((field) => field.includes(query));
+    const query = search.toLowerCase();
+    return (
+      patient.name.toLowerCase().includes(query) ||
+      patient.species.toLowerCase().includes(query) ||
+      patient.breed.toLowerCase().includes(query) ||
+      patient.id.toLowerCase().includes(query) ||
+      patient.pet_id?.toLowerCase().includes(query) ||
+      patient.owner?.name.toLowerCase().includes(query)
+    );
   });
 
-  const patientsPerPage = 10;
-  const totalPages = Math.ceil(filteredPatients.length / patientsPerPage);
-  const indexOfLastPatient = currentPage * patientsPerPage;
-  const indexOfFirstPatient = indexOfLastPatient - patientsPerPage;
-  const currentPatients = filteredPatients.slice(indexOfFirstPatient, indexOfLastPatient);
-
   return (
-    <div className="max-w-full mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Health Records</h1>
-        <p className="text-gray-600 text-sm">
-          Search and view through patient records and owner information
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Patient Records</h1>
+        <p className="mt-2 text-gray-600">
+          Manage and view patient medical records
         </p>
       </div>
 
-      {/* Search + Filters */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5 mb-6">
-        <div className="flex flex-col md:flex-row md:items-center md:gap-4 gap-4">
-
-          {/* Search Bar */}
-          <div className="flex-1 relative">
-            <FiSearch
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              size={20}
-            />
+      <div className="bg-white rounded-2xl border border-gray-200 p-6">
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            Select a Patient to View Records
+          </h2>
+          
+          {/* Search */}
+          <div className="relative">
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search patients..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl 
-                        focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition"
+              placeholder="Search by name, species, breed, ID, or owner..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
             />
           </div>
-
-          {/* Right-side Actions */}
-          <div className="flex gap-3">
-
-            {/* Filter Button */}
-            <button
-              className="w-full md:w-fit px-4 py-2.5 border border-gray-200 rounded-xl 
-                        hover:bg-gray-50 transition flex items-center gap-2"
-            >
-              <FiFilter size={18} />
-              <span className="text-sm font-medium">Filters</span>
-            </button>
-          </div>
         </div>
-      </div>
 
-      {/* Table
-      <div className="bg-white rounded-xl border border-gray-200 overflow-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr className="*:p-2">
-              <th className="table-header">Patient</th>
-              <th className="table-header">Species & Breed</th>
-              <th className="table-header">Age</th>
-              <th className="table-header">Owner</th>
-              <th className="table-header">Contact</th>
-              <th className="table-header">Last Visit</th>
-              <th className="table-header">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredPatients.map((patient) => (
-              <tr
-                key={patient.id}
-                className="hover:bg-gray-50 cursor-pointer transition truncate"
-                onClick={() => onSelect(patient)}
-              >
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-gray-600">
-                        {patient.name.charAt(0)}
-                      </span>
+        {/* Patients Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredPatients.map((patient) => (
+            <button
+              key={patient.pet_id || patient.id}
+              onClick={() => onSelect(patient)}
+              className="text-left p-4 rounded-xl border border-gray-200 hover:border-primary hover:bg-primary/5 transition-all group"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-16 h-16 bg-linear-to-br from-primary to-[#FEA08E] rounded-2xl flex items-center justify-center shrink-0">
+                  {patient.profileURL?.link ? (
+                    <img
+                      src={patient.profileURL.link}
+                      alt={patient.name}
+                      className="w-full h-full object-cover rounded-2xl"
+                    />
+                  ) : (
+                    <span className="text-2xl font-bold text-white">
+                      {patient.name.charAt(0)}
+                    </span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 text-lg mb-1 truncate group-hover:text-primary transition">
+                    {patient.name}
+                  </h3>
+                  <p className="text-sm capitalize text-gray-600 mb-2">
+                    {patient.species} • {patient.breed}
+                  </p>
+                  <div className="text-xs text-gray-500 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span>ID: {patient.pet_id || patient.id}</span>
+                      <span>•</span>
+                      <span>{calculateAge(patient.birthdate || patient.dateOfBirth)}</span>
                     </div>
-                    <div>
-                      <div className="font-medium text-gray-900">{patient.name}</div>
-                      <div className="text-sm text-gray-500">{patient.id}</div>
-                    </div>
+                    {patient.owner?.name && (
+                      <div className="flex items-center gap-1">
+                        <span className="font-medium">Owner:</span>
+                        <span className="truncate">{patient.owner.name}</span>
+                      </div>
+                    )}
                   </div>
-                </td>
+                </div>
+                <FiChevronRight className="text-gray-400 mt-2 group-hover:text-primary transition" />
+              </div>
+            </button>
+          ))}
+        </div>
 
-                <td className="px-6 py-4 text-sm text-gray-900">
-                  {patient.species}
-                  <div className="text-gray-500">{patient.breed}</div>
-                </td>
-
-                <td className="px-6 py-4 text-sm text-gray-900 truncate">{patient.age}</td>
-                <td className="px-6 py-4 text-sm text-gray-900 truncate">{patient.owner.name}</td>
-
-                <td className="px-6 py-4">
-                  <div className="text-sm text-gray-900">{patient.owner.phone}</div>
-                  <div className="text-sm text-gray-500">{patient.owner.email}</div>
-                </td>
-
-                <td className="px-6 py-4 text-sm text-gray-900 truncate">{patient.lastVisit}</td>
-
-                <td className="px-6 py-4">
-                  <button className="text-gray-400 hover:text-gray-600">⋮</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div> */}
-      <PatientsTable
-        patients={currentPatients}
-        onSelect={onSelect}
-      />
-      <span className="text-sm xl:hidden flex pt-2 text-gray-500 font-light">Note: Slide left to view more columns.</span>
-    
-      {/* Pagination */}
-      <div className="flex justify-end items-center gap-2 sm:mb-0">
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={(page) => setCurrentPage(page)}
-        />
+        {filteredPatients.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-600">No patients found matching your search</p>
+          </div>
+        )}
       </div>
     </div>
   );
