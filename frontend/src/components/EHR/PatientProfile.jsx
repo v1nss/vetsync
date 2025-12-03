@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import { FiChevronLeft, FiPlus } from "react-icons/fi";
-import { RiMicroscopeLine, RiSyringeLine } from "react-icons/ri";
-import { FaPrescription } from "react-icons/fa";
 import HealthRecordsTable from "./HealthRecordsTable";
 import HealthRecordModal from "./HealthRecordModal.jsx";
 import AddHealthRecordModal from "./AddHealthRecordModal.jsx";
+import NotificationModal from "../NotificationModal";
 
 // Mock health records data
 const mockHealthRecords = [
@@ -123,6 +122,12 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [displayHealthRecords, setDisplayHealthRecords] = useState(healthRecords || mockHealthRecords);
+  const [notification, setNotification] = useState({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    message: ''
+  });
 
   // Handle saving new health record
   const handleSaveHealthRecord = async (newRecord) => {
@@ -138,12 +143,24 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
       // Close modal
       setShowAddModal(false);
       
-      // Show success message (you can use a toast library)
-      alert("Health record added successfully!");
+      // Show success notification
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: 'Success!',
+        message: 'Health record has been added successfully.'
+      });
       
     } catch (error) {
       console.error("Error saving health record:", error);
-      alert("Failed to save health record. Please try again.");
+      
+      // Show error notification
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to save health record. Please try again.'
+      });
     }
   };
 
@@ -313,6 +330,15 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
           onSave={handleSaveHealthRecord}
         />
       )}
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ ...notification, isOpen: false })}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+      />
     </>
   );
 }
