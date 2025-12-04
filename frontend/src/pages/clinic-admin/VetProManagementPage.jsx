@@ -4,9 +4,10 @@ import { useAuth } from "../../context/AuthContext";
 import AddVetModal from "../../components/vet/AddVetModal";
 import NotificationModal from "../../components/NotificationModal";
 import ConfirmationModal from "../../components/ConfirmationModal";
+import { addVetProfessional } from "../../global/api/clinicAdmin";
 
 export default function VetProManagementPage() {
-  const { token } = useAuth();
+  const { user } = useAuth();
   const [vets, setVets] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedVet, setSelectedVet] = useState(null);
@@ -28,7 +29,7 @@ export default function VetProManagementPage() {
 
   useEffect(() => {
     fetchVets();
-  }, [token]);
+  }, [user]);
 
   const fetchVets = async () => {
     try {
@@ -51,9 +52,9 @@ export default function VetProManagementPage() {
     }
   };
 
-  const handleAddVet = async (vetData) => {
+  const handleAddVet = async (vetData, profilePicture) => {
     try {
-      // await addVet(token, vetData);
+      await addVetProfessional(vetData, profilePicture);
       await fetchVets();
       setIsModalOpen(false);
       
@@ -70,14 +71,15 @@ export default function VetProManagementPage() {
         isOpen: true,
         type: 'error',
         title: 'Failed to Add Vet',
-        message: 'Unable to add the veterinarian. Please try again.'
+        message: err.response?.data?.error || err.message || 'Unable to add the veterinarian. Please try again.'
       });
     }
   };
 
-  const handleEditVet = async (vetData) => {
+  const handleEditVet = async (vetData, profilePicture) => {
     try {
-      // await updateVet(token, selectedVet.id, vetData);
+      // TODO: Implement update vet API when backend supports it
+      // await updateVetProfessional(selectedVet.id, vetData, profilePicture);
       await fetchVets();
       setIsModalOpen(false);
       setSelectedVet(null);
@@ -95,7 +97,7 @@ export default function VetProManagementPage() {
         isOpen: true,
         type: 'error',
         title: 'Update Failed',
-        message: 'Unable to update veterinarian information. Please try again.'
+        message: err.response?.data?.error || err.message || 'Unable to update veterinarian information. Please try again.'
       });
     }
   };

@@ -53,6 +53,39 @@ export const updateClinic = async (clinicId, clinicData, newImages = { clinicIma
   }
 };
 
+export const addVetProfessional = async (vetData, profilePicture) => {
+  try {
+    const formData = new FormData();
+    
+    // Prepare vet data
+    const dataToSend = {
+      full_name: vetData.name,
+      email: vetData.email,
+      password: vetData.password,
+      specialization: vetData.specialization,
+      license_number: vetData.license_number,
+    };
+    
+    formData.append('user', JSON.stringify(dataToSend));
+    
+    // Append profile picture if provided
+    if (profilePicture) {
+      formData.append('file', profilePicture);
+    }
+    
+    const res = await api.post('/users/vet', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    
+    return res.data;
+  } catch (err) {
+    console.error("Unable to add vet professional", err);
+    throw err;
+  }
+};
+
 // export const fetchClinicStats = async (token) => {
 //   try {
 //     const res = await axios.get(`${BASE_URL}/clinic-admin/my-clinic/stats`, {

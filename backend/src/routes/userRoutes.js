@@ -7,7 +7,7 @@ const router = express.Router();
 
 // users Creation Routes
 router.post('/register', upload.single("file"), register); // for petOwner or clinicAdmin
-router.post('/vet', authenticate, verifyClinicAdmin, createVetProfessional); // only clinic admin
+router.post('/vet', authenticate, verifyClinicAdmin, upload.single("file"), createVetProfessional); // only clinic admin
 
 router.get('/:id', authenticate, fetchUserDataById);
 

@@ -2,8 +2,14 @@ import Appointment from "../models/appointmentModel.js";
 import ClinicAdmin from "../models/users/clinicAdminModel.js";
 import VetProfessional from "../models/users/vetProfessionalModel.js";
 
-export const createAppointment = async (appointmentData) => {
-  const newAppointment = await Appointment.create(appointmentData);
+export const createAppointment = async (id, appointmentData) => {
+ const { body } = appointmentData;
+  // No need to parse - it's already an object
+  const appointmentInfo = body;
+  const newAppointment = await Appointment.create({
+    ...appointmentInfo,
+    owner_id: id,
+  });
   return newAppointment;
 };
 

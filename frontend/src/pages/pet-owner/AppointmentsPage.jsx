@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../../components/Navbar";
+import { getAppointmentsByOwner } from '../../global/api/appointment.jsx';
 import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUser, FaPhone } from "react-icons/fa";
 import ViewDetailsModal from "../../components/appointments/ViewDetailsModal";
 import RescheduleModal from "../../components/appointments/RescheduleModal";
@@ -14,81 +15,63 @@ export default function AppointmentPage() {
   const [rescheduleModal, setRescheduleModal] = useState({ isOpen: false, appointment: null });
   const [rebookModal, setRebookModal] = useState({ isOpen: false, appointment: null });
   const [notification, setNotification] = useState({ isOpen: false, type: 'success', title: '', message: '' });
+  const [appointmentsData, setAppointmentsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const upcomingAppointments = [
-    {
-      id: 1,
-      petName: "Max",
-      petType: "Dog",
-      date: "2025-11-20",
-      time: "10:00 AM",
-      veterinarian: "Dr. Sarah Johnson",
-      clinic: "Happy Paws Veterinary Clinic",
-      address: "123 Main St, Metro Manila",
-      phone: "+63 912 345 6789",
-      type: "Regular Checkup",
-      status: "Confirmed"
-    },
-    {
-      id: 2,
-      petName: "Luna",
-      petType: "Cat",
-      date: "2025-11-25",
-      time: "2:30 PM",
-      veterinarian: "Dr. Michael Chen",
-      clinic: "Pet Care Center",
-      address: "456 Oak Ave, Quezon City",
-      phone: "+63 917 876 5432",
-      type: "Vaccination",
-      status: "Pending"
-    }
-  ];
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        setLoading(true);
+        const appointments = await getAppointmentsByOwner();
+        console.log("APPOINTMENTS DATA:", appointments);
+        
+        // Ensure we always set an array
+        if (Array.isArray(appointments)) {
+          setAppointmentsData(appointments);
+        } else if (appointments?.data && Array.isArray(appointments.data)) {
+          setAppointmentsData(appointments.data);
+        } else if (appointments?.appointments && Array.isArray(appointments.appointments)) {
+          setAppointmentsData(appointments.appointments);
+        } else {
+          setAppointmentsData([]);
+          console.warn("API returned non-array data:", appointments);
+        }
+      } catch (err) {
+        setError("Failed to load appointments. Please try again later.");
+        console.error("Error fetching appointments:", err);
+        setAppointmentsData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const pastAppointments = [
-    {
-      id: 3,
-      petName: "Max",
-      petType: "Dog",
-      date: "2025-11-10",
-      time: "11:00 AM",
-      veterinarian: "Dr. Sarah Johnson",
-      clinic: "Happy Paws Veterinary Clinic",
-      address: "123 Main St, Metro Manila",
-      phone: "+63 912 345 6789",
-      type: "Vaccination",
-      status: "Completed"
-    },
-    {
-      id: 4,
-      petName: "Bella",
-      petType: "Dog",
-      date: "2025-10-15",
-      time: "3:00 PM",
-      veterinarian: "Dr. Emily Rodriguez",
-      clinic: "Animal Wellness Hospital",
-      address: "789 Pine Rd, Makati City",
-      phone: "+63 918 234 5678",
-      type: "Dental Cleaning",
-      status: "Completed"
-    },
-    {
-      id: 5,
-      petName: "Luna",
-      petType: "Cat",
-      date: "2025-09-20",
-      time: "9:30 AM",
-      veterinarian: "Dr. Michael Chen",
-      clinic: "Pet Care Center",
-      address: "456 Oak Ave, Quezon City",
-      phone: "+63 917 876 5432",
-      type: "Regular Checkup",
-      status: "Completed"
-    }
-  ];
+    fetchAppointments();
+  }, []);
+
+  // Filter appointments based on date and status
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const upcomingAppointments = appointmentsData.filter(apt => {
+    const aptDate = new Date(apt.date);
+    aptDate.setHours(0, 0, 0, 0);
+    const status = apt.status?.toLowerCase();
+    return aptDate >= today && status !== "completed" && status !== "canceled";
+  });
+
+  const pastAppointments = appointmentsData.filter(apt => {
+    const aptDate = new Date(apt.date);
+    aptDate.setHours(0, 0, 0, 0);
+    const status = apt.status?.toLowerCase();
+    return aptDate < today || status === "completed" || status === "canceled";
+  });
 
   const appointments = activeTab === "upcoming" ? upcomingAppointments : pastAppointments;
 
   const handleViewDetails = (appointment) => {
+    console.log(appointment.owner.User.email)
+    console.log(appointment)
     setViewDetailsModal({ isOpen: true, appointment });
   };
 
@@ -133,16 +116,83 @@ export default function AppointmentPage() {
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case "Confirmed":
+    const statusLower = status?.toLowerCase();
+    switch (statusLower) {
+      case "confirmed":
         return "bg-green-100 text-green-800";
-      case "Pending":
+      case "pending":
         return "bg-yellow-100 text-yellow-800";
-      case "Completed":
+      case "completed":
         return "bg-gray-100 text-gray-800";
+      case "canceled":
+      case "cancelled":
+        return "bg-red-100 text-red-800";
       default:
         return "bg-blue-100 text-blue-800";
     }
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  const formatTime = (timeString) => {
+    // If time is already formatted (e.g., "10:00 AM"), return as is
+    if (timeString && (timeString.includes('AM') || timeString.includes('PM'))) {
+      return timeString;
+    }
+    
+    // Otherwise, parse and format
+    if (timeString) {
+      const [hours, minutes] = timeString.split(':');
+      const hour = parseInt(hours);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const formattedHour = hour % 12 || 12;
+      return `${formattedHour}:${minutes} ${ampm}`;
+    }
+    
+    return "Time not set";
+  };
+
+  // Helper function to safely get nested data
+  const getPetName = (appointment) => {
+    return appointment.pet?.name || appointment.petName || appointment.pet_name || "Pet";
+  };
+
+  const getPetType = (appointment) => {
+    return appointment.pet?.species || appointment.pet?.type || appointment.petType || appointment.pet_type || "Unknown";
+  };
+
+  const getClinicName = (appointment) => {
+    return appointment.clinic?.name || appointment.clinic_name || appointment.clinicName || "Veterinary Clinic";
+  };
+
+  const getClinicAddress = (appointment) => {
+    return appointment.clinic?.address || appointment.clinic_address || appointment.address || "Address not available";
+  };
+
+  const getClinicPhone = (appointment) => {
+    return appointment.clinic?.phone || appointment.clinic_phone || appointment.phone || "N/A";
+  };
+
+  const getVeterinarianName = (appointment) => {
+    // Handle vet from VetProfessional model
+    const vet = appointment.vet;
+    if (vet) {
+      const firstName = vet.first_name || vet.firstName || '';
+      const lastName = vet.last_name || vet.lastName || '';
+      return `Dr. ${firstName} ${lastName}`.trim();
+    }
+    return appointment.vet_name || appointment.veterinarian || "Veterinarian";
+  };
+
+  const getAppointmentType = (appointment) => {
+    return appointment.type || appointment.appointment_type || appointment.notes || "General Checkup";
   };
 
   return (
@@ -181,118 +231,145 @@ export default function AppointmentPage() {
           </nav>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-12 bg-white rounded-2xl border border-gray-200">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-sm text-gray-600">Loading appointments...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="text-center py-12 bg-red-50 rounded-2xl border border-red-200">
+            <p className="text-red-600">{error}</p>
+          </div>
+        )}
+
         {/* Appointments List */}
-        <div className="space-y-4">
-          {appointments.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-2xl border border-gray-200">
-              <FaCalendarAlt className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No appointments</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {activeTab === "upcoming"
-                  ? "You don't have any upcoming appointments."
-                  : "You don't have any past appointments."}
-              </p>
-            </div>
-          ) : (
-            appointments.map((appointment) => (
-              <div
-                key={appointment.id}
-                className="bg-white border border-gray-200 rounded-2xl hover:border-primary transition-shadow p-6"
-              >
-                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between">
-                  {/* Left Section */}
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h3 className="text-xl font-semibold text-gray-900">
-                          {appointment.petName}
-                          <span className="text-gray-500 font-normal text-base ml-2">
-                            ({appointment.petType})
+        {!loading && !error && (
+          <div className="space-y-4">
+            {appointments.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-2xl border border-gray-200">
+                <FaCalendarAlt className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">No appointments</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  {activeTab === "upcoming"
+                    ? "You don't have any upcoming appointments."
+                    : "You don't have any past appointments."}
+                </p>
+              </div>
+            ) : (
+              appointments.map((appointment) => (
+                <div
+                  key={appointment.appointment_id}
+                  className="bg-white border border-gray-200 rounded-2xl hover:border-primary transition-shadow p-6"
+                >
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between">
+                    {/* Left Section */}
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h3 className="text-xl font-semibold text-gray-900">
+                            {getPetName(appointment)}
+                            <span className="text-gray-500 font-normal text-base ml-2">
+                              ({getPetType(appointment)})
+                            </span>
+                          </h3>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {getAppointmentType(appointment)}
+                          </p>
+                        </div>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                            appointment.status
+                          )}`}
+                        >
+                          {appointment.status?.charAt(0).toUpperCase() + appointment.status?.slice(1)}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                        <div className="flex items-center text-gray-700">
+                          <FaCalendarAlt className="h-5 w-5 mr-2 text-primary" />
+                          <span className="text-sm">{formatDate(appointment.date)}</span>
+                        </div>
+                        <div className="flex items-center text-gray-700">
+                          <FaClock className="h-5 w-5 mr-2 text-primary" />
+                          <span className="text-sm">{formatTime(appointment.time)}</span>
+                        </div>
+                        <div className="flex items-center text-gray-700">
+                          <FaUser className="h-5 w-5 mr-2 text-primary" />
+                          <span className="text-sm">
+                            {getVeterinarianName(appointment)}
                           </span>
-                        </h3>
-                        <p className="text-sm text-gray-600 mt-1">{appointment.type}</p>
+                        </div>
+                        <div className="flex items-center text-gray-700">
+                          <FaPhone className="h-5 w-5 mr-2 text-primary" />
+                          <span className="text-sm">
+                            {getClinicPhone(appointment)}
+                          </span>
+                        </div>
                       </div>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                          appointment.status
-                        )}`}
-                      >
-                        {appointment.status}
-                      </span>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                      <div className="flex items-center text-gray-700">
-                        <FaCalendarAlt className="h-5 w-5 mr-2 text-primary" />
-                        <span className="text-sm">{appointment.date}</span>
-                      </div>
-                      <div className="flex items-center text-gray-700">
-                        <FaClock className="h-5 w-5 mr-2 text-primary" />
-                        <span className="text-sm">{appointment.time}</span>
-                      </div>
-                      <div className="flex items-center text-gray-700">
-                        <FaUser className="h-5 w-5 mr-2 text-primary" />
-                        <span className="text-sm">{appointment.veterinarian}</span>
-                      </div>
-                      <div className="flex items-center text-gray-700">
-                        <FaPhone className="h-5 w-5 mr-2 text-primary" />
-                        <span className="text-sm">{appointment.phone}</span>
+                      <div className="flex items-start text-gray-700 mt-3">
+                        <FaMapMarkerAlt className="h-5 w-5 mr-2 text-primary shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium">
+                            {getClinicName(appointment)}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {getClinicAddress(appointment)}
+                          </p>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-start text-gray-700 mt-3">
-                      <FaMapMarkerAlt className="h-5 w-5 mr-2 text-primary shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium">{appointment.clinic}</p>
-                        <p className="text-sm text-gray-600">{appointment.address}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Section - Actions */}
-                  {activeTab === "upcoming" && (
-                    <div className="flex flex-col space-y-2 mt-4 lg:mt-0 lg:ml-6">
-                      <button 
+                    {/* Right Section - Actions */}
+                    {activeTab === "upcoming" && (
+                      <div className="flex flex-col space-y-2 mt-4 lg:mt-0 lg:ml-6">
+                        <button 
                         onClick={() => handleViewDetails(appointment)}
                         className="px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/80 transition-colors text-sm font-medium"
                       >
-                        View Details
-                      </button>
-                      <button 
+                          View Details
+                        </button>
+                        <button 
                         onClick={() => handleRescheduleClick(appointment)}
                         className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium"
                       >
-                        Reschedule
-                      </button>
-                      <button 
+                          Reschedule
+                        </button>
+                        <button 
                         onClick={() => handleCancel(appointment)}
                         className="px-4 py-2 bg-white text-red-600 border border-red-300 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium"
                       >
-                        Cancel
-                      </button>
-                    </div>
-                  )}
+                          Cancel
+                        </button>
+                      </div>
+                    )}
 
-                  {activeTab === "past" && (
-                    <div className="flex flex-col space-y-2 mt-4 lg:mt-0 lg:ml-6">
-                      <button 
+                    {activeTab === "past" && (
+                      <div className="flex flex-col space-y-2 mt-4 lg:mt-0 lg:ml-6">
+                        <button 
                         onClick={() => handleViewDetails(appointment)}
                         className="px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/80 transition-colors text-sm font-medium"
                       >
-                        View Details
-                      </button>
-                      <button 
+                          View Details
+                        </button>
+                        <button 
                         onClick={() => setRebookModal({ isOpen: true, appointment })}
                         className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium">
-                        Book Again
-                      </button>
-                    </div>
-                  )}
+                          Book Again
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       {/* Modals */}

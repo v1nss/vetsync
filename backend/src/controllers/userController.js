@@ -18,7 +18,7 @@ export const register = async (req, res) => {
 export const createVetProfessional = async (req, res) => {
   try {
     const adminUserId = req.user.id; // from JWT or session
-    const user = await registerVetProfessional(req.body, adminUserId);
+    const user = await registerVetProfessional(req, adminUserId);
     res
       .status(201)
       .json({ message: "Vet Professional created successfully", user });

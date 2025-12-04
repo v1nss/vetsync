@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FaTimes } from "react-icons/fa";
+import { FaTimes, FaCamera, FaUser } from "react-icons/fa";
 
 export default function AddVetModal({ isOpen, onClose, onSubmit, vet }) {
   const [formData, setFormData] = useState({
@@ -9,28 +9,76 @@ export default function AddVetModal({ isOpen, onClose, onSubmit, vet }) {
     specialization: "",
     license_number: "",
   });
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [profilePreview, setProfilePreview] = useState(null);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (vet) {
       setFormData({
-        name: vet.name,
-        email: vet.email,
+        name: vet.name || vet.full_name || "",
+        email: vet.email || "",
         password: "",
-        specialization: vet.specialization,
-        license_number: vet.license_number,
+        specialization: vet.specialization || "",
+        license_number: vet.license_number || "",
       });
+      // Set profile preview if vet has profile image
+      if (vet.profile_image_url) {
+        setProfilePreview(
+          vet.profile_image_url.link || 
+          vet.profile_image_url.thumbnail || 
+          vet.profile_image_url
+        );
+      } else {
+        setProfilePreview(null);
+      }
+      setProfilePicture(null);
     } else {
       setFormData({ name: "", email: "", password: "", specialization: "", license_number: "" });
+      setProfilePicture(null);
+      setProfilePreview(null);
     }
+    setErrors({});
   }, [vet, isOpen]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (errors[e.target.name]) {
+      setErrors({ ...errors, [e.target.name]: "" });
+    }
+  };
+
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+
+    if (!file) return;
+
+    if (!allowedTypes.includes(file.type)) {
+      setErrors(prev => ({ ...prev, 
+        profilePicture: "Invalid file type. Only PNG, JPG, JPEG, and WEBP are allowed." 
+      }));
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > 5000000) {
+      setErrors(prev => ({ ...prev, profilePicture: "File must be less than 5MB" }));
+      e.target.value = "";
+      return;
+    }
+
+    setProfilePicture(file);
+    setErrors(prev => ({ ...prev, profilePicture: "" }));
+    
+    const reader = new FileReader();
+    reader.onloadend = () => { setProfilePreview(reader.result); };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    onSubmit(formData, profilePicture);
   };
 
   if (!isOpen) return null;
@@ -48,6 +96,32 @@ export default function AddVetModal({ isOpen, onClose, onSubmit, vet }) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Profile Picture Upload */}
+          <div className="flex justify-center">
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full border-2 border-gray-300 overflow-hidden bg-gray-100 flex items-center justify-center">
+                {profilePreview ? (
+                  <img src={profilePreview} alt="Profile Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-gray-400 text-3xl"><FaUser /></span>
+                )}
+              </div>
+              <label htmlFor="profile-picture" className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary/80 transition">
+                <FaCamera className="text-sm" />
+              </label>
+              <input
+                type="file"
+                id="profile-picture"
+                accept="image/*"
+                onChange={handleProfilePictureChange}
+                className="hidden"
+              />
+            </div>
+          </div>
+          {errors.profilePicture && (
+            <p className="text-red-500 text-xs text-center">{errors.profilePicture}</p>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
             <input

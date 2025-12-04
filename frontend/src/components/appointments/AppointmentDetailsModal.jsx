@@ -3,6 +3,8 @@ import { FaTimes, FaPaw, FaUser, FaClock, FaPhone, FaEnvelope, FaMapMarkerAlt, F
 export default function AppointmentDetailsModal({ isOpen, onClose, appointment }) {
   if (!isOpen || !appointment) return null;
 
+  console.log("TANGINA", appointment);
+  
   const getStatusBadge = (status) => {
     const styles = {
       pending: "bg-yellow-100 text-yellow-700",
@@ -51,24 +53,24 @@ export default function AppointmentDetailsModal({ isOpen, onClose, appointment }
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-gray-600">Name</label>
-                    <p className="text-gray-900 font-medium">{appointment.pet_name}</p>
+                    <p className="text-gray-900 font-medium">{appointment.pet?.name || 'N/A'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">Type</label>
-                    <p className="text-gray-900">{appointment.pet_type}</p>
+                    <p className="text-gray-900">{appointment.pet?.species || 'N/A'}</p>
                   </div>
-                  {appointment.pet_breed && (
+                  {appointment.pet?.breed && (
                     <div>
                       <label className="text-sm font-medium text-gray-600">Breed</label>
-                      <p className="text-gray-900">{appointment.pet_breed}</p>
+                      <p className="text-gray-900">{appointment.pet?.breed}</p>
                     </div>
                   )}
-                  {appointment.pet_age && (
+                  {/* {appointment.pet_age && (
                     <div>
                       <label className="text-sm font-medium text-gray-600">Age</label>
                       <p className="text-gray-900">{appointment.pet_age}</p>
                     </div>
-                  )}
+                  )} */}
                 </div>
               </div>
             </div>
@@ -82,15 +84,15 @@ export default function AppointmentDetailsModal({ isOpen, onClose, appointment }
               <div className="bg-gray-50 rounded-xl p-4 space-y-3">
                 <div>
                   <label className="text-sm font-medium text-gray-600">Name</label>
-                  <p className="text-gray-900 font-medium">{appointment.owner_name}</p>
+                  <p className="text-gray-900 font-medium">{appointment.owner?.User?.full_name || 'N/A'}</p>
                 </div>
                 <div className="flex items-center gap-2 text-gray-900">
                   <FaPhone className="text-primary text-sm" />
-                  <span>{appointment.owner_phone}</span>
+                  <span>{appointment.owner?.User?.phone_number || 'N/A'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-900">
                   <FaEnvelope className="text-primary text-sm" />
-                  <span>{appointment.owner_email}</span>
+                  <span>{appointment.owner?.User?.email || 'N/A'}</span>
                 </div>
               </div>
             </div>
@@ -112,14 +114,20 @@ export default function AppointmentDetailsModal({ isOpen, onClose, appointment }
                     <p className="text-gray-900 font-medium">{appointment.time}</p>
                   </div>
                 </div>
-                <div>
+                {/* <div>
                   <label className="text-sm font-medium text-gray-600">Service</label>
                   <p className="text-gray-900">{appointment.service}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FaMapMarkerAlt className="text-primary text-sm" />
-                  <span className="text-gray-900">{appointment.clinic_name || 'Main Clinic'}</span>
-                </div>
+                </div> */}
+                {appointment.clinic && (
+                  <div className="flex items-center gap-2">
+                    <FaMapMarkerAlt className="text-primary text-sm" />
+                    <span className="text-gray-900">
+                      {typeof appointment.clinic === 'string' 
+                        ? appointment.clinic 
+                        : appointment.clinic?.name || 'N/A'}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -6,11 +6,11 @@ import { IoCheckmarkCircle } from "react-icons/io5";
 import Navbar from "../../components/Navbar.jsx";
 import { fetchAllPetsById } from "../../global/api/pet";
 import { useAuth } from "../../context/AuthContext";
+import { createAppointment } from "../../global/api/appointment.jsx";
 
 export default function BookAppointmentPage() {
   const navigate = useNavigate();
   const { state: { clinic } = {} } = useLocation();
-  const { token } = useAuth();
 
   const [selectedPet, setSelectedPet] = useState(null);
   const [selectedService, setSelectedService] = useState("");
@@ -21,6 +21,14 @@ export default function BookAppointmentPage() {
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState({
+      pet_id: "",
+      clinic_id: "",
+      service: "",
+      date: "",
+      time: "",
+      notes: "",
+  });
 
   const timeSlots = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"];
   const defaultServices = ["General Checkup", "Vaccinations", "Emergency Services", "Grooming", "Diagnostics"];
@@ -31,7 +39,7 @@ export default function BookAppointmentPage() {
       .then(res => setPets(res || []))
       .catch(err => console.error("Unable to get pets:", err))
       .finally(() => setLoading(false));
-  }, [token]);
+  }, []);
 
   const getMinDate = () => new Date().toISOString().split('T')[0];
   const getMaxDate = () => {
@@ -46,16 +54,26 @@ export default function BookAppointmentPage() {
     return imageObj?.link || imageObj?.directLink || imageObj?.viewLink || null;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("APPOINTMENT BOOKED:", {
-      clinic: clinic.name,
-      pet: selectedPet,
-      service: selectedService === "others" ? otherService : selectedService,
-      appointmentDate,
-      appointmentTime,
-      reason,
-    });
+
+      const payload = {
+        pet_id: selectedPet?.pet_id || null,
+        clinic_id: clinic.id,
+        service: selectedService === "others" ? otherService : selectedService,
+        date: appointmentDate,
+        time: appointmentTime,
+        notes: reason,
+      };
+
+    try {
+      const res = await createAppointment(payload);
+      console.log("Appointment booked successfully:", res);
+      navigate('/pet-owner/appointments');
+    } catch (err) {
+      console.error("Error booking appointment:", err);
+      return;
+    }
   };
 
   const canProceedToStep2 = selectedPet && selectedService && (selectedService !== "others" || otherService);

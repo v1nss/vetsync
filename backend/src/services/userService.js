@@ -64,17 +64,41 @@ export const registerUser = async (userData) => {
   }
 };
 
-export const registerVetProfessional = async (data, adminUserId) => {
+export const registerVetProfessional = async (req, adminUserId) => {
+  const { body, file } = req;
+  
+  // Parse the user JSON sent in form-data
+  const data = body.user ? JSON.parse(body.user) : body;
+  const { full_name, email, password, specialization, license_number } = data;
 
   const admin = await ClinicAdmin.findOne({ where: { user_id: adminUserId } });
 
   if (!admin)
     throw new Error("Only clinic admins can register vet professionals");
 
-  const { full_name, email, password, specialization } = data; //license_number
-
   const existing = await User.findOne({ where: { email } });
   if (existing) throw new Error("Email already registered");
+
+  // Upload profile image if provided
+  let userProfile = null;
+  if (file) {
+    const uploadedFile = await uploadFiles(
+      file,
+      process.env.GDRIVE_FOLDER_ID
+    );
+
+    userProfile = {
+      id: uploadedFile.id,
+      name: uploadedFile.name,
+      // Primary link - Googleusercontent (most reliable)
+      link: `https://lh3.googleusercontent.com/d/${uploadedFile.id}`,
+      // Alternative links for fallback
+      viewLink: uploadedFile.webViewLink,
+      downloadLink: uploadedFile.webContentLink,
+      // Thumbnail for optimization
+      thumbnail: `https://drive.google.com/thumbnail?id=${uploadedFile.id}&sz=w400`
+    };
+  }
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -83,6 +107,7 @@ export const registerVetProfessional = async (data, adminUserId) => {
     email,
     password_hash: hashedPassword,
     user_type: "vet_professional",
+    profile_image_url: userProfile,
   });
 
   await VetProfessional.create({

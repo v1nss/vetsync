@@ -69,7 +69,7 @@ export default function UserManagementPage() {
   const stats = {
     total: users.length,
     clinic_admin: users.filter((u) => u.user_type === "clinic_admin").length,
-    vet_pro: users.filter((u) => u.user_type === "vet_pro").length,
+    vet_pro: users.filter((u) => u.user_type === "vet_professional").length,
     pet_owner: users.filter((u) => u.user_type === "pet_owner").length,
   };
 
@@ -137,7 +137,7 @@ export default function UserManagementPage() {
         {/* Filter Tabs */}
         <div className="mt-8 mb-6">
           <div className="flex gap-3 overflow-x-auto pb-2">
-            {["all", "clinic_admin", "vet_pro", "pet_owner"].map((tab) => {
+            {["all", "clinic_admin", "vet_professional", "pet_owner"].map((tab) => {
               const isActive = activeFilter === tab;
               return (
                 <button

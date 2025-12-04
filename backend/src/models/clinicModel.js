@@ -37,6 +37,10 @@ const Clinic = sequelize.define( "Clinic", {
       type: DataTypes.STRING,
       allowNull: true,
     },
+    // service: {
+    //   type: DataTypes.STRING,
+    //   allowNull: false,
+    // },
     clinic_images: {
       type: DataTypes.JSON,
       allowNull: true,

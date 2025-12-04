@@ -75,4 +75,10 @@ Appointment.belongsTo(VetProfessional, { foreignKey: "vet_professional_id", as: 
 Clinic.hasMany(Appointment, { foreignKey: "clinic_id", as: "appointments" });
 Appointment.belongsTo(Clinic, { foreignKey: "clinic_id", as: "clinic" });
 
+Pet.hasMany(Appointment, { foreignKey: "pet_id", as: "appointments" });
+Appointment.belongsTo(Pet, { foreignKey: "pet_id", as: "pet" });
+
+PetOwner.hasMany(Appointment, { foreignKey: "owner_id", as: "appointments" });
+Appointment.belongsTo(PetOwner, { foreignKey: "owner_id", as: "owner" });
+
 export default Appointment;

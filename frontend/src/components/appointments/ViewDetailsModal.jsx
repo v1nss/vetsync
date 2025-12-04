@@ -23,16 +23,22 @@ export default function ViewDetailsModal({ isOpen, onClose, appointment }) {
             <div className="bg-gray-50 rounded-xl p-4 space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600">Pet Name:</span>
-                <span className="font-medium text-gray-900">{appointment.petName}</span>
+                <span className="font-medium text-gray-900">
+                  {appointment.pet?.name || appointment.petName || 'N/A'}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Pet Type:</span>
-                <span className="font-medium text-gray-900">{appointment.petType}</span>
+                <span className="font-medium text-gray-900">
+                  {appointment.pet?.species || appointment.petType || 'N/A'}
+                </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Appointment Type:</span>
-                <span className="font-medium text-gray-900">{appointment.type}</span>
-              </div>
+              {appointment.service && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Service:</span>
+                  <span className="font-medium text-gray-900">{appointment.service}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -67,15 +73,27 @@ export default function ViewDetailsModal({ isOpen, onClose, appointment }) {
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Clinic Information</h3>
             <div className="bg-gray-50 rounded-xl p-4 space-y-3">
               <div>
-                <p className="font-medium text-gray-900">{appointment.clinic}</p>
+                <p className="font-medium text-gray-900">
+                  {typeof appointment.clinic === 'string' 
+                    ? appointment.clinic 
+                    : appointment.clinic?.name || 'N/A'}
+                </p>
               </div>
               <div className="flex items-start text-gray-700">
                 <FaMapMarkerAlt className="h-5 w-5 mr-3 text-primary shrink-0 mt-0.5" />
-                <span>{appointment.address}</span>
+                <span>
+                  {typeof appointment.clinic === 'object' && appointment.clinic?.address
+                    ? appointment.clinic.address
+                    : appointment.address || 'N/A'}
+                </span>
               </div>
               <div className="flex items-center text-gray-700">
                 <FaPhone className="h-5 w-5 mr-3 text-primary" />
-                <span>{appointment.phone}</span>
+                <span>
+                  {typeof appointment.clinic === 'object' && appointment.clinic?.contact_number
+                    ? appointment.clinic.contact_number
+                    : appointment.phone || 'N/A'}
+                </span>
               </div>
             </div>
           </div>

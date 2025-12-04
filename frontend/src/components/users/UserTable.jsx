@@ -54,7 +54,7 @@ export default function UserTable({ users, onViewDetails }) {
                     className={`px-3 truncate py-1 rounded-xl text-xs font-semibold ${
                       user.user_type === "clinic_admin"
                         ? "bg-purple-100 text-purple-700 border border-purple-300"
-                        : user.user_type === "vet_pro"
+                        : user.user_type === "vet_professional"
                         ? "bg-blue-100 text-blue-700 border border-blue-300"
                         : "bg-gray-100 text-gray-700 border border-gray-300"
                     }`}
