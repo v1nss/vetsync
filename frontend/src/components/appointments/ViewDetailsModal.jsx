@@ -1,3 +1,4 @@
+// AppointmentDetailsModal.jsx (FOR VET PROFESSIONALS)
 import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUser, FaPhone, FaTimes } from "react-icons/fa";
 
 export default function ViewDetailsModal({ isOpen, onClose, appointment }) {

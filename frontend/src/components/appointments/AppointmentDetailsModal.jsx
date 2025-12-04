@@ -1,9 +1,8 @@
+// AppointmentDetailsModal.jsx (FOR VET PROFESSIONALS)
 import { FaTimes, FaPaw, FaUser, FaClock, FaPhone, FaEnvelope, FaMapMarkerAlt, FaNotesMedical } from "react-icons/fa";
 
 export default function AppointmentDetailsModal({ isOpen, onClose, appointment }) {
   if (!isOpen || !appointment) return null;
-
-  console.log("TANGINA", appointment);
   
   const getStatusBadge = (status) => {
     const styles = {
