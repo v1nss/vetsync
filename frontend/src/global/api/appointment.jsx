@@ -19,3 +19,13 @@ export const getAppointmentsByOwner = async () => {
         console.error("Error fetching appointments for owner:", err.message);
     }
 }
+
+export const deleteAppointment = async (appointmentId) => {
+    try {
+        const res = await api.delete(`/appointments/delete/${appointmentId}`);
+        console.log("Appointment deleted successfully:", res.data);
+        return res.data;
+    } catch (err) {
+        console.error("Error deleting appointment:", err.message);
+    }
+}

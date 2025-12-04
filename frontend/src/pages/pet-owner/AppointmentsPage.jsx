@@ -7,6 +7,7 @@ import RescheduleModal from "../../components/appointments/RescheduleModal";
 import RebookModal from "../../components/appointments/RebookModal";
 import NotificationModal from "../../components/NotificationModal";
 import ConfirmationModal from "../../components/ConfirmationModal";
+import { deleteAppointment } from "../../global/api/appointment.jsx";
 
 export default function AppointmentPage() {
   const [activeTab, setActiveTab] = useState("upcoming");
@@ -19,33 +20,34 @@ export default function AppointmentPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchAppointments = async () => {
-      try {
-        setLoading(true);
-        const appointments = await getAppointmentsByOwner();
-        console.log("APPOINTMENTS DATA:", appointments);
-        
-        // Ensure we always set an array
-        if (Array.isArray(appointments)) {
-          setAppointmentsData(appointments);
-        } else if (appointments?.data && Array.isArray(appointments.data)) {
-          setAppointmentsData(appointments.data);
-        } else if (appointments?.appointments && Array.isArray(appointments.appointments)) {
-          setAppointmentsData(appointments.appointments);
-        } else {
-          setAppointmentsData([]);
-          console.warn("API returned non-array data:", appointments);
-        }
-      } catch (err) {
-        setError("Failed to load appointments. Please try again later.");
-        console.error("Error fetching appointments:", err);
-        setAppointmentsData([]);
-      } finally {
-        setLoading(false);
-      }
-    };
 
+  const fetchAppointments = async () => {
+    try {
+      setLoading(true);
+      const appointments = await getAppointmentsByOwner();
+      console.log("APPOINTMENTS DATA:", appointments);
+      
+      // Ensure we always set an array
+      if (Array.isArray(appointments)) {
+        setAppointmentsData(appointments);
+      } else if (appointments?.data && Array.isArray(appointments.data)) {
+        setAppointmentsData(appointments.data);
+      } else if (appointments?.appointments && Array.isArray(appointments.appointments)) {
+        setAppointmentsData(appointments.appointments);
+      } else {
+        setAppointmentsData([]);
+        console.warn("API returned non-array data:", appointments);
+      }
+    } catch (err) {
+      setError("Failed to load appointments. Please try again later.");
+      console.error("Error fetching appointments:", err);
+      setAppointmentsData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchAppointments();
   }, []);
 
@@ -100,19 +102,38 @@ export default function AppointmentPage() {
   }
 
   const handleCancel = (appointment) => {
-    // setNotification({
-    //   isOpen: true,
-    //   type: 'warning',
-    //   title: 'Appointment Cancelled',
-    //   message: `Your appointment for ${appointment.petName} on ${appointment.date} has been cancelled.`
-    // });
     setConfirmation({
       isOpen: true,
       title: 'Appointment Cancellation',
-      message: `Are you sure you want to cancel the appointment for ${appointment.petName} on ${appointment.date}?`,
+      message: `Are you sure you want to cancel the appointment for ${appointment.pet.name} on ${appointment.date}?`,
       type: 'warning',
-      action: 'cancel'
+      action: 'cancel',
+      appointmentId: appointment.appointment_id
     });
+  };
+
+  const handleConfirmCancel = async (appointmentId) => {
+    console.log("Cancelling appointment with ID:", appointmentId);
+    try {
+      const res = await deleteAppointment(appointmentId);
+      console.log("Appointment deleted successfully:", res.data);
+      setConfirmation({ isOpen: false, appointmentId: null });
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: 'Appointment Canceled',
+        message: 'Your appointment has been successfully canceled.'
+      });
+      fetchAppointments();
+    } catch (err) {
+      console.error("Error deleting appointment:", err.message);
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Cancellation Failed',
+        message: 'There was an error canceling your appointment. Please try again later.'
+      });
+    }
   };
 
   const getStatusColor = (status) => {
@@ -161,23 +182,23 @@ export default function AppointmentPage() {
 
   // Helper function to safely get nested data
   const getPetName = (appointment) => {
-    return appointment.pet?.name || appointment.petName || appointment.pet_name || "Pet";
+    return appointment.pet?.name || "Pet";
   };
 
   const getPetType = (appointment) => {
-    return appointment.pet?.species || appointment.pet?.type || appointment.petType || appointment.pet_type || "Unknown";
+    return appointment.pet?.species || "Unknown";
   };
 
   const getClinicName = (appointment) => {
-    return appointment.clinic?.name || appointment.clinic_name || appointment.clinicName || "Veterinary Clinic";
+    return appointment.clinic?.name || "Veterinary Clinic";
   };
 
   const getClinicAddress = (appointment) => {
-    return appointment.clinic?.address || appointment.clinic_address || appointment.address || "Address not available";
+    return appointment.clinic?.address  || "Address not available";
   };
 
   const getClinicPhone = (appointment) => {
-    return appointment.clinic?.phone || appointment.clinic_phone || appointment.phone || "N/A";
+    return appointment.clinic?.contact_number || "N/A";
   };
 
   const getVeterinarianName = (appointment) => {
@@ -341,9 +362,9 @@ export default function AppointmentPage() {
                           Reschedule
                         </button>
                         <button 
-                        onClick={() => handleCancel(appointment)}
-                        className="px-4 py-2 bg-white text-red-600 border border-red-300 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium"
-                      >
+                          onClick={() => handleCancel(appointment)}
+                          className="px-4 py-2 bg-white text-red-600 border border-red-300 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium"
+                        >
                           Cancel
                         </button>
                       </div>
@@ -404,7 +425,7 @@ export default function AppointmentPage() {
       <ConfirmationModal
         isOpen={confirmation.isOpen}
         onClose={() => setConfirmation({ ...confirmation, isOpen: false })}
-        onConfirm={() => {(confirmation.appointmentId)}}
+        onConfirm={() => {handleConfirmCancel(confirmation.appointmentId)}}
         type={confirmation.type}
         title={confirmation.title}
         message={confirmation.message}

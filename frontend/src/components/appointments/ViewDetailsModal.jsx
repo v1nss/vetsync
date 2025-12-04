@@ -3,7 +3,9 @@ import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUser, FaPhone, FaTimes } from
 
 export default function ViewDetailsModal({ isOpen, onClose, appointment }) {
   if (!isOpen || !appointment) return null;
-
+  const status = appointment.status
+    ? appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1).toLowerCase()
+    : '';
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-2xl w-full relative animate-scale-in max-h-[90vh] overflow-y-auto">
@@ -104,11 +106,11 @@ export default function ViewDetailsModal({ isOpen, onClose, appointment }) {
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Status</h3>
             <div className="bg-gray-50 rounded-xl p-4">
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                appointment.status === 'Confirmed' ? 'bg-green-100 text-green-800' :
-                appointment.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                status === 'Confirmed' ? 'bg-green-100 text-green-800' :
+                status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
                 'bg-gray-100 text-gray-800'
               }`}>
-                {appointment.status}
+                {status}
               </span>
             </div>
           </div>

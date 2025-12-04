@@ -108,3 +108,22 @@ export const getAppointmentsByOwner = async (req, res) => {
       .json({ message: "Error fetching appointments for owner", error: err.message });
   }
 }
+
+export const deleteAppointmentById = async (req, res) => {
+  try {
+    const appointmentId = req.params.appointmentId;
+    await Appointment.destroy({
+      where: {
+        appointment_id: appointmentId
+      }
+    });
+    return res
+      .status(200)
+      .json({ message: "Appointment deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting appointment", err.message);
+    res
+      .status(500)
+      .json({ message: "Error deleting appointment", error: err.message });
+  }
+};
