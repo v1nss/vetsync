@@ -13,6 +13,7 @@ export default function ClinicAdminDashboard() {
   const [upcomingAppointments, setUpcomingAppointments] = useState([]);
   const [recentRecords, setRecentRecords] = useState([]);
   const [todayStats, setTodayStats] = useState({ appointments: 0, checkIns: 0 });
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     // Mock data (replace with API integration)
@@ -28,12 +29,18 @@ export default function ClinicAdminDashboard() {
       checkIns: 5,
     });
 
-    setUpcomingAppointments([
+    const appointments = [
       { id: 1, petName: "Buddy", owner: "Maria Santos", time: "10:00 AM", date: "2025-11-15", vet: "Dr. Ana Reyes", type: "Checkup", status: "confirmed" },
       { id: 2, petName: "Milo", owner: "John Cruz", time: "11:30 AM", date: "2025-11-15", vet: "Dr. Roberto Garcia", type: "Vaccination", status: "pending" },
       { id: 3, petName: "Luna", owner: "Sarah Lee", time: "2:00 PM", date: "2025-11-15", vet: "Dr. Ana Reyes", type: "Surgery", status: "confirmed" },
       { id: 4, petName: "Max", owner: "Carlos Diaz", time: "3:30 PM", date: "2025-11-16", vet: "Dr. Maria Santos", type: "Follow-up", status: "confirmed" },
-    ]);
+    ];
+
+    setUpcomingAppointments(appointments);
+
+    // Count pending appointments
+    const pending = appointments.filter(appt => appt.status === 'pending').length;
+    setPendingCount(pending);
 
     setRecentRecords([
       { id: 1, petName: "Bella", owner: "Emma Wilson", updatedBy: "Dr. Maria Santos", date: "2025-11-12", time: "2:30 PM", type: "Lab Results" },
@@ -63,13 +70,18 @@ export default function ClinicAdminDashboard() {
             </p>
           </div>
           <div className="flex gap-3 mt-3 sm:mt-0">
-            <button
-              onClick={() => handleNavigation('/clinic-admin/appointments/new')}
-              className="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg font-medium transition flex items-center gap-2"
+            <Link
+              to="/clinic-admin/appointments"
+              className="relative px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg font-medium transition flex items-center gap-2"
             >
               <FaCalendarAlt className="text-sm" />
               New Appointments
-            </button>
+              {pendingCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white">
+                  {pendingCount}
+                </span>
+              )}
+            </Link>
           </div>
         </div>
       </div>
