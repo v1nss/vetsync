@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { FaRegHeart } from 'react-icons/fa';
+import { FaRegHeart, FaUser } from 'react-icons/fa';
 import { RiHomeLine, RiHealthBookLine, RiCalendar2Line, RiListSettingsLine } from "react-icons/ri";
 import { FaCalendarAlt, FaFileMedical } from 'react-icons/fa';
 import { useAuth } from "../context/AuthContext";
@@ -16,6 +16,7 @@ const NAV_ITEMS = {
   vet_professional: [
     { to: '/vet/appointments', icon: FaCalendarAlt, label: 'Appointments' },
     { to: '/vet/health-records', icon: FaFileMedical, label: 'Records' },
+    { to: '/vet/profile', icon: FaUser, label: 'Profile' },
   ],
 };
 
