@@ -31,7 +31,7 @@ function MobileNavBar({ userType }) {
   const getMobileHeader = () => {
     if (userType === 'vet_professional') {
       return (
-        <header className="sticky top-0 p-4 sm:hidden bg-white/95 backdrop-blur-lg border-b border-gray-100">
+        <header className="sticky top-0 p-4 sm:hidden bg-white/95 backdrop-blur-lg border-b border-gray-100 z-10">
           <div className="flex items-center justify-center">
             <Link to="/vet/appointments" aria-label="Home">
               <img src="/vetsync-logo-wname.png" alt="VetSync" className="h-7" />

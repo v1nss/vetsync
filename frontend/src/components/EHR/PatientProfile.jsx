@@ -173,7 +173,7 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
 
   return (
     <>
-      <div className="max-w-7xl mx-auto">
+      <div className="mx-auto">
         <div className="mb-6 flex justify-between items-center">
           <div>
             <button
@@ -182,7 +182,7 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
             >
               <FiChevronLeft /> Back to Records
             </button>
-            <h1 className="text-2xl font-bold text-gray-900">Patient Record</h1>
+            <h1 className="text-2xl font-bold capitalize text-gray-900">{patient.name}'s Health Record</h1>
           </div>
         </div>
 
@@ -190,7 +190,8 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
         <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
           <div className="flex items-start gap-4">
             <div className="flex-1">
-              <div className="flex justify-between items-start mb-4">
+              
+              <div className="flex flex-col sm:flex-row justify-between items-start mb-4">
                 <div className="flex gap-4">
                   <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center">
                     <span className="text-3xl font-bold text-gray-500">
@@ -212,7 +213,7 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
                 {/* Add Health Record Button */}
                 <button 
                   onClick={() => setShowAddModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium"
+                  className="flex w-full mt-4 sm:mt-0 sm:w-fit items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium"
                 >
                   <FiPlus className="w-4 h-4" />
                   <span className="hidden sm:inline">Add Health Record</span>

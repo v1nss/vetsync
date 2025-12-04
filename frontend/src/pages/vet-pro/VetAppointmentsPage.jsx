@@ -95,8 +95,8 @@ export default function VetAppointmentsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Appointments</h1>
-            <p className="text-sm sm:text-base text-gray-600 mt-1">View and manage your assigned appointments</p>
+            <h1 className="text-3xl font-bold text-gray-900">My Appointments</h1>
+            <p className="text-base text-gray-600 mt-1">View and manage your assigned appointments</p>
           </div>
           <button
             onClick={() => setShowCalendar(true)}

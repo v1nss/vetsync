@@ -11,7 +11,7 @@ export default function VetProEHRPage() {
     <main>
       <Navbar />
       
-      <div className="min-h-screen bg-gray-50 pb-24 sm:pb-8">
+      <div className="min-h-screen bg-gray-50 p-4 pb-24 sm:pb-8">
         {!selectedPatient ? (
           <PatientList 
             patients={patientsData} 

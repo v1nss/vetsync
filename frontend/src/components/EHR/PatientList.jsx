@@ -52,12 +52,12 @@ export default function PatientList({ patients, onSelect, searchTerm, setSearchT
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-8">
+    <div className="mx-auto pb-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Patient Records</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Health Records</h1>
         <p className="mt-2 text-gray-600">
-          Manage and view patient medical records
+          Manage and view patient medical health records
         </p>
       </div>
 
