@@ -7,6 +7,7 @@ import Navbar from "../../components/Navbar.jsx";
 import { fetchAllPetsById } from "../../global/api/pet";
 import { useAuth } from "../../context/AuthContext";
 import { createAppointment } from "../../global/api/appointment.jsx";
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 export default function BookAppointmentPage() {
   const navigate = useNavigate();
@@ -21,14 +22,8 @@ export default function BookAppointmentPage() {
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-      pet_id: "",
-      clinic_id: "",
-      service: "",
-      date: "",
-      time: "",
-      notes: "",
-  });
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const timeSlots = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"];
   const defaultServices = ["General Checkup", "Vaccinations", "Emergency Services", "Grooming", "Diagnostics"];
@@ -54,25 +49,33 @@ export default function BookAppointmentPage() {
     return imageObj?.link || imageObj?.directLink || imageObj?.viewLink || null;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleConfirmBooking = () => {
+    setShowConfirmation(true);
+  };
 
-      const payload = {
-        pet_id: selectedPet?.pet_id || null,
-        clinic_id: clinic.id,
-        service: selectedService === "others" ? otherService : selectedService,
-        date: appointmentDate,
-        time: appointmentTime,
-        notes: reason,
-      };
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+
+    const payload = {
+      pet_id: selectedPet?.pet_id || null,
+      clinic_id: clinic.id,
+      service: selectedService === "others" ? otherService : selectedService,
+      date: appointmentDate,
+      time: appointmentTime,
+      notes: reason,
+    };
 
     try {
       const res = await createAppointment(payload);
       console.log("Appointment booked successfully:", res);
+      setShowConfirmation(false);
       navigate('/pet-owner/appointments');
     } catch (err) {
       console.error("Error booking appointment:", err);
-      return;
+      setShowConfirmation(false);
+      alert("Failed to book appointment. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -285,7 +288,7 @@ export default function BookAppointmentPage() {
 
                 <div className="flex gap-3">
                   <button onClick={() => setStep(2)} className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-50 transition">Back</button>
-                  <button onClick={handleSubmit} className="flex-1 bg-primary text-white py-3 rounded-xl font-semibold hover:bg-[#FEA08E] transition">Confirm Booking</button>
+                  <button onClick={handleConfirmBooking} className="flex-1 bg-primary text-white py-3 rounded-xl font-semibold hover:bg-[#FEA08E] transition">Confirm Booking</button>
                 </div>
               </>
             )}
@@ -315,6 +318,19 @@ export default function BookAppointmentPage() {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+        onConfirm={handleSubmit}
+        type="info"
+        title="Confirm Appointment Booking"
+        message={`Are you sure you want to book an appointment for ${selectedPet?.name} at ${clinic?.name} on ${appointmentDate ? new Date(appointmentDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : ''} at ${appointmentTime}?`}
+        confirmText={isSubmitting ? "Booking..." : "Confirm"}
+        cancelText="Cancel"
+        isLoading={isSubmitting}
+      />
     </main>
   );
 }
