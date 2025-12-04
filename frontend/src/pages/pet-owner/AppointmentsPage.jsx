@@ -1,9 +1,17 @@
 import { useState } from "react";
 import Navbar from "../../components/Navbar";
 import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUser, FaPhone } from "react-icons/fa";
+import ViewDetailsModal from "../../components/appointments/ViewDetailsModal";
+import RescheduleModal from "../../components/appointments/RescheduleModal";
+import NotificationModal from "../../components/NotificationModal";
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 export default function AppointmentPage() {
   const [activeTab, setActiveTab] = useState("upcoming");
+  const [confirmation, setConfirmation] = useState({ isOpen: false, appointmentId: null });
+  const [viewDetailsModal, setViewDetailsModal] = useState({ isOpen: false, appointment: null });
+  const [rescheduleModal, setRescheduleModal] = useState({ isOpen: false, appointment: null });
+  const [notification, setNotification] = useState({ isOpen: false, type: 'success', title: '', message: '' });
 
   const upcomingAppointments = [
     {
@@ -78,6 +86,40 @@ export default function AppointmentPage() {
 
   const appointments = activeTab === "upcoming" ? upcomingAppointments : pastAppointments;
 
+  const handleViewDetails = (appointment) => {
+    setViewDetailsModal({ isOpen: true, appointment });
+  };
+
+  const handleRescheduleClick = (appointment) => {
+    setRescheduleModal({ isOpen: true, appointment });
+  };
+
+  const handleReschedule = (date, time) => {
+    setRescheduleModal({ isOpen: false, appointment: null });
+    setNotification({
+      isOpen: true,
+      type: 'success',
+      title: 'Appointment Rescheduled!',
+      message: `Your appointment has been rescheduled to ${date} at ${time}.`
+    });
+  };
+
+  const handleCancel = (appointment) => {
+    // setNotification({
+    //   isOpen: true,
+    //   type: 'warning',
+    //   title: 'Appointment Cancelled',
+    //   message: `Your appointment for ${appointment.petName} on ${appointment.date} has been cancelled.`
+    // });
+    setConfirmation({
+      isOpen: true,
+      title: 'Appointment Cancellation',
+      message: `Are you sure you want to cancel the appointment for ${appointment.petName} on ${appointment.date}?`,
+      type: 'warning',
+      action: 'cancel'
+    });
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case "Confirmed":
@@ -94,7 +136,7 @@ export default function AppointmentPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       <Navbar />
-        <div className="max-w-7xl mx-auto pb-8 pt-4 px-4 sm:px-6">
+      <div className="max-w-7xl mx-auto pb-8 pt-4 px-4 sm:px-6">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">My Appointments</h1>
@@ -198,13 +240,22 @@ export default function AppointmentPage() {
                   {/* Right Section - Actions */}
                   {activeTab === "upcoming" && (
                     <div className="flex flex-col space-y-2 mt-4 lg:mt-0 lg:ml-6">
-                      <button className="px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/80 transition-colors text-sm font-medium">
+                      <button 
+                        onClick={() => handleViewDetails(appointment)}
+                        className="px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/80 transition-colors text-sm font-medium"
+                      >
                         View Details
                       </button>
-                      <button className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium">
+                      <button 
+                        onClick={() => handleRescheduleClick(appointment)}
+                        className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium"
+                      >
                         Reschedule
                       </button>
-                      <button className="px-4 py-2 bg-white text-red-600 border border-red-300 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium">
+                      <button 
+                        onClick={() => handleCancel(appointment)}
+                        className="px-4 py-2 bg-white text-red-600 border border-red-300 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium"
+                      >
                         Cancel
                       </button>
                     </div>
@@ -212,7 +263,10 @@ export default function AppointmentPage() {
 
                   {activeTab === "past" && (
                     <div className="flex flex-col space-y-2 mt-4 lg:mt-0 lg:ml-6">
-                      <button className="px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/80 transition-colors text-sm font-medium">
+                      <button 
+                        onClick={() => handleViewDetails(appointment)}
+                        className="px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/80 transition-colors text-sm font-medium"
+                      >
                         View Details
                       </button>
                       <button className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium">
@@ -226,6 +280,39 @@ export default function AppointmentPage() {
           )}
         </div>
       </div>
+
+      {/* Modals */}
+      <ViewDetailsModal
+        isOpen={viewDetailsModal.isOpen}
+        onClose={() => setViewDetailsModal({ isOpen: false, appointment: null })}
+        appointment={viewDetailsModal.appointment}
+      />
+
+      <RescheduleModal
+        isOpen={rescheduleModal.isOpen}
+        onClose={() => setRescheduleModal({ isOpen: false, appointment: null })}
+        appointment={rescheduleModal.appointment}
+        onReschedule={handleReschedule}
+      />
+
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ ...notification, isOpen: false })}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+      />
+
+      <ConfirmationModal
+        isOpen={confirmation.isOpen}
+        onClose={() => setConfirmation({ ...confirmation, isOpen: false })}
+        onConfirm={() => {(confirmation.appointmentId)}}
+        type={confirmation.type}
+        title={confirmation.title}
+        message={confirmation.message}
+        confirmText="Yes, Cancel"
+        cancelText="No, Keep"
+      />
     </main>
   );
 }
