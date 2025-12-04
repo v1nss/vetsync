@@ -3,6 +3,7 @@ import Navbar from "../../components/Navbar";
 import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUser, FaPhone } from "react-icons/fa";
 import ViewDetailsModal from "../../components/appointments/ViewDetailsModal";
 import RescheduleModal from "../../components/appointments/RescheduleModal";
+import RebookModal from "../../components/appointments/RebookModal";
 import NotificationModal from "../../components/NotificationModal";
 import ConfirmationModal from "../../components/ConfirmationModal";
 
@@ -11,6 +12,7 @@ export default function AppointmentPage() {
   const [confirmation, setConfirmation] = useState({ isOpen: false, appointmentId: null });
   const [viewDetailsModal, setViewDetailsModal] = useState({ isOpen: false, appointment: null });
   const [rescheduleModal, setRescheduleModal] = useState({ isOpen: false, appointment: null });
+  const [rebookModal, setRebookModal] = useState({ isOpen: false, appointment: null });
   const [notification, setNotification] = useState({ isOpen: false, type: 'success', title: '', message: '' });
 
   const upcomingAppointments = [
@@ -103,6 +105,16 @@ export default function AppointmentPage() {
       message: `Your appointment has been rescheduled to ${date} at ${time}.`
     });
   };
+
+  const handleRebook = (appointmentId) => {
+    setRebookModal({ isOpen: false, appointment: null });
+    setNotification({
+      isOpen: true,
+      type: 'success',
+      title: 'Appointment Rebooked!',
+      message: `Your appointment has been successfully rebooked.`
+    });
+  }
 
   const handleCancel = (appointment) => {
     // setNotification({
@@ -269,7 +281,9 @@ export default function AppointmentPage() {
                       >
                         View Details
                       </button>
-                      <button className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium">
+                      <button 
+                        onClick={() => setRebookModal({ isOpen: true, appointment })}
+                        className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium">
                         Book Again
                       </button>
                     </div>
@@ -293,6 +307,13 @@ export default function AppointmentPage() {
         onClose={() => setRescheduleModal({ isOpen: false, appointment: null })}
         appointment={rescheduleModal.appointment}
         onReschedule={handleReschedule}
+      />
+
+      <RebookModal
+        isOpen={rebookModal.isOpen}
+        onClose={() => setRebookModal({ isOpen: false, appointment: null })}
+        appointment={rebookModal.appointment}
+        onRebook={handleRebook}
       />
 
       <NotificationModal
