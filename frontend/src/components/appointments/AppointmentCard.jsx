@@ -1,6 +1,6 @@
-import { FaPaw, FaClock, FaPhone, FaEnvelope, FaUserMd, FaCheckCircle, FaTimesCircle, FaBan } from "react-icons/fa";
+import { FaPaw, FaClock, FaPhone, FaEnvelope, FaUserMd, FaCheckCircle, FaTimesCircle, FaBan, FaCheck, FaExclamationTriangle } from "react-icons/fa";
 
-export default function AppointmentCard({ appointment, onStatusChange, onAssignVet }) {
+export default function AppointmentCard({ appointment, onStatusChange, onComplete }) {
   const getStatusBadge = (status) => {
     const styles = {
       pending: "bg-yellow-100 text-yellow-700",
@@ -16,6 +16,9 @@ export default function AppointmentCard({ appointment, onStatusChange, onAssignV
       </span>
     );
   };
+
+  // Check if appointment needs vet assignment
+  const needsVetAssignment = appointment.status === 'pending' && !appointment.assigned_vet;
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-6 hover:border-primary transition">
@@ -61,13 +64,23 @@ export default function AppointmentCard({ appointment, onStatusChange, onAssignV
             </div>
           )}
 
-          {appointment.assigned_vet && (
+          {/* Vet Assignment Status */}
+          {appointment.assigned_vet ? (
             <div className="flex items-center gap-2 text-sm">
               <FaUserMd className="text-green-600" />
               <span className="text-gray-600">
                 Assigned to: <span className="font-medium text-gray-900">{appointment.assigned_vet}</span>
               </span>
             </div>
+          ) : (
+            needsVetAssignment && (
+              <div className="flex items-center gap-2 text-sm bg-orange-50 border border-orange-200 rounded-lg p-2">
+                <FaExclamationTriangle className="text-orange-600" />
+                <span className="text-orange-700 font-medium">
+                  No veterinarian assigned - Click Approve to assign
+                </span>
+              </div>
+            )
           )}
         </div>
 
@@ -90,6 +103,15 @@ export default function AppointmentCard({ appointment, onStatusChange, onAssignV
             </>
           )}
 
+          {appointment.status === 'approved' && (
+            <button
+              onClick={() => onComplete(appointment)}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
+            >
+              <FaCheck /> Complete
+            </button>
+          )}
+
           {(appointment.status === 'approved' || appointment.status === 'pending') && (
             <button
               onClick={() => onStatusChange(appointment.id, 'cancelled', appointment)}
@@ -98,13 +120,6 @@ export default function AppointmentCard({ appointment, onStatusChange, onAssignV
               <FaBan /> Cancel
             </button>
           )}
-
-          <button
-            onClick={() => onAssignVet(appointment)}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition text-sm font-medium"
-          >
-            <FaUserMd /> {appointment.assigned_vet ? 'Reassign' : 'Assign'} Vet
-          </button>
         </div>
       </div>
     </div>

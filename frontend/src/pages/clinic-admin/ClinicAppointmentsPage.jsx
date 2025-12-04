@@ -6,6 +6,7 @@ import CalendarModal from "../../components/appointments/CalendarModal";
 import AssignVetModal from "../../components/appointments/AssignVetModal";
 import AppointmentCard from "../../components/appointments/AppointmentCard";
 import AppointmentsFilters from "../../components/appointments/AppointmentsFilters";
+import AddHealthRecordModal from "../../components/EHR/AddHealthRecordModal";
 import { useAppointments } from "../../hooks/useAppointments";
 
 const STATUS_MESSAGES = {
@@ -23,6 +24,11 @@ const STATUS_MESSAGES = {
     title: 'Cancel Appointment?',
     message: (apt) => `Cancel appointment for ${apt.pet_name}? This action cannot be undone.`,
     type: 'warning'
+  },
+  completed: {
+    title: 'Complete Appointment?',
+    message: (apt) => `Complete this appointment for ${apt.pet_name}? This will finalize the visit and save the health record.`,
+    type: 'info'
   }
 };
 
@@ -34,6 +40,8 @@ export default function ClinicAppointmentsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showCalendar, setShowCalendar] = useState(false);
   const [showAssignVetModal, setShowAssignVetModal] = useState(false);
+  const [showHealthRecordModal, setShowHealthRecordModal] = useState(false);
+  const [pendingApproval, setPendingApproval] = useState(false);
   
   const [confirmation, setConfirmation] = useState({
     isOpen: false,
@@ -74,6 +82,14 @@ export default function ClinicAppointmentsPage() {
   };
 
   const handleStatusChange = (appointmentId, newStatus, appointmentDetails) => {
+    // If trying to approve without vet assignment, open assign vet modal first
+    if (newStatus === 'approved' && !appointmentDetails.assigned_vet) {
+      setSelectedAppointment(appointmentDetails);
+      setShowAssignVetModal(true);
+      setPendingApproval(true);
+      return;
+    }
+
     const config = STATUS_MESSAGES[newStatus];
     setConfirmation({
       isOpen: true,
@@ -96,11 +112,8 @@ export default function ClinicAppointmentsPage() {
       title: 'Success!',
       message: `Appointment for ${appointment.pet_name} has been ${action}.`
     });
-  };
-
-  const openAssignVetModal = (appointment) => {
-    setSelectedAppointment(appointment);
-    setShowAssignVetModal(true);
+    
+    setConfirmation({ ...confirmation, isOpen: false });
   };
 
   const handleAssignVet = (selectedVet) => {
@@ -117,11 +130,51 @@ export default function ClinicAppointmentsPage() {
     assignVetToAppointment(selectedAppointment.id, selectedVet);
     setShowAssignVetModal(false);
     
+    // If this was triggered from approval flow, proceed with approval
+    if (pendingApproval) {
+      setPendingApproval(false);
+      
+      // Show approval confirmation after assigning vet
+      const config = STATUS_MESSAGES.approved;
+      setConfirmation({
+        isOpen: true,
+        title: config.title,
+        message: config.message(selectedAppointment),
+        type: config.type,
+        action: 'approved',
+        appointmentId: selectedAppointment.id
+      });
+    } else {
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: 'Vet Assigned!',
+        message: `${selectedVet} has been assigned to ${selectedAppointment.pet_name}'s appointment.`
+      });
+    }
+  };
+
+  const handleCompleteAppointment = (appointment) => {
+    setSelectedAppointment(appointment);
+    setShowHealthRecordModal(true);
+  };
+
+  const handleHealthRecordSave = (healthRecord) => {
+    // Save health record (implement your logic here)
+    console.log('Health record saved:', healthRecord);
+    
+    // Automatically mark appointment as completed
+    updateAppointmentStatus(selectedAppointment.id, 'completed');
+    
+    // Close health record modal
+    setShowHealthRecordModal(false);
+    
+    // Show success notification
     setNotification({
       isOpen: true,
       type: 'success',
-      title: 'Vet Assigned!',
-      message: `${selectedVet} has been assigned to ${selectedAppointment.pet_name}'s appointment.`
+      title: 'Appointment Completed!',
+      message: `Health record saved and appointment for ${selectedAppointment.pet_name} has been completed.`
     });
   };
 
@@ -164,7 +217,7 @@ export default function ClinicAppointmentsPage() {
                 key={appointment.id}
                 appointment={appointment}
                 onStatusChange={handleStatusChange}
-                onAssignVet={openAssignVetModal}
+                onComplete={handleCompleteAppointment}
               />
             ))
           )}
@@ -180,11 +233,27 @@ export default function ClinicAppointmentsPage() {
 
       <AssignVetModal
         isOpen={showAssignVetModal}
-        onClose={() => setShowAssignVetModal(false)}
+        onClose={() => {
+          setShowAssignVetModal(false);
+          setPendingApproval(false);
+        }}
         appointment={selectedAppointment}
         vets={vets}
         onAssign={handleAssignVet}
       />
+
+      {showHealthRecordModal && selectedAppointment && (
+        <AddHealthRecordModal
+          patient={{
+            id: selectedAppointment.id,
+            name: selectedAppointment.pet_name,
+            species: selectedAppointment.pet_type,
+            breed: selectedAppointment.pet_type
+          }}
+          onClose={() => setShowHealthRecordModal(false)}
+          onSave={handleHealthRecordSave}
+        />
+      )}
 
       <ConfirmationModal
         isOpen={confirmation.isOpen}

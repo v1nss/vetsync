@@ -12,7 +12,6 @@ import AppointmentsPage from "../pages/pet-owner/AppointmentsPage";
 import ManagePetsPage from "../pages/pet-owner/ManagePetsPage";
 import MessagesPage from "../pages/pet-owner/MessagesPage";
 import ClinicAdminDashboard from "../pages/clinic-admin/ClinicAdminDashboard";
-import PatientManagementPage from "../pages/clinic-admin/PatientManagementPage";
 import ClinicManagementPage from "../pages/clinic-admin/ClinicManagementPage";
 import SettingsPage from "../pages/pet-owner/SettingsPage";
 import VetAppointmentPage from "../pages/vet-pro/VetAppointmentsPage";
@@ -156,7 +155,6 @@ const AppRoutes = () => (
                 <Route element={<ClinicAdminLayout />}>
                     <Route index element={<Navigate to="dashboard" replace />} />
                     <Route path="dashboard" element={<ClinicAdminDashboard />} />
-                    <Route path="patients" exact element={<PatientManagementPage />} />
                     <Route path="ehr" exact element={<ClinicAdminEHRPage />} />
                     <Route path="vet-pros" element={<VetProManagementPage />} />
                     <Route path="settings" element={<ClinicManagementPage />} />

@@ -19,11 +19,9 @@ export default function ClinicAdminLayout() {
   const clinicAdminLinks = [
     { name: "Dashboard", icon: <BiSolidDashboard />, path: "/clinic-admin/dashboard" },
     { name: "Health Records", icon: <FaNotesMedical />, path: "/clinic-admin/ehr" },
-    { name: "Patient Management", icon: <FaPaw />, path: "/clinic-admin/patients" },
     { name: "Clinic Management", icon: <FaClinicMedical />, path: "/clinic-admin/settings" },
     { name: "Appointments", icon: <FaCalendarAlt />, path: "/clinic-admin/appointments" },
     { name: "Vet Professionals", icon: <FaUserMd />, path: "/clinic-admin/vet-pros" },
-    // { name: "Settings", icon: <FaCog />, path: "/clinic-admin/profile-settings" },
   ];
 
   const handleLogout = () => {
