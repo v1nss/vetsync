@@ -31,6 +31,7 @@ import RejectedClinicPage from "../pages/clinic-admin/RejectedClinicPage";
 import EditClinicPage from "../pages/clinic-admin/EditClinicPage";
 import ClinicAppointmentsPage from "../pages/clinic-admin/ClinicAppointmentsPage";
 import VetProEHRPage from "../pages/vet-pro/VetProEHRPage";
+import VetProfilePage from "../pages/vet-pro/VetProfilePage";
 
 // Public routes (no auth required)
 const PublicRoute = () => {
@@ -173,6 +174,7 @@ const AppRoutes = () => (
                 <Route index element={<Navigate to="appointments" replace />} />
                 <Route path="appointments" element={<VetAppointmentPage />} />
                 <Route path="health-records" element={<VetProEHRPage />} />
+                <Route path="profile" element={<VetProfilePage />} />
             </Route>
 
             {/* System Admin Routes */}

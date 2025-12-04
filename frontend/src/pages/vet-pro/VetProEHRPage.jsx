@@ -8,10 +8,10 @@ export default function VetProEHRPage() {
   const [selectedPatient, setSelectedPatient] = useState(null);
 
   return (
-    <main>
+    <main className="min-h-screen bg-gray-50">
       <Navbar />
       
-      <div className="min-h-screen bg-gray-50 p-4 pb-24 sm:pb-8">
+      <div className="min-h-screen mx-auto max-w-7xl bg-gray-50 p-4 sm:p-6 pb-24 sm:pb-8">
         {!selectedPatient ? (
           <PatientList 
             patients={patientsData} 

@@ -178,11 +178,11 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
           <div>
             <button
               onClick={onBack}
-              className="text-primary hover:text-[#FEA08E] mb-2 flex items-center gap-1 transition"
+              className="text-2xl mb-2 flex items-center gap-1 transition"
             >
-              <FiChevronLeft /> Back to Records
+              <FiChevronLeft />
+              <span className="text-2xl font-bold capitalize text-gray-900">{patient.name}'s Health Record</span>
             </button>
-            <h1 className="text-2xl font-bold capitalize text-gray-900">{patient.name}'s Health Record</h1>
           </div>
         </div>
 

@@ -142,7 +142,13 @@ export default function ClinicViewPage({ onLike }) {
 
         {/* Desktop Header with Actions */}
         <div className="hidden md:flex items-start justify-between mb-6 pt-6">
-          <h1 className="text-2xl font-semibold text-gray-900">{clinic.name}</h1>
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 p-2 hover:gap-4 rounded-full transition"
+          >
+            <FaChevronLeft className="text-gray-700" />
+            <span className="text-2xl font-semibold text-gray-900">{clinic.name}</span>
+          </button>
           <div className="flex items-center gap-3">
             <button onClick={toggleLike} className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 rounded-lg transition underline font-semibold">
               {liked ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
