@@ -3,7 +3,7 @@ import User from "../models/users/userModel.js";
 import PetOwner from "../models/users/petOwnerModel.js";
 import ClinicAdmin from "../models/users/clinicAdminModel.js";
 import VetProfessional from "../models/users/vetProfessionalModel.js";
-import { uploadFiles } from "../../global/utils/drive.js";
+import { uploadFiles, deleteFiles } from "../../global/utils/drive.js";
 
 export const registerUser = async (userData) => {
   const { body, file } = userData;
@@ -165,4 +165,97 @@ export const getVetsByClinicAdmin = async (clinicAdminId) => {
     ]
   });
   return vets;
+};
+
+export const updateVetProfessional = async (req, vetUserId, adminUserId) => {
+  const { body, file } = req;
+  
+  // Parse the user JSON sent in form-data
+  const data = body.user ? JSON.parse(body.user) : body;
+  const { full_name, email, specialization, license_number } = data;
+
+  // Verify the admin has permission
+  const admin = await ClinicAdmin.findOne({ where: { user_id: adminUserId } });
+  if (!admin)
+    throw new Error("Only clinic admins can update vet professionals");
+
+  // Get the current vet user
+  const currentUser = await User.findByPk(vetUserId);
+  if (!currentUser)
+    throw new Error("Vet professional not found");
+
+  // Verify the vet belongs to this admin
+  const vetProfessional = await VetProfessional.findOne({
+    where: { 
+      user_id: vetUserId,
+      clinic_admin_id: adminUserId
+    }
+  });
+
+  if (!vetProfessional)
+    throw new Error("Vet professional not found or you don't have permission");
+
+  // Check if email is being changed and if it's already taken
+  if (email && email !== currentUser.email) {
+    const existing = await User.findOne({ where: { email } });
+    if (existing) throw new Error("Email already registered");
+  }
+
+  // Handle profile picture update
+  let userProfile = currentUser.profile_image_url;
+  if (file) {
+    // Delete old profile picture from Google Drive if it exists
+    if (userProfile && userProfile.id) {
+      try {
+        await deleteFiles(userProfile.id);
+        console.log(`Deleted old profile picture: ${userProfile.id}`);
+      } catch (err) {
+        console.error("Error deleting old profile picture:", err.message);
+        // Continue with upload even if deletion fails
+      }
+    }
+
+    // Upload new profile picture
+    const uploadedFile = await uploadFiles(
+      file,
+      process.env.GDRIVE_FOLDER_ID
+    );
+
+    userProfile = {
+      id: uploadedFile.id,
+      name: uploadedFile.name,
+      link: `https://lh3.googleusercontent.com/d/${uploadedFile.id}`,
+      viewLink: uploadedFile.webViewLink,
+      downloadLink: uploadedFile.webContentLink,
+      thumbnail: `https://drive.google.com/thumbnail?id=${uploadedFile.id}&sz=w400`
+    };
+  }
+
+  // Update user record
+  const updateData = {};
+  if (full_name) updateData.full_name = full_name;
+  if (email) updateData.email = email;
+  if (userProfile) updateData.profile_image_url = userProfile;
+
+  await currentUser.update(updateData);
+
+  // Update vet professional record (we already have it from permission check)
+  if (vetProfessional) {
+    const vetUpdateData = {};
+    if (specialization) vetUpdateData.specialization = specialization;
+    // Note: license_number is commented out in the model, so we skip it
+    // if (license_number) vetUpdateData.license_number = license_number;
+    
+    await vetProfessional.update(vetUpdateData);
+  }
+
+  // Return updated user with vet professional data
+  const updatedUser = await User.findByPk(vetUserId, {
+    include: [{
+      model: VetProfessional
+    }],
+    attributes: { exclude: ['password_hash'] }
+  });
+
+  return updatedUser;
 };

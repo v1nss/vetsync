@@ -6,6 +6,7 @@ import {
   updateUserProfile,
   getUserById,
   verifyExistingEmail,
+  updateVetProfessional,
 } from "../services/userService.js";
 
 export const register = async (req, res) => {
@@ -80,7 +81,7 @@ export const fetchVetProfessionalsByClinic = async (req, res) => {
       include: [
         {
           model: User,
-          attributes: ["full_name", "email", "phone_number"]
+          attributes: ["id", "full_name", "email", "phone_number", "profile_image_url"]
         }
       ]
     });
@@ -88,5 +89,19 @@ export const fetchVetProfessionalsByClinic = async (req, res) => {
   } catch (err) {
     console.error("Error fetching vet professionals by clinic", err.message);
     res.status(500).json({ error: err.message });
+  }
+};
+
+export const updateVetProfessionalController = async (req, res) => {
+  try {
+    const adminUserId = req.user.id; // from JWT
+    const vetUserId = req.params.vetId;
+    const updatedUser = await updateVetProfessional(req, vetUserId, adminUserId);
+    res
+      .status(200)
+      .json({ message: "Vet Professional updated successfully", user: updatedUser });
+  } catch (err) {
+    console.error("Unable to update Vet Professional", err.message);
+    res.status(400).json({ error: err.message });
   }
 };

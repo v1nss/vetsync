@@ -96,6 +96,38 @@ export const fetchClinicVets = async () => {
   }
 };
 
+export const updateVetProfessional = async (vetId, vetData, profilePicture) => {
+  try {
+    const formData = new FormData();
+    
+    // Prepare vet data
+    const dataToSend = {
+      full_name: vetData.name,
+      email: vetData.email,
+      specialization: vetData.specialization,
+      license_number: vetData.license_number,
+    };
+    
+    formData.append('user', JSON.stringify(dataToSend));
+    
+    // Append profile picture if provided
+    if (profilePicture) {
+      formData.append('file', profilePicture);
+    }
+    
+    const res = await api.patch(`/users/vet/${vetId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    
+    return res.data;
+  } catch (err) {
+    console.error("Unable to update vet professional", err);
+    throw err;
+  }
+};
+
 // export const fetchClinicStats = async (token) => {
 //   try {
 //     const res = await axios.get(`${BASE_URL}/clinic-admin/my-clinic/stats`, {

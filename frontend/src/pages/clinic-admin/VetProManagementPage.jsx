@@ -4,7 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import AddVetModal from "../../components/vet/AddVetModal";
 import NotificationModal from "../../components/NotificationModal";
 import ConfirmationModal from "../../components/ConfirmationModal";
-import { addVetProfessional } from "../../global/api/clinicAdmin";
+import { addVetProfessional, updateVetProfessional, fetchClinicVets } from "../../global/api/clinicAdmin";
 
 export default function VetProManagementPage() {
   const { user } = useAuth();
@@ -33,14 +33,20 @@ export default function VetProManagementPage() {
 
   const fetchVets = async () => {
     try {
-      // const data = await fetchClinicVets(token);
-      // setVets(data);
+      const vets = await fetchClinicVets();
       
-      // Mock data
-      setVets([
-        { id: 1, name: "Dr. Sarah Johnson", email: "sarah@clinic.com", specialization: "Surgery", license_number: "VET-2023-001", status: "active" },
-        { id: 2, name: "Dr. Michael Chen", email: "michael@clinic.com", specialization: "General Practice", license_number: "VET-2023-002", status: "active" },
-      ]);
+      const transformedVets = vets.map(vet => ({
+        id: vet.user_id,
+        name: vet.User.full_name,
+        email: vet.User.email,
+        specialization: vet.specialization,
+        license_number: vet.license_number || 'N/A',
+        profile_image_url: vet.User.profile_image_url || null,
+        status: 'active' // Assuming all fetched vets are active
+      }));
+
+      setVets(transformedVets);
+
     } catch (err) {
       console.error("Failed to fetch vets:", err);
       setNotification({
@@ -78,8 +84,11 @@ export default function VetProManagementPage() {
 
   const handleEditVet = async (vetData, profilePicture) => {
     try {
-      // TODO: Implement update vet API when backend supports it
-      // await updateVetProfessional(selectedVet.id, vetData, profilePicture);
+      if (!selectedVet || !selectedVet.id) {
+        throw new Error("No vet selected for update");
+      }
+      
+      await updateVetProfessional(selectedVet.id, vetData, profilePicture);
       await fetchVets();
       setIsModalOpen(false);
       setSelectedVet(null);
@@ -117,6 +126,9 @@ export default function VetProManagementPage() {
     try {
       // await deleteVet(token, confirmDelete.vetId);
       await fetchVets();
+      
+      // Close confirmation modal
+      setConfirmDelete({ isOpen: false, vetId: null, vetName: '' });
       
       // Show success notification
       setNotification({

@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, createVetProfessional, updateUserDetails, fetchUserDataById, checkEmailExists, fetchVetProfessionalsByClinic } from '../controllers/userController.js';
+import { register, createVetProfessional, updateUserDetails, fetchUserDataById, checkEmailExists, fetchVetProfessionalsByClinic, updateVetProfessionalController } from '../controllers/userController.js';
 import { authenticate, verifyClinicAdmin } from '../../global/middleware/authMiddleware.js';
 import upload from '../../global/config/multer.js';
 
@@ -18,6 +18,7 @@ router.put('/email-check', checkEmailExists);
 
 // Vet Professional
 router.post('/vet', authenticate, verifyClinicAdmin, upload.single("file"), createVetProfessional); // only clinic admin
+router.patch('/vet/:vetId', authenticate, verifyClinicAdmin, upload.single("file"), updateVetProfessionalController); // only clinic admin
 router.get('/my-clinic/vets', authenticate, verifyClinicAdmin, fetchVetProfessionalsByClinic)
 
 export default router;

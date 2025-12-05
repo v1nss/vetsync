@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { FaTimes, FaCamera, FaUser } from "react-icons/fa";
+import DriveImage from "../DriveImage";
 
 export default function AddVetModal({ isOpen, onClose, onSubmit, vet }) {
   const [formData, setFormData] = useState({
@@ -11,6 +12,7 @@ export default function AddVetModal({ isOpen, onClose, onSubmit, vet }) {
   });
   const [profilePicture, setProfilePicture] = useState(null);
   const [profilePreview, setProfilePreview] = useState(null);
+  const [existingProfileImage, setExistingProfileImage] = useState(null);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -22,21 +24,19 @@ export default function AddVetModal({ isOpen, onClose, onSubmit, vet }) {
         specialization: vet.specialization || "",
         license_number: vet.license_number || "",
       });
-      // Set profile preview if vet has profile image
+      // Set existing profile image for display
       if (vet.profile_image_url) {
-        setProfilePreview(
-          vet.profile_image_url.link || 
-          vet.profile_image_url.thumbnail || 
-          vet.profile_image_url
-        );
+        setExistingProfileImage(vet.profile_image_url);
       } else {
-        setProfilePreview(null);
+        setExistingProfileImage(null);
       }
+      setProfilePreview(null);
       setProfilePicture(null);
     } else {
       setFormData({ name: "", email: "", password: "", specialization: "", license_number: "" });
       setProfilePicture(null);
       setProfilePreview(null);
+      setExistingProfileImage(null);
     }
     setErrors({});
   }, [vet, isOpen]);
@@ -70,6 +70,8 @@ export default function AddVetModal({ isOpen, onClose, onSubmit, vet }) {
 
     setProfilePicture(file);
     setErrors(prev => ({ ...prev, profilePicture: "" }));
+    // Clear existing image when new one is selected
+    setExistingProfileImage(null);
     
     const reader = new FileReader();
     reader.onloadend = () => { setProfilePreview(reader.result); };
@@ -102,6 +104,13 @@ export default function AddVetModal({ isOpen, onClose, onSubmit, vet }) {
               <div className="w-24 h-24 rounded-full border-2 border-gray-300 overflow-hidden bg-gray-100 flex items-center justify-center">
                 {profilePreview ? (
                   <img src={profilePreview} alt="Profile Preview" className="w-full h-full object-cover" />
+                ) : existingProfileImage ? (
+                  <DriveImage
+                    image={existingProfileImage}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                    fallbackIcon={false}
+                  />
                 ) : (
                   <span className="text-gray-400 text-3xl"><FaUser /></span>
                 )}
@@ -118,6 +127,9 @@ export default function AddVetModal({ isOpen, onClose, onSubmit, vet }) {
               />
             </div>
           </div>
+          {vet && existingProfileImage && !profilePreview && (
+            <p className="text-xs text-gray-500 text-center">Current profile picture</p>
+          )}
           {errors.profilePicture && (
             <p className="text-red-500 text-xs text-center">{errors.profilePicture}</p>
           )}
