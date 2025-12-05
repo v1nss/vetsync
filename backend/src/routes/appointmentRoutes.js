@@ -2,7 +2,7 @@ import express from 'express';
 import { authenticate, verifyClinicAdmin } from '../../global/middleware/authMiddleware.js';
 import { 
     createNewAppointment, 
-    acceptAppointmentRequest, 
+    approveAppointmentRequest, 
     completeAppointmentRequest, 
     getAppointmentsByOwner, 
     deleteAppointmentById,
@@ -21,7 +21,7 @@ router.get('/clinic/:clinicId', authenticate, verifyClinicAdmin, fetchAppointmen
 
 router.delete('/delete/:appointmentId', authenticate, deleteAppointmentById)
 
-router.patch('/accept/:appointmentId', authenticate, verifyClinicAdmin, acceptAppointmentRequest);
+router.patch('/approve/:appointmentId', authenticate, verifyClinicAdmin, approveAppointmentRequest);
 
 router.patch('/complete/:appointmentId', authenticate, completeAppointmentRequest);
 

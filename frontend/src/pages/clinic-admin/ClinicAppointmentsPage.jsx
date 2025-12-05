@@ -233,7 +233,7 @@ export default function ClinicAppointmentsPage() {
       // Refresh appointments
       if (clinicId) {
         const appointmentsData = await fetchAppointmentsByClinic(clinicId);
-        console.log("Refreshed appointments data after vet assignment:", appointmentsData);
+        
         const transformedAppointments = (appointmentsData.appointments || []).map(apt => ({
           id: apt.appointment_id,
           pet_name: apt.pet?.name || 'N/A',

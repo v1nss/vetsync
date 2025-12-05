@@ -13,7 +13,7 @@ export const createAppointment = async (id, appointmentData) => {
   return newAppointment;
 };
 
-export const acceptAppointment = async (clinicAdminId, appointmentId, vetProId) => {
+export const approveAppointment = async (clinicAdminId, appointmentId, vetProId) => {
   const appointment = await Appointment.findByPk(appointmentId);
   if (!appointment) throw new Error("Appointment not found");
   const vetProExists = await VetProfessional.findOne({
@@ -28,7 +28,7 @@ export const acceptAppointment = async (clinicAdminId, appointmentId, vetProId) 
   }
 
   await appointment.update({
-    status: "confirmed",
+    status: "approved",
     vet_professional_id: vetProId,
   });
 

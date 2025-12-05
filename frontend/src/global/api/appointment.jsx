@@ -40,9 +40,9 @@ export const fetchAppointmentsByClinic = async (clinicId) => {
     }
 }
 
-export const acceptAppointment = async (appointmentId, vetProfessionalId = null) => {
+export const approveAppointment = async (appointmentId, vetProfessionalId = null) => {
     try {
-        const res = await api.patch(`/appointments/accept/${appointmentId}`, {
+        const res = await api.patch(`/appointments/approve/${appointmentId}`, {
             vet_professional_id: vetProfessionalId
         });
         // console.log("Appointment accepted successfully:", res.data);
@@ -56,8 +56,8 @@ export const acceptAppointment = async (appointmentId, vetProfessionalId = null)
 export const updateAppointmentStatus = async (appointmentId, status, vetProfessionalId = null) => {
     try {
         // Use accept endpoint for 'confirmed' status, complete for 'completed'
-        if (status === 'confirmed' || status === 'approved') {
-            return await acceptAppointment(appointmentId, vetProfessionalId);
+        if (status === 'approved') {
+            return await approveAppointment(appointmentId, vetProfessionalId);
         } else if (status === 'completed') {
             const res = await api.patch(`/appointments/complete/${appointmentId}`);
             // console.log("Appointment completed successfully:", res.data);
@@ -75,7 +75,7 @@ export const updateAppointmentStatus = async (appointmentId, status, vetProfessi
 
 export const assignVetToAppointment = async (appointmentId, vetProfessionalId) => {
     try {
-        const res = await api.patch(`/appointments/accept/${appointmentId}`, {
+        const res = await api.patch(`/appointments/approve/${appointmentId}`, {
             vet_professional_id: vetProfessionalId
         });
         // console.log("Vet assigned successfully:", res.data);
