@@ -1,22 +1,24 @@
 import React, { useState } from "react";
 import { FiX, FiPlus, FiTrash2, FiUpload } from "react-icons/fi";
-import { RiMicroscopeLine, RiSyringeLine } from "react-icons/ri";
+import { RiMicroscopeLine, RiSyringeLine, RiBugLine } from "react-icons/ri";
 import { FaPrescription } from "react-icons/fa";
 import NotificationModal from "../NotificationModal";
 
-export default function AddHealthRecordModal({ patient, onClose, onSave }) {
+export default function AddHealthRecordModal({ patient, appointment, onClose, onSave }) {
   const [formData, setFormData] = useState({
-    appointmentDate: new Date().toISOString().split('T')[0],
-    veterinarian: "",
-    reason: "",
+    appointmentDate: appointment?.date || new Date().toISOString().split('T')[0],
+    veterinarian: appointment?.assigned_vet || "",
+    reason: appointment?.service || "",
+    attachedFile: null,
+    noRecordsRequired: false,
     documents: {
       labResults: [],
       vaccineRecords: [],
-      prescriptions: []
+      prescriptions: [],
+      deworming: []
     }
   });
 
-  const [activeDocType, setActiveDocType] = useState(null);
   const [errors, setErrors] = useState({});
   const [notification, setNotification] = useState({
     isOpen: false,
@@ -29,9 +31,10 @@ export default function AddHealthRecordModal({ patient, onClose, onSave }) {
   const addDocument = (type) => {
     const newDoc = {
       id: `${type}_${Date.now()}`,
-      documentName: "",
-      details: "",
-      fileUrl: null
+      name: "",
+      description: "",
+      duration: type === 'vaccineRecords' ? "" : undefined,
+      durationUnit: type === 'vaccineRecords' ? "months" : undefined
     };
 
     setFormData(prev => ({
@@ -41,7 +44,6 @@ export default function AddHealthRecordModal({ patient, onClose, onSave }) {
         [type]: [...(prev.documents[type] || []), newDoc]
       }
     }));
-    setActiveDocType(type);
   };
 
   // Remove a document
@@ -68,14 +70,13 @@ export default function AddHealthRecordModal({ patient, onClose, onSave }) {
     }));
   };
 
-  // Handle file upload (mock - replace with actual upload logic)
-  const handleFileUpload = (type, docId, file) => {
-    // TODO: Implement actual file upload to your server
-    console.log("Uploading file:", file.name);
-    
-    // Mock file URL
-    const fileUrl = URL.createObjectURL(file);
-    updateDocument(type, docId, 'fileUrl', fileUrl);
+  // Handle main file upload
+  const handleFileUpload = (file) => {
+    if (file) {
+      console.log("Uploading file:", file.name);
+      const fileUrl = URL.createObjectURL(file);
+      setFormData(prev => ({ ...prev, attachedFile: { name: file.name, url: fileUrl } }));
+    }
   };
 
   // Validate form
@@ -92,27 +93,34 @@ export default function AddHealthRecordModal({ patient, onClose, onSave }) {
       newErrors.reason = "Reason for visit is required";
     }
 
-    // Check if at least one document is added
-    const hasDocuments = 
-      formData.documents.labResults.length > 0 ||
-      formData.documents.vaccineRecords.length > 0 ||
-      formData.documents.prescriptions.length > 0;
+    if (!formData.noRecordsRequired) {
+      const hasDocuments = 
+        formData.documents.labResults.length > 0 ||
+        formData.documents.vaccineRecords.length > 0 ||
+        formData.documents.prescriptions.length > 0 ||
+        formData.documents.deworming.length > 0;
 
-    if (!hasDocuments) {
-      newErrors.documents = "Please add at least one document";
-    }
+      if (!hasDocuments) {
+        newErrors.documents = "Please add at least one medical record or check 'No medical records required'";
+      }
 
-    // Validate each document has required fields
-    ['labResults', 'vaccineRecords', 'prescriptions'].forEach(type => {
-      formData.documents[type].forEach((doc, index) => {
-        if (!doc.documentName.trim()) {
-          newErrors[`${type}_${index}_name`] = "Document name is required";
-        }
-        if (!doc.details.trim()) {
-          newErrors[`${type}_${index}_details`] = "Details are required";
-        }
+      ['labResults', 'vaccineRecords', 'prescriptions', 'deworming'].forEach(type => {
+        formData.documents[type].forEach((doc, index) => {
+          if (!doc.name.trim()) {
+            newErrors[`${type}_${index}_name`] = "Name is required";
+          }
+          if (!doc.description.trim()) {
+            newErrors[`${type}_${index}_description`] = "Description is required";
+          }
+          
+          if (type === 'vaccineRecords') {
+            if (!doc.duration || doc.duration <= 0) {
+              newErrors[`${type}_${index}_duration`] = "Duration is required";
+            }
+          }
+        });
       });
-    });
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -127,27 +135,30 @@ export default function AddHealthRecordModal({ patient, onClose, onSave }) {
         isOpen: true,
         type: 'error',
         title: 'Validation Error',
-        message: 'Please fill in all required fields and add at least one document.'
+        message: 'Please fill in all required fields.'
       });
       return;
     }
 
-    // Prepare data for API
     const healthRecord = {
       id: `hr_${Date.now()}`,
-      patientId: patient.id,
+      petId: patient.id,
+      appointmentId: appointment?.id,
+      vetId: appointment?.vet_id,
       appointmentDate: formData.appointmentDate,
       veterinarian: formData.veterinarian,
       reason: formData.reason,
-      documents: {
+      attachedFile: formData.attachedFile,
+      noRecordsRequired: formData.noRecordsRequired,
+      documents: formData.noRecordsRequired ? null : {
         labResults: formData.documents.labResults.length > 0 ? formData.documents.labResults : null,
         vaccineRecords: formData.documents.vaccineRecords.length > 0 ? formData.documents.vaccineRecords : null,
-        prescriptions: formData.documents.prescriptions.length > 0 ? formData.documents.prescriptions : null
+        prescriptions: formData.documents.prescriptions.length > 0 ? formData.documents.prescriptions : null,
+        deworming: formData.documents.deworming.length > 0 ? formData.documents.deworming : null
       },
       createdAt: new Date().toISOString()
     };
 
-    // Show success notification BEFORE calling onSave
     setNotification({
       isOpen: true,
       type: 'success',
@@ -155,13 +166,11 @@ export default function AddHealthRecordModal({ patient, onClose, onSave }) {
       message: 'Health record has been saved successfully.'
     });
 
-    // Call onSave to update parent state
     onSave(healthRecord);
   };
 
   const handleNotificationClose = () => {
     setNotification({ ...notification, isOpen: false });
-    // Close the main modal after notification is dismissed
     if (notification.type === 'success') {
       onClose();
     }
@@ -170,19 +179,107 @@ export default function AddHealthRecordModal({ patient, onClose, onSave }) {
   const documentTypes = [
     { key: 'labResults', label: 'Lab Results', icon: RiMicroscopeLine, color: 'blue' },
     { key: 'vaccineRecords', label: 'Vaccine Records', icon: RiSyringeLine, color: 'green' },
-    { key: 'prescriptions', label: 'Prescriptions', icon: FaPrescription, color: 'purple' }
+    { key: 'prescriptions', label: 'Prescriptions', icon: FaPrescription, color: 'purple' },
+    { key: 'deworming', label: 'Deworming', icon: RiBugLine, color: 'orange' }
   ];
+
+  const renderDocumentForm = (type, doc, index) => {
+    const isVaccine = type === 'vaccineRecords';
+    
+    return (
+      <div key={doc.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+        <div className="flex items-start justify-between mb-3">
+          <span className="text-sm font-medium text-gray-700">
+            {documentTypes.find(t => t.key === type).label} #{index + 1}
+          </span>
+          <button
+            type="button"
+            onClick={() => removeDocument(type, doc.id)}
+            className="p-1 text-red-600 hover:bg-red-50 rounded transition"
+          >
+            <FiTrash2 className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className={`grid grid-cols-1 ${isVaccine ? 'md:grid-cols-3' : ''} gap-3`}>
+          <div className={isVaccine ? 'md:col-span-3' : ''}>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Name *</label>
+            <input
+              type="text"
+              value={doc.name}
+              onChange={(e) => updateDocument(type, doc.id, 'name', e.target.value)}
+              placeholder={`e.g., ${type === 'labResults' ? 'Blood Test Results' : type === 'vaccineRecords' ? 'Rabies Vaccination' : type === 'prescriptions' ? 'Amoxicillin Prescription' : 'Deworming Treatment'}`}
+              className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                errors[`${type}_${index}_name`] ? 'border-red-500' : 'border-gray-200'
+              }`}
+            />
+            {errors[`${type}_${index}_name`] && (
+              <p className="text-red-500 text-xs mt-1">{errors[`${type}_${index}_name`]}</p>
+            )}
+          </div>
+
+          <div className={isVaccine ? 'md:col-span-3' : ''}>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Description *</label>
+            <textarea
+              value={doc.description}
+              onChange={(e) => updateDocument(type, doc.id, 'description', e.target.value)}
+              placeholder="Enter detailed information..."
+              rows={3}
+              className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                errors[`${type}_${index}_description`] ? 'border-red-500' : 'border-gray-200'
+              }`}
+            />
+            {errors[`${type}_${index}_description`] && (
+              <p className="text-red-500 text-xs mt-1">{errors[`${type}_${index}_description`]}</p>
+            )}
+          </div>
+
+          {isVaccine && (
+            <>
+              <div className="md:col-span-2">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Duration *</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={doc.duration}
+                  onChange={(e) => updateDocument(type, doc.id, 'duration', e.target.value)}
+                  placeholder="1"
+                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                    errors[`${type}_${index}_duration`] ? 'border-red-500' : 'border-gray-200'
+                  }`}
+                />
+                {errors[`${type}_${index}_duration`] && (
+                  <p className="text-red-500 text-xs mt-1">{errors[`${type}_${index}_duration`]}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Unit</label>
+                <select
+                  value={doc.durationUnit}
+                  onChange={(e) => updateDocument(type, doc.id, 'durationUnit', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="days">Days</option>
+                  <option value="months">Months</option>
+                  <option value="years">Years</option>
+                </select>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <>
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
         <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
           {/* Modal Header */}
-          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">
-                Add Health Record
-              </h2>
+              <h2 className="text-xl font-bold text-gray-900">Add Health Record</h2>
               <p className="text-sm text-gray-600 mt-1">
                 {patient.name} • {patient.species} • {patient.breed}
               </p>
@@ -240,164 +337,130 @@ export default function AddHealthRecordModal({ patient, onClose, onSave }) {
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Reason for Visit *
+                    Reason for Visit (Service) *
                   </label>
                   <input
                     type="text"
                     value={formData.reason}
-                    onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                    placeholder="Annual Wellness Check, Vaccination, Follow-up, etc."
-                    className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 ${
-                      errors.reason ? 'border-red-500' : 'border-gray-200'
-                    }`}
+                    disabled
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
                   />
-                  {errors.reason && (
-                    <p className="text-red-500 text-xs mt-1">{errors.reason}</p>
-                  )}
+                  <p className="text-xs text-gray-500 mt-1">This field is auto-filled from the appointment service</p>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Attach File (Optional)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary cursor-pointer transition">
+                      <FiUpload className="w-5 h-5 text-gray-500" />
+                      <span className="text-sm text-gray-600">
+                        {formData.attachedFile ? formData.attachedFile.name : 'Choose file (PDF, Images, Documents)'}
+                      </span>
+                      <input
+                        type="file"
+                        onChange={(e) => handleFileUpload(e.target.files[0])}
+                        className="hidden"
+                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      />
+                    </label>
+                    {formData.attachedFile && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, attachedFile: null }))}
+                        className="p-3 text-red-600 hover:bg-red-50 rounded-lg transition"
+                      >
+                        <FiTrash2 className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Documents Section */}
+            {/* Medical Records Section */}
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                  Medical Documents *
+                  Medical Records
                 </h3>
                 {errors.documents && (
                   <p className="text-red-500 text-xs">{errors.documents}</p>
                 )}
               </div>
 
-              {/* Add Document Buttons */}
-              <div className="flex flex-wrap gap-2 mb-6">
-                {documentTypes.map(({ key, label, icon: Icon, color }) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => addDocument(key)}
-                    className={`flex items-center gap-2 px-4 py-2 bg-${color}-50 text-${color}-700 border border-${color}-200 rounded-lg hover:bg-${color}-100 transition`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span className="text-sm font-medium">Add {label}</span>
-                    <FiPlus className="w-3.5 h-3.5" />
-                  </button>
-                ))}
+              {/* No Records Required Checkbox */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.noRecordsRequired}
+                    onChange={(e) => setFormData({ ...formData, noRecordsRequired: e.target.checked })}
+                    className="w-5 h-5 text-primary rounded focus:ring-2 focus:ring-primary/20"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    No medical records required for this visit
+                  </span>
+                </label>
+                <p className="text-xs text-gray-500 mt-2 ml-8">
+                  Check this box if the service does not require medical documentation (e.g., Grooming, Boarding)
+                </p>
               </div>
 
-              {/* Document Forms */}
-              <div className="space-y-6">
-                {documentTypes.map(({ key, label, icon: Icon, color }) => (
-                  formData.documents[key].length > 0 && (
-                    <div key={key}>
-                      <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                        <Icon className={`w-4 h-4 text-${color}-600`} />
-                        {label} ({formData.documents[key].length})
-                      </h4>
-                      <div className="space-y-4">
-                        {formData.documents[key].map((doc, index) => (
-                          <div key={doc.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                            <div className="flex items-start justify-between mb-3">
-                              <span className="text-sm font-medium text-gray-700">
-                                {label} #{index + 1}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => removeDocument(key, doc.id)}
-                                className="p-1 text-red-600 hover:bg-red-50 rounded transition"
-                              >
-                                <FiTrash2 className="w-4 h-4" />
-                              </button>
-                            </div>
+              {/* Only show medical records section if checkbox is NOT checked */}
+              {!formData.noRecordsRequired && (
+                <>
+                  {/* Add Document Buttons */}
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {documentTypes.map(({ key, label, icon: Icon, color }) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => addDocument(key)}
+                        className={`flex items-center gap-2 px-4 py-2 bg-${color}-50 text-${color}-700 border border-${color}-200 rounded-lg hover:bg-${color}-100 transition`}
+                      >
+                        <Icon className="w-4 h-4" />
+                        <span className="text-sm font-medium">Add {label}</span>
+                        <FiPlus className="w-3.5 h-3.5" />
+                      </button>
+                    ))}
+                  </div>
 
-                            <div className="space-y-3">
-                              <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">
-                                  Document Name *
-                                </label>
-                                <input
-                                  type="text"
-                                  value={doc.documentName}
-                                  onChange={(e) => updateDocument(key, doc.id, 'documentName', e.target.value)}
-                                  placeholder={`e.g., ${key === 'labResults' ? 'Blood Test Results' : key === 'vaccineRecords' ? 'Rabies Vaccination' : 'Amoxicillin Prescription'}`}
-                                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
-                                    errors[`${key}_${index}_name`] ? 'border-red-500' : 'border-gray-200'
-                                  }`}
-                                />
-                                {errors[`${key}_${index}_name`] && (
-                                  <p className="text-red-500 text-xs mt-1">{errors[`${key}_${index}_name`]}</p>
-                                )}
-                              </div>
-
-                              <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">
-                                  Details *
-                                </label>
-                                <textarea
-                                  value={doc.details}
-                                  onChange={(e) => updateDocument(key, doc.id, 'details', e.target.value)}
-                                  placeholder="Enter detailed information about this document..."
-                                  rows={3}
-                                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 ${
-                                    errors[`${key}_${index}_details`] ? 'border-red-500' : 'border-gray-200'
-                                  }`}
-                                />
-                                {errors[`${key}_${index}_details`] && (
-                                  <p className="text-red-500 text-xs mt-1">{errors[`${key}_${index}_details`]}</p>
-                                )}
-                              </div>
-
-                              <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">
-                                  Attach File (Optional)
-                                </label>
-                                <div className="flex items-center gap-2">
-                                  <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary cursor-pointer transition">
-                                    <FiUpload className="w-4 h-4 text-gray-500" />
-                                    <span className="text-sm text-gray-600">
-                                      {doc.fileUrl ? 'File attached' : 'Choose file'}
-                                    </span>
-                                    <input
-                                      type="file"
-                                      onChange={(e) => handleFileUpload(key, doc.id, e.target.files[0])}
-                                      className="hidden"
-                                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                                    />
-                                  </label>
-                                  {doc.fileUrl && (
-                                    <button
-                                      type="button"
-                                      onClick={() => updateDocument(key, doc.id, 'fileUrl', null)}
-                                      className="p-2 text-red-600 hover:bg-red-50 rounded transition"
-                                    >
-                                      <FiTrash2 className="w-4 h-4" />
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
+                  {/* Document Forms */}
+                  <div className="space-y-6">
+                    {documentTypes.map(({ key, label, icon: Icon, color }) => (
+                      formData.documents[key].length > 0 && (
+                        <div key={key}>
+                          <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                            <Icon className={`w-4 h-4 text-${color}-600`} />
+                            {label} ({formData.documents[key].length})
+                          </h4>
+                          <div className="space-y-4">
+                            {formData.documents[key].map((doc, index) => renderDocumentForm(key, doc, index))}
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  )
-                ))}
-              </div>
+                        </div>
+                      )
+                    ))}
 
-              {/* Empty State */}
-              {formData.documents.labResults.length === 0 &&
-               formData.documents.vaccineRecords.length === 0 &&
-               formData.documents.prescriptions.length === 0 && (
-                <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
-                  <p className="text-gray-500 text-sm">
-                    No documents added yet. Click the buttons above to add medical documents.
-                  </p>
-                </div>
+                    {/* Empty State */}
+                    {formData.documents.labResults.length === 0 &&
+                     formData.documents.vaccineRecords.length === 0 &&
+                     formData.documents.prescriptions.length === 0 &&
+                     formData.documents.deworming.length === 0 && (
+                      <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
+                        <p className="text-gray-500 text-sm">
+                          No medical records added yet. Click the buttons above to add medical records.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </>
               )}
             </div>
 
             {/* Form Actions */}
-            <div className="flex gap-3 pt-4 border-t border-gray-200">
+            <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-gray-200">
               <button
                 type="button"
                 onClick={onClose}
@@ -416,15 +479,13 @@ export default function AddHealthRecordModal({ patient, onClose, onSave }) {
         </div>
       </div>
 
-      <div className="relative z-60">
-        <NotificationModal
-          isOpen={notification.isOpen}
-          onClose={handleNotificationClose}
-          type={notification.type}
-          title={notification.title}
-          message={notification.message}
-        />
-      </div>
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={handleNotificationClose}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+      />
     </>
   );
 }

@@ -245,10 +245,17 @@ export default function ClinicAppointmentsPage() {
       {showHealthRecordModal && selectedAppointment && (
         <AddHealthRecordModal
           patient={{
-            id: selectedAppointment.id,
+            id: selectedAppointment.pet_id,
             name: selectedAppointment.pet_name,
             species: selectedAppointment.pet_type,
-            breed: selectedAppointment.pet_type
+            breed: selectedAppointment.pet_breed || selectedAppointment.pet_type
+          }}
+          appointment={{
+            id: selectedAppointment.id,
+            date: selectedAppointment.date,
+            assigned_vet: selectedAppointment.assigned_vet,
+            vet_id: selectedAppointment.vet_id,
+            service: selectedAppointment.service
           }}
           onClose={() => setShowHealthRecordModal(false)}
           onSave={handleHealthRecordSave}
