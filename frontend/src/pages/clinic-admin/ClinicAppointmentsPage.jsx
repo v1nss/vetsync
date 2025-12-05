@@ -7,7 +7,9 @@ import AssignVetModal from "../../components/appointments/AssignVetModal";
 import AppointmentCard from "../../components/appointments/AppointmentCard";
 import AppointmentsFilters from "../../components/appointments/AppointmentsFilters";
 import AddHealthRecordModal from "../../components/EHR/AddHealthRecordModal";
-import { useAppointments } from "../../hooks/useAppointments";
+import { fetchAppointmentsByClinic, updateAppointmentStatus, assignVetToAppointment } from "../../global/api/appointment";
+import { fetchMyClinic } from "../../global/api/clinicAdmin";
+import { fetchClinicVets } from "../../global/api/clinicAdmin";
 
 const STATUS_MESSAGES = {
   approved: {
@@ -33,7 +35,10 @@ const STATUS_MESSAGES = {
 };
 
 export default function ClinicAppointmentsPage() {
-  const { appointments, vets, updateAppointmentStatus, assignVetToAppointment } = useAppointments();
+  const [appointments, setAppointments] = useState([]);
+  const [vets, setVets] = useState([]);
+  const [clinicId, setClinicId] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [filteredAppointments, setFilteredAppointments] = useState([]);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -59,12 +64,67 @@ export default function ClinicAppointmentsPage() {
     message: ''
   });
 
+  // Fetch clinic and appointments on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // Get clinic info to get clinic ID
+        const clinic = await fetchMyClinic();
+        if (clinic && clinic.clinic_id) {
+          setClinicId(clinic.clinic_id);
+          
+          // Fetch appointments and vets in parallel
+          const [appointmentsData, vetsData] = await Promise.all([
+            fetchAppointmentsByClinic(clinic.clinic_id),
+            fetchClinicVets()
+          ]);
+          // Transform appointments to match expected format
+          const transformedAppointments = (appointmentsData.appointments || []).map(apt => ({
+            id: apt.appointment_id,
+            pet_name: apt.pet?.name || 'N/A',
+            pet_type: apt.pet?.species || 'N/A',
+            pet_breed: apt.pet?.breed || apt.pet?.species || 'N/A',
+            pet_id: apt.pet_id,
+            owner_name: apt.owner?.User?.full_name || 'N/A',
+            owner_email: apt.owner?.User?.email || 'N/A',
+            owner_phone: apt.owner?.User?.phone_number || 'N/A',
+            date: apt.date,
+            time: apt.time,
+            service: apt.service || 'General Checkup',
+            status: apt.status,
+            notes: apt.notes || '',
+            assigned_vet: apt.vet_professional_id ? 
+              vetsData.find(v => v.user_id === apt.vet_professional_id)?.User?.full_name: null,
+            vet_id: apt.vet_professional_id
+          }));
+          
+          setAppointments(transformedAppointments);
+          // vetsData is already transformed in fetchClinicVets
+          setVets(vetsData);
+        }
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setNotification({
+          isOpen: true,
+          type: 'error',
+          title: 'Error',
+          message: 'Failed to load appointments. Please try again.'
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+
   useEffect(() => {
     filterAppointments();
   }, [appointments, searchTerm, statusFilter]);
 
   const filterAppointments = () => {
-    let filtered = appointments;
+    let filtered = appointments || [];
 
     if (statusFilter !== "all") {
       filtered = filtered.filter(apt => apt.status === statusFilter);
@@ -72,9 +132,9 @@ export default function ClinicAppointmentsPage() {
 
     if (searchTerm) {
       filtered = filtered.filter(apt =>
-        apt.pet_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        apt.owner_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        apt.service.toLowerCase().includes(searchTerm.toLowerCase())
+        (apt.pet_name && apt.pet_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (apt.owner_name && apt.owner_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (apt.service && apt.service.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -97,27 +157,65 @@ export default function ClinicAppointmentsPage() {
       message: config.message(appointmentDetails),
       type: config.type,
       action: newStatus,
-      appointmentId
+      appointmentId,
+      vetId: appointmentDetails?.vet_id || null
     });
   };
 
-  const confirmStatusChange = () => {
-    const { action, appointmentId } = confirmation;
-    updateAppointmentStatus(appointmentId, action);
-    
-    const appointment = appointments.find(apt => apt.id === appointmentId);
-    setNotification({
-      isOpen: true,
-      type: 'success',
-      title: 'Success!',
-      message: `Appointment for ${appointment.pet_name} has been ${action}.`
-    });
-    
-    setConfirmation({ ...confirmation, isOpen: false });
+  const confirmStatusChange = async () => {
+    const { action, appointmentId, vetId: confirmationVetId } = confirmation;
+    try {
+      // Get the appointment to check if it has a vet assigned
+      const currentAppointment = appointments.find(apt => apt.id === appointmentId);
+      const vetId = confirmationVetId || currentAppointment?.vet_id || null;
+      
+      await updateAppointmentStatus(appointmentId, action, vetId);
+      
+      // Refresh appointments
+      if (clinicId) {
+        const appointmentsData = await fetchAppointmentsByClinic(clinicId);
+        const transformedAppointments = (appointmentsData.appointments || []).map(apt => ({
+          id: apt.appointment_id,
+          pet_name: apt.pet?.name || 'N/A',
+          pet_type: apt.pet?.species || 'N/A',
+          pet_breed: apt.pet?.breed || apt.pet?.species || 'N/A',
+          pet_id: apt.pet_id,
+          owner_name: apt.owner?.User?.full_name || 'N/A',
+          owner_email: apt.owner?.User?.email || 'N/A',
+          owner_phone: apt.owner?.User?.phone_number || 'N/A',
+          date: apt.date,
+          time: apt.time,
+          service: apt.service || 'General Checkup',
+          status: apt.status,
+          notes: apt.notes || '',
+          assigned_vet: apt.vet_professional_id ? 
+            vets.find(v => v.user_id === apt.vet_professional_id)?.User?.full_name: null,
+          vet_id: apt.vet_professional_id
+        }));
+        setAppointments(transformedAppointments);
+      }
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: 'Success!',
+        message: `Appointment for ${currentAppointment?.pet_name || 'pet'} has been ${action}.`
+      });
+      
+      setConfirmation({ ...confirmation, isOpen: false });
+    } catch (err) {
+      console.error("Error updating appointment status:", err);
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to update appointment status. Please try again.'
+      });
+      setConfirmation({ ...confirmation, isOpen: false });
+    }
   };
 
-  const handleAssignVet = (selectedVet) => {
-    if (!selectedVet) {
+  const handleAssignVet = async (selectedVetId) => {
+    if (!selectedVetId) {
       setNotification({
         isOpen: true,
         type: 'warning',
@@ -127,29 +225,75 @@ export default function ClinicAppointmentsPage() {
       return;
     }
 
-    assignVetToAppointment(selectedAppointment.id, selectedVet);
-    setShowAssignVetModal(false);
-    
-    // If this was triggered from approval flow, proceed with approval
-    if (pendingApproval) {
-      setPendingApproval(false);
+    try {
+      const vetId = parseInt(selectedVetId, 10);
+
+      await assignVetToAppointment(selectedAppointment.id, vetId);
       
-      // Show approval confirmation after assigning vet
-      const config = STATUS_MESSAGES.approved;
-      setConfirmation({
-        isOpen: true,
-        title: config.title,
-        message: config.message(selectedAppointment),
-        type: config.type,
-        action: 'approved',
-        appointmentId: selectedAppointment.id
-      });
-    } else {
+      // Refresh appointments
+      if (clinicId) {
+        const appointmentsData = await fetchAppointmentsByClinic(clinicId);
+        console.log("Refreshed appointments data after vet assignment:", appointmentsData);
+        const transformedAppointments = (appointmentsData.appointments || []).map(apt => ({
+          id: apt.appointment_id,
+          pet_name: apt.pet?.name || 'N/A',
+          pet_type: apt.pet?.species || 'N/A',
+          pet_breed: apt.pet?.breed || apt.pet?.species || 'N/A',
+          pet_id: apt.pet_id,
+          owner_name: apt.owner?.User?.full_name || 'N/A',
+          owner_email: apt.owner?.User?.email || 'N/A',
+          owner_phone: apt.owner?.User?.phone_number || 'N/A',
+          date: apt.date,
+          time: apt.time,
+          service: apt.service || 'General Checkup',
+          status: apt.status,
+          notes: apt.notes || '',
+          assigned_vet: apt.vet_professional_id ? 
+            vets.find(v => v.user_id === apt.vet_professional_id)?.User?.full_name || 'Assigned' : null,
+          vet_id: apt.vet_professional_id
+        }));
+        setAppointments(transformedAppointments);
+      }
+      
+      setShowAssignVetModal(false);
+      setSelectedAppointment(prev => ({
+        ...prev,
+        vet_id: vetId,
+        assigned_vet: vets.find(v => (v.user_id || v.id) === vetId)?.name || 'Assigned'
+      }));
+      // If this was triggered from approval flow, proceed with approval
+      if (pendingApproval) {
+        setPendingApproval(false);
+        
+        // Show approval confirmation after assigning vet
+        const config = STATUS_MESSAGES.approved;
+        setConfirmation({
+          isOpen: true,
+          title: config.title,
+          message: config.message(selectedAppointment),
+          type: config.type,
+          action: 'approved',
+          appointmentId: selectedAppointment.id,
+          vetId: vetId // Store vetId for approval
+        });
+      } else {
+        // Find vet name by ID for notification
+        const assignedVet = vets.find(v => (v.user_id || v.id) === vetId);
+        const vetName = assignedVet?.name || assignedVet?.User?.full_name || 'Veterinarian';
+        setNotification({
+          isOpen: true,
+          type: 'success',
+          title: 'Vet Assigned!',
+          message: `${vetName} has been assigned to ${selectedAppointment.pet_name}'s appointment.`
+        });
+      }
+    } catch (err) {
+      console.error("Error assigning vet:", err);
       setNotification({
         isOpen: true,
-        type: 'success',
-        title: 'Vet Assigned!',
-        message: `${selectedVet} has been assigned to ${selectedAppointment.pet_name}'s appointment.`
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to assign veterinarian. Please try again.'
       });
     }
   };
@@ -159,23 +303,57 @@ export default function ClinicAppointmentsPage() {
     setShowHealthRecordModal(true);
   };
 
-  const handleHealthRecordSave = (healthRecord) => {
+  const handleHealthRecordSave = async (healthRecord) => {
     // Save health record (implement your logic here)
     console.log('Health record saved:', healthRecord);
     
-    // Automatically mark appointment as completed
-    updateAppointmentStatus(selectedAppointment.id, 'completed');
-    
-    // Close health record modal
-    setShowHealthRecordModal(false);
-    
-    // Show success notification
-    setNotification({
-      isOpen: true,
-      type: 'success',
-      title: 'Appointment Completed!',
-      message: `Health record saved and appointment for ${selectedAppointment.pet_name} has been completed.`
-    });
+    try {
+      // Automatically mark appointment as completed
+      await updateAppointmentStatus(selectedAppointment.id, 'completed');
+      
+      // Refresh appointments
+      if (clinicId) {
+        const appointmentsData = await fetchAppointmentsByClinic(clinicId);
+        const transformedAppointments = (appointmentsData.appointments || []).map(apt => ({
+          id: apt.appointment_id,
+          pet_name: apt.pet?.name || 'N/A',
+          pet_type: apt.pet?.species || 'N/A',
+          pet_breed: apt.pet?.breed || apt.pet?.species || 'N/A',
+          pet_id: apt.pet_id,
+          owner_name: apt.owner?.User?.full_name || 'N/A',
+          owner_email: apt.owner?.User?.email || 'N/A',
+          owner_phone: apt.owner?.User?.phone_number || 'N/A',
+          date: apt.date,
+          time: apt.time,
+          service: apt.service || 'General Checkup',
+          status: apt.status,
+          notes: apt.notes || '',
+          assigned_vet: apt.vet_professional_id ? 
+            vets.find(v => v.user_id === apt.vet_professional_id || v.id === apt.vet_professional_id)?.name || 'Assigned' : null,
+          vet_id: apt.vet_professional_id
+        }));
+        setAppointments(transformedAppointments);
+      }
+      
+      // Close health record modal
+      setShowHealthRecordModal(false);
+      
+      // Show success notification
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: 'Appointment Completed!',
+        message: `Health record saved and appointment for ${selectedAppointment.pet_name} has been completed.`
+      });
+    } catch (err) {
+      console.error("Error completing appointment:", err);
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to complete appointment. Please try again.'
+      });
+    }
   };
 
   return (
@@ -205,7 +383,12 @@ export default function ClinicAppointmentsPage() {
 
         {/* Appointments List */}
         <div className="space-y-4">
-          {filteredAppointments.length === 0 ? (
+          {loading ? (
+            <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-primary mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading appointments...</p>
+            </div>
+          ) : filteredAppointments.length === 0 ? (
             <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
               <FaCalendarAlt className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No appointments found</h3>

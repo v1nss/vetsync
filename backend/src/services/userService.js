@@ -151,3 +151,18 @@ export const verifyExistingEmail = async (email) => {
   const existing = await User.findOne({ where: { email } });
   return !!existing;
 };
+
+export const getVetsByClinicAdmin = async (clinicAdminId) => {
+  const vets = await VetProfessional.findAll({
+    where: {
+      clinic_admin_id: clinicAdminId
+    },
+    include: [
+      {
+        model: User,
+        attributes: ["id", "full_name", "email"]
+      }
+    ]
+  });
+  return vets;
+};

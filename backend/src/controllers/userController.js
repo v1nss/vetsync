@@ -1,3 +1,5 @@
+import VetProfessional from "../models/users/vetProfessionalModel.js";
+import User from "../models/users/userModel.js";
 import {
   registerUser,
   registerVetProfessional,
@@ -64,6 +66,27 @@ export const checkEmailExists = async (req, res) => {
     return res.status(200).json({ exists });
   } catch (err) {
     console.error("Error checking email existence", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const fetchVetProfessionalsByClinic = async (req, res) => {
+  try {
+    const owner_id = req.user.id;
+    const vets = await VetProfessional.findAll({
+      where: {
+        clinic_admin_id: owner_id
+      },
+      include: [
+        {
+          model: User,
+          attributes: ["full_name", "email", "phone_number"]
+        }
+      ]
+    });
+    return res.status(200).json({ vets });
+  } catch (err) {
+    console.error("Error fetching vet professionals by clinic", err.message);
     res.status(500).json({ error: err.message });
   }
 };

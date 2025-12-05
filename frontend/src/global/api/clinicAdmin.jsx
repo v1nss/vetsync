@@ -86,6 +86,16 @@ export const addVetProfessional = async (vetData, profilePicture) => {
   }
 };
 
+export const fetchClinicVets = async () => {
+  try {
+    const res = await api.get('/users/my-clinic/vets');
+    return res.data.vets || [];
+  } catch (err) {
+    console.error("Unable to fetch clinic vets", err);
+    throw err;
+  }
+};
+
 // export const fetchClinicStats = async (token) => {
 //   try {
 //     const res = await axios.get(`${BASE_URL}/clinic-admin/my-clinic/stats`, {

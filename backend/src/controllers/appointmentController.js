@@ -109,6 +109,48 @@ export const getAppointmentsByOwner = async (req, res) => {
   }
 }
 
+export const fetchAppointmentsByClinic = async (req, res) => {
+  const clinicId = req.params.clinicId;
+  try {
+    const appointments = await Appointment.findAll({
+      where: {
+        clinic_id: clinicId
+      }, 
+      include: [
+        {
+          model: PetOwner,
+          as: "owner",
+          attributes: ["address"],
+
+          include: [
+            {
+              model: User,
+              attributes: ["full_name", "email", "phone_number"]
+            }
+          ]
+        },
+        {
+          model: Pet,
+          as: "pet",
+          attributes: ["name", "species", "breed", "birthdate"]
+        },
+        {
+          model: Clinic,
+          as: "clinic",
+          attributes: ["name", "address", "contact_number"]
+        }
+      ],
+      order: [["date", "ASC"], ["time", "ASC"]]
+    });
+    return res 
+          .status(200)
+          .json({appointments});
+  } catch (err) {
+    console.error("Error fetching appointments by clinic", err.message);
+    throw err;
+  }
+};
+
 export const deleteAppointmentById = async (req, res) => {
   try {
     const appointmentId = req.params.appointmentId;

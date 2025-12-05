@@ -41,22 +41,22 @@ app.use("/api/system-admin", systemAdminRoutes);
 
 app.use("/api/approval-logs", ApprovalLogRoutes)
 
-app.use('/api', testRoute);
+// app.use('/api', testRoute);
 
-// app.use("/api")
-import { getAuthUrl, getToken } from "../global/config/oauth.js";
+// // app.use("/api")
+// import { getAuthUrl, getToken } from "../global/config/oauth.js";
 
-app.get("/", (req, res) => {
-  res.redirect(getAuthUrl());
-});
+// app.get("/", (req, res) => {
+//   res.redirect(getAuthUrl());
+// });
 
-app.get("/oauth2callback", async (req, res) => {
-  const code = req.query.code;
-  const tokens = await getToken(code);
+// app.get("/oauth2callback", async (req, res) => {
+//   const code = req.query.code;
+//   const tokens = await getToken(code);
 
-  console.log("TOKENS:", tokens);
-  res.send("Authentication complete! Tokens saved.");
-});
+//   console.log("TOKENS:", tokens);
+//   res.send("Authentication complete! Tokens saved.");
+// });
 
 syncDB().then(() => {
   app.listen(port, () => {

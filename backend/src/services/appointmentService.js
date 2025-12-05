@@ -16,7 +16,6 @@ export const createAppointment = async (id, appointmentData) => {
 export const acceptAppointment = async (clinicAdminId, appointmentId, vetProId) => {
   const appointment = await Appointment.findByPk(appointmentId);
   if (!appointment) throw new Error("Appointment not found");
-
   const vetProExists = await VetProfessional.findOne({
     where: {
       user_id: vetProId,

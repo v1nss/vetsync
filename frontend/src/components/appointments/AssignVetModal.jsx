@@ -5,7 +5,7 @@ export default function AssignVetModal({ isOpen, onClose, appointment, vets, onA
 
   useEffect(() => {
     if (isOpen && appointment) {
-      setSelectedVet(appointment.assigned_vet || "");
+      setSelectedVet(appointment.vet_id || "");
     }
   }, [isOpen, appointment]);
 
@@ -16,6 +16,7 @@ export default function AssignVetModal({ isOpen, onClose, appointment, vets, onA
       alert("Please select a veterinarian");
       return;
     }
+    // selectedVet is now the vet ID
     onAssign(selectedVet);
   };
 
@@ -38,8 +39,8 @@ export default function AssignVetModal({ isOpen, onClose, appointment, vets, onA
           >
             <option value="">Choose a vet...</option>
             {vets.map((vet) => (
-              <option key={vet.id} value={vet.name}>
-                {vet.name} - {vet.specialization}
+              <option key={vet.user_id} value={vet.user_id}>
+                {vet.User?.full_name} - {vet.specialization}
               </option>
             ))}
           </select>

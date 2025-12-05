@@ -5,7 +5,8 @@ import {
     acceptAppointmentRequest, 
     completeAppointmentRequest, 
     getAppointmentsByOwner, 
-    deleteAppointmentById
+    deleteAppointmentById,
+    fetchAppointmentsByClinic
 } from '../controllers/appointmentController.js';
 
 const router = express.Router();
@@ -15,6 +16,8 @@ const router = express.Router();
 router.post('/create', authenticate, createNewAppointment);
 
 router.get('/owner', authenticate, getAppointmentsByOwner);
+
+router.get('/clinic/:clinicId', authenticate, verifyClinicAdmin, fetchAppointmentsByClinic);
 
 router.delete('/delete/:appointmentId', authenticate, deleteAppointmentById)
 
