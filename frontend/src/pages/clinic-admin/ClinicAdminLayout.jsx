@@ -18,9 +18,9 @@ export default function ClinicAdminLayout() {
 
   const clinicAdminLinks = [
     { name: "Dashboard", icon: <BiSolidDashboard />, path: "/clinic-admin/dashboard" },
+    { name: "Appointments", icon: <FaCalendarAlt />, path: "/clinic-admin/appointments" },
     { name: "Health Records", icon: <FaNotesMedical />, path: "/clinic-admin/ehr" },
     { name: "Clinic Management", icon: <FaClinicMedical />, path: "/clinic-admin/settings" },
-    { name: "Appointments", icon: <FaCalendarAlt />, path: "/clinic-admin/appointments" },
     { name: "Vet Professionals", icon: <FaUserMd />, path: "/clinic-admin/vet-pros" },
   ];
 
