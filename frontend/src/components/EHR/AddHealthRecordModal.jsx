@@ -5,6 +5,7 @@ import { FaPrescription } from "react-icons/fa";
 import NotificationModal from "../NotificationModal";
 
 export default function AddHealthRecordModal({ patient, appointment, onClose, onSave }) {
+  console.log("AddHealthRecordModal appointment:", appointment);
   const [formData, setFormData] = useState({
     appointmentDate: appointment?.date || new Date().toISOString().split('T')[0],
     veterinarian: appointment?.assigned_vet || "",
@@ -75,7 +76,7 @@ export default function AddHealthRecordModal({ patient, appointment, onClose, on
     if (file) {
       console.log("Uploading file:", file.name);
       const fileUrl = URL.createObjectURL(file);
-      setFormData(prev => ({ ...prev, attachedFile: { name: file.name, url: fileUrl } }));
+      setFormData(prev => ({ ...prev, attachedFile: { name: file.name, url: fileUrl, file: file } }));
     }
   };
 
@@ -150,11 +151,16 @@ export default function AddHealthRecordModal({ patient, appointment, onClose, on
       reason: formData.reason,
       attachedFile: formData.attachedFile,
       noRecordsRequired: formData.noRecordsRequired,
-      documents: formData.noRecordsRequired ? null : {
-        labResults: formData.documents.labResults.length > 0 ? formData.documents.labResults : null,
-        vaccineRecords: formData.documents.vaccineRecords.length > 0 ? formData.documents.vaccineRecords : null,
-        prescriptions: formData.documents.prescriptions.length > 0 ? formData.documents.prescriptions : null,
-        deworming: formData.documents.deworming.length > 0 ? formData.documents.deworming : null
+      documents: formData.noRecordsRequired ? {
+        labResults: [],
+        vaccineRecords: [],
+        prescriptions: [],
+        deworming: []
+      } : {
+        labResults: formData.documents.labResults.length > 0 ? formData.documents.labResults : [],
+        vaccineRecords: formData.documents.vaccineRecords.length > 0 ? formData.documents.vaccineRecords : [],
+        prescriptions: formData.documents.prescriptions.length > 0 ? formData.documents.prescriptions : [],
+        deworming: formData.documents.deworming.length > 0 ? formData.documents.deworming : []
       },
       createdAt: new Date().toISOString()
     };

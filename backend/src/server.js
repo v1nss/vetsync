@@ -9,6 +9,7 @@ import clinicRoutes from "./routes/clinicRoutes.js";
 import appointmentRoutes from "./routes/appointmentRoutes.js";
 import systemAdminRoutes from "./routes/systemAdminRoutes.js";
 import ApprovalLogRoutes from "./routes/approvalLogsRoutes.js";
+import ehrRoutes from "./routes/ehrRoutes.js";
 import testRoute from './routes/testRoute.js'
 
 const app = express();
@@ -39,7 +40,10 @@ app.use("/api/appointments", appointmentRoutes);
 //system admin Routes
 app.use("/api/system-admin", systemAdminRoutes);
 
-app.use("/api/approval-logs", ApprovalLogRoutes)
+app.use("/api/approval-logs", ApprovalLogRoutes);
+
+// EHR Routes
+app.use("/api/ehr", ehrRoutes);
 
 // app.use('/api', testRoute);
 

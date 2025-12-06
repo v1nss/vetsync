@@ -184,6 +184,16 @@ export const getAppointmentsByVet = async (req, res) => {
           ]
         },
         {
+          model: VetProfessional,
+          as: "vet",
+          include: [
+            {
+              model: User,
+              attributes: ["first_name", "last_name", "email", "phone_number"]
+            }
+          ]
+        },
+        {
           model: Pet,
           as: "pet",
           attributes: ["name", "species", "breed", "birthdate", "gender"]

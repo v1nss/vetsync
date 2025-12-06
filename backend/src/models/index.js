@@ -9,8 +9,14 @@ import Clinic from "./clinicModel.js";
 import ClinicAddress from "./clinicAddressModel.js";
 import ClinicSchedule from "./clinicScheduleModel.js";
 import Appointment from "./appointmentModel.js";
-
 import ApprovalLog from "./approvalLogsModel.js";
+
+// EHR models - imported after Appointment to avoid circular dependency
+import EHR from "./ehrModel.js";
+import Prescription from "./prescriptionModel.js";
+import Vaccination from "./vaccinationModel.js";
+import Deworming from "./dewormingModel.js";
+import LabResult from "./labResultModel.js";
 
 // Sync all models with the database
 const syncDB = async () => {
@@ -33,6 +39,11 @@ export {
   ClinicAddress,
   ClinicSchedule,
   Appointment,
+  EHR,
+  Prescription,
+  Vaccination,
+  Deworming,
+  LabResult,
   ApprovalLog,
   syncDB,
 };

@@ -9,6 +9,7 @@ import AppointmentsFilters from "../../components/appointments/AppointmentsFilte
 import AddHealthRecordModal from "../../components/EHR/AddHealthRecordModal";
 import { useVetAppointments } from "../../hooks/useVetAppointments";
 import { updateAppointmentStatus } from "../../global/api/appointment";
+import { createEHR } from "../../global/api/ehr";
 import Navbar from "../../components/Navbar";
 
 export default function VetAppointmentsPage() {
@@ -28,8 +29,6 @@ export default function VetAppointmentsPage() {
     title: '',
     message: ''
   });
-
-  console.log("VetAppointmentsPage User:", user);
 
   useEffect(() => {
     filterAppointments();
@@ -60,14 +59,60 @@ export default function VetAppointmentsPage() {
 
   const handleHealthRecordSave = async (healthRecord) => {
     try {
-      console.log('Health record saved:', healthRecord);
+      // Prepare EHR data
+      const ehrData = {
+        pet_owner_id: selectedAppointment.owner_id,
+        pet_id: selectedAppointment.pet_id,
+        clinic_id: selectedAppointment.clinic_id,
+        appointment_id: selectedAppointment.id,
+        visit_date: healthRecord.appointmentDate,
+        prescriptions: healthRecord.documents?.prescriptions?.map(p => ({
+          name: p.name,
+          description: p.description
+        })) || [],
+        vaccinations: healthRecord.documents?.vaccineRecords?.map(v => ({
+          name: v.name,
+          description: v.description,
+          duration: v.duration ? `${v.duration} ${v.durationUnit || 'months'}` : null
+        })) || [],
+        dewormings: healthRecord.documents?.deworming?.map(d => ({
+          name: d.name,
+          description: d.description
+        })) || [],
+        labResults: healthRecord.documents?.labResults?.map(l => ({
+          name: l.name,
+          description: l.description
+        })) || [],
+      };
+
+      // Prepare files for upload
+      const files = [];
+      if (healthRecord.attachedFile) {
+        // Check if it's a File object directly
+        if (healthRecord.attachedFile instanceof File) {
+          files.push(healthRecord.attachedFile);
+        } 
+        // Check if it has a file property
+        else if (healthRecord.attachedFile.file && healthRecord.attachedFile.file instanceof File) {
+          files.push(healthRecord.attachedFile.file);
+        } else {
+          console.warn('Attached file is not a File object, skipping file upload');
+        }
+      }
+
+      // Create EHR record
+      await createEHR(ehrData, files);
       
+      // Update appointment status to completed
       await updateAppointmentStatus(selectedAppointment.id, 'completed');
       
+      // Refresh appointments list
       await refetchAppointments();
       
+      // Close modal
       setShowHealthRecordModal(false);
       
+      // Show success notification
       setNotification({
         isOpen: true,
         type: 'success',
@@ -80,7 +125,7 @@ export default function VetAppointmentsPage() {
         isOpen: true,
         type: 'error',
         title: 'Error',
-        message: 'Failed to complete appointment. Please try again.'
+        message: err.response?.data?.error || err.message || 'Failed to complete appointment. Please try again.'
       });
     }
   };
@@ -193,7 +238,7 @@ export default function VetAppointmentsPage() {
           appointment={{
             id: selectedAppointment.id,
             date: selectedAppointment.date,
-            assigned_vet: user?.full_name || selectedAppointment.assigned_vet,
+            assigned_vet: user?.first_name || selectedAppointment.assigned_vet,
             vet_id: user?.id || selectedAppointment.vet_id,
             service: selectedAppointment.service
           }}
