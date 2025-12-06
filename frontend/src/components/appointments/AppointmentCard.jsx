@@ -130,7 +130,7 @@ export default function AppointmentCard({ appointment, onStatusChange, onComplet
           {(appointment.status === 'approved' || appointment.status === 'pending') && (
             <button
               onClick={() => onStatusChange(appointment.id, 'cancelled', appointment)}
-              className="w-full sm:w-fit flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition text-sm font-medium"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-medium"
             >
               <FaBan /> Cancel
             </button>

@@ -1,5 +1,5 @@
-// AppointmentDetailsModal.jsx (FOR VET PROFESSIONALS)
-import { FaTimes, FaPaw, FaUser, FaClock, FaPhone, FaEnvelope, FaMapMarkerAlt, FaNotesMedical } from "react-icons/fa";
+// AppointmentDetailsModal.jsx (FOR CLINIC ADMIN)
+import { FaTimes, FaPaw, FaUser, FaClock, FaPhone, FaEnvelope, FaMapMarkerAlt, FaNotesMedical, FaMars, FaVenus } from "react-icons/fa";
 
 export default function AppointmentDetailsModal({ isOpen, onClose, appointment }) {
   if (!isOpen || !appointment) return null;
@@ -18,6 +18,48 @@ export default function AppointmentDetailsModal({ isOpen, onClose, appointment }
       </span>
     );
   };
+
+  // Calculate age from birthdate
+  const calculateAge = (birthdate) => {
+    if (!birthdate) return null;
+    
+    const birth = new Date(birthdate);
+    const today = new Date();
+    
+    let years = today.getFullYear() - birth.getFullYear();
+    let months = today.getMonth() - birth.getMonth();
+    
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+    
+    if (years > 0) {
+      return `${years} year${years > 1 ? 's' : ''}${months > 0 ? ` ${months} month${months > 1 ? 's' : ''}` : ''}`;
+    } else if (months > 0) {
+      return `${months} month${months > 1 ? 's' : ''}`;
+    } else {
+      const days = Math.floor((today - birth) / (1000 * 60 * 60 * 24));
+      return `${days} day${days > 1 ? 's' : ''}`;
+    }
+  };
+
+  // Get gender icon
+  const getGenderIcon = (gender) => {
+    if (!gender) return null;
+    const genderLower = gender.toLowerCase();
+
+    if (genderLower === 'male' || genderLower === 'm') {
+      return <FaMars className="text-blue-500" title="Male" />;
+    } else if (genderLower === 'female' || genderLower === 'f') {
+      return <FaVenus className="text-pink-500" title="Female" />;
+    }
+    return null;
+  };
+
+  const petBirthdate = appointment.pet_birthdate || appointment.pet?.birthdate;
+  const petAge = calculateAge(petBirthdate);
+  const petGender = appointment.pet_gender || appointment.pet?.gender;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-9999 p-4">
@@ -52,24 +94,31 @@ export default function AppointmentDetailsModal({ isOpen, onClose, appointment }
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-gray-600">Name</label>
-                    <p className="text-gray-900 font-medium">{appointment.pet?.name || 'N/A'}</p>
+                    <p className="text-gray-900 font-medium flex items-center gap-2">
+                      {appointment.pet_name || appointment.pet?.name || 'N/A'}
+                      {petGender && (
+                        <span className="inline-flex items-center">
+                          {getGenderIcon(petGender)}
+                        </span>
+                      )}
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">Type</label>
-                    <p className="text-gray-900">{appointment.pet?.species || 'N/A'}</p>
+                    <p className="text-gray-900 capitalize">{appointment.pet_type || appointment.pet?.species || 'N/A'}</p>
                   </div>
-                  {appointment.pet?.breed && (
+                  {(appointment.pet_breed || appointment.pet?.breed) && (
                     <div>
                       <label className="text-sm font-medium text-gray-600">Breed</label>
-                      <p className="text-gray-900">{appointment.pet?.breed}</p>
+                      <p className="text-gray-900">{appointment.pet_breed || appointment.pet?.breed}</p>
                     </div>
                   )}
-                  {/* {appointment.pet_age && (
+                  {petAge && (
                     <div>
                       <label className="text-sm font-medium text-gray-600">Age</label>
-                      <p className="text-gray-900">{appointment.pet_age}</p>
+                      <p className="text-gray-900">{petAge}</p>
                     </div>
-                  )} */}
+                  )}
                 </div>
               </div>
             </div>
@@ -83,15 +132,15 @@ export default function AppointmentDetailsModal({ isOpen, onClose, appointment }
               <div className="bg-gray-50 rounded-xl p-4 space-y-3">
                 <div>
                   <label className="text-sm font-medium text-gray-600">Name</label>
-                  <p className="text-gray-900 font-medium">{appointment.owner?.User?.full_name || 'N/A'}</p>
+                  <p className="text-gray-900 font-medium">{appointment.owner_name || appointment.owner?.User?.full_name || 'N/A'}</p>
                 </div>
                 <div className="flex items-center gap-2 text-gray-900">
                   <FaPhone className="text-primary text-sm" />
-                  <span>{appointment.owner?.User?.phone_number || 'N/A'}</span>
+                  <span>{appointment.owner_phone || appointment.owner?.User?.phone_number || 'N/A'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-900">
                   <FaEnvelope className="text-primary text-sm" />
-                  <span>{appointment.owner?.User?.email || 'N/A'}</span>
+                  <span>{appointment.owner_email || appointment.owner?.User?.email || 'N/A'}</span>
                 </div>
               </div>
             </div>
@@ -113,17 +162,27 @@ export default function AppointmentDetailsModal({ isOpen, onClose, appointment }
                     <p className="text-gray-900 font-medium">{appointment.time}</p>
                   </div>
                 </div>
-                {/* <div>
-                  <label className="text-sm font-medium text-gray-600">Service</label>
-                  <p className="text-gray-900">{appointment.service}</p>
-                </div> */}
-                {appointment.clinic && (
+                <div className="grid grid-cols-2 gap-4">
+                  {appointment.service && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Service</label>
+                      <p className="text-gray-900">{appointment.service}</p>
+                    </div>
+                  )}
+                  {appointment.assigned_vet && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Assigned Veterinarian</label>
+                      <p className="text-gray-900 font-medium">{appointment.assigned_vet}</p>
+                    </div>
+                  )}
+                </div>
+                {(appointment.clinic || appointment.clinic_name) && (
                   <div className="flex items-center gap-2">
                     <FaMapMarkerAlt className="text-primary text-sm" />
                     <span className="text-gray-900">
                       {typeof appointment.clinic === 'string' 
                         ? appointment.clinic 
-                        : appointment.clinic?.name || 'N/A'}
+                        : appointment.clinic?.name || appointment.clinic_name || 'N/A'}
                     </span>
                   </div>
                 )}
