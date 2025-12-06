@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
-import { FaCalendarAlt } from "react-icons/fa";
+import { useState, useEffect, useMemo } from "react";
+import { FaCalendarAlt, FaClipboardList, FaClock, FaCheckCircle, FaHourglassHalf } from "react-icons/fa";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import NotificationModal from "../../components/NotificationModal";
 import CalendarModal from "../../components/appointments/CalendarModal";
 import AssignVetModal from "../../components/appointments/AssignVetModal";
+import AppointmentDetailsModal from "../../components/appointments/AppointmentDetailsModal";
 import AppointmentCard from "../../components/appointments/AppointmentCard";
 import AppointmentsFilters from "../../components/appointments/AppointmentsFilters";
 import AddHealthRecordModal from "../../components/EHR/AddHealthRecordModal";
@@ -45,6 +46,7 @@ export default function ClinicAppointmentsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showCalendar, setShowCalendar] = useState(false);
   const [showAssignVetModal, setShowAssignVetModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showHealthRecordModal, setShowHealthRecordModal] = useState(false);
   const [pendingApproval, setPendingApproval] = useState(false);
   
@@ -64,22 +66,33 @@ export default function ClinicAppointmentsPage() {
     message: ''
   });
 
+  // Calculate stats from appointments
+  const stats = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    
+    return {
+      total: appointments.length,
+      pending: appointments.filter(apt => apt.status === 'pending').length,
+      approved: appointments.filter(apt => apt.status === 'approved').length,
+      completed: appointments.filter(apt => apt.status === 'completed').length,
+      today: appointments.filter(apt => apt.date === today).length
+    };
+  }, [appointments]);
+
   // Fetch clinic and appointments on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Get clinic info to get clinic ID
         const clinic = await fetchMyClinic();
         if (clinic && clinic.clinic_id) {
           setClinicId(clinic.clinic_id);
           
-          // Fetch appointments and vets in parallel
           const [appointmentsData, vetsData] = await Promise.all([
             fetchAppointmentsByClinic(clinic.clinic_id),
             fetchClinicVets()
           ]);
-          // Transform appointments to match expected format
+          
           const transformedAppointments = (appointmentsData.appointments || []).map(apt => ({
             id: apt.appointment_id,
             pet_name: apt.pet?.name || 'N/A',
@@ -100,7 +113,6 @@ export default function ClinicAppointmentsPage() {
           }));
           
           setAppointments(transformedAppointments);
-          // vetsData is already transformed in fetchClinicVets
           setVets(vetsData);
         }
       } catch (err) {
@@ -142,7 +154,6 @@ export default function ClinicAppointmentsPage() {
   };
 
   const handleStatusChange = (appointmentId, newStatus, appointmentDetails) => {
-    // If trying to approve without vet assignment, open assign vet modal first
     if (newStatus === 'approved' && !appointmentDetails.assigned_vet) {
       setSelectedAppointment(appointmentDetails);
       setShowAssignVetModal(true);
@@ -165,13 +176,11 @@ export default function ClinicAppointmentsPage() {
   const confirmStatusChange = async () => {
     const { action, appointmentId, vetId: confirmationVetId } = confirmation;
     try {
-      // Get the appointment to check if it has a vet assigned
       const currentAppointment = appointments.find(apt => apt.id === appointmentId);
       const vetId = confirmationVetId || currentAppointment?.vet_id || null;
       
       await updateAppointmentStatus(appointmentId, action, vetId);
       
-      // Refresh appointments
       if (clinicId) {
         const appointmentsData = await fetchAppointmentsByClinic(clinicId);
         const transformedAppointments = (appointmentsData.appointments || []).map(apt => ({
@@ -230,7 +239,6 @@ export default function ClinicAppointmentsPage() {
 
       await assignVetToAppointment(selectedAppointment.id, vetId);
       
-      // Refresh appointments
       if (clinicId) {
         const appointmentsData = await fetchAppointmentsByClinic(clinicId);
         
@@ -261,11 +269,10 @@ export default function ClinicAppointmentsPage() {
         vet_id: vetId,
         assigned_vet: vets.find(v => (v.user_id || v.id) === vetId)?.name || 'Assigned'
       }));
-      // If this was triggered from approval flow, proceed with approval
+      
       if (pendingApproval) {
         setPendingApproval(false);
         
-        // Show approval confirmation after assigning vet
         const config = STATUS_MESSAGES.approved;
         setConfirmation({
           isOpen: true,
@@ -274,10 +281,9 @@ export default function ClinicAppointmentsPage() {
           type: config.type,
           action: 'approved',
           appointmentId: selectedAppointment.id,
-          vetId: vetId // Store vetId for approval
+          vetId: vetId
         });
       } else {
-        // Find vet name by ID for notification
         const assignedVet = vets.find(v => (v.user_id || v.id) === vetId);
         const vetName = assignedVet?.name || assignedVet?.User?.full_name || 'Veterinarian';
         setNotification({
@@ -303,15 +309,17 @@ export default function ClinicAppointmentsPage() {
     setShowHealthRecordModal(true);
   };
 
+  const handleViewDetails = (appointment) => {
+    setSelectedAppointment(appointment);
+    setShowDetailsModal(true);
+  };
+
   const handleHealthRecordSave = async (healthRecord) => {
-    // Save health record (implement your logic here)
     console.log('Health record saved:', healthRecord);
     
     try {
-      // Automatically mark appointment as completed
       await updateAppointmentStatus(selectedAppointment.id, 'completed');
       
-      // Refresh appointments
       if (clinicId) {
         const appointmentsData = await fetchAppointmentsByClinic(clinicId);
         const transformedAppointments = (appointmentsData.appointments || []).map(apt => ({
@@ -335,10 +343,8 @@ export default function ClinicAppointmentsPage() {
         setAppointments(transformedAppointments);
       }
       
-      // Close health record modal
       setShowHealthRecordModal(false);
       
-      // Show success notification
       setNotification({
         isOpen: true,
         type: 'success',
@@ -356,6 +362,13 @@ export default function ClinicAppointmentsPage() {
     }
   };
 
+  const statsCards = [
+    { label: "Total", value: stats.total, icon: FaClipboardList, bgColor: "bg-blue-100", iconColor: "text-blue-600" },
+    { label: "Pending", value: stats.pending, icon: FaHourglassHalf, bgColor: "bg-yellow-100", iconColor: "text-yellow-600" },
+    { label: "Approved", value: stats.approved, icon: FaClock, bgColor: "bg-green-100", iconColor: "text-green-600" },
+    { label: "Completed", value: stats.completed, icon: FaCheckCircle, bgColor: "bg-blue-100", iconColor: "text-blue-600" }
+  ];
+
   return (
     <main className="min-h-screen pb-10 bg-gray-50">
       <div>
@@ -371,6 +384,26 @@ export default function ClinicAppointmentsPage() {
           >
             <FaCalendarAlt /> View Calendar
           </button>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {statsCards.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <div key={index} className="bg-white rounded-2xl border border-gray-200 p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
+                    <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                  </div>
+                  <div className={`w-12 h-12 ${stat.bgColor} rounded-xl flex items-center justify-center`}>
+                    <Icon className={`text-2xl ${stat.iconColor}`} />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Filters */}
@@ -401,6 +434,7 @@ export default function ClinicAppointmentsPage() {
                 appointment={appointment}
                 onStatusChange={handleStatusChange}
                 onComplete={handleCompleteAppointment}
+                onViewDetails={handleViewDetails}
               />
             ))
           )}
@@ -423,6 +457,12 @@ export default function ClinicAppointmentsPage() {
         appointment={selectedAppointment}
         vets={vets}
         onAssign={handleAssignVet}
+      />
+
+      <AppointmentDetailsModal
+        isOpen={showDetailsModal}
+        onClose={() => setShowDetailsModal(false)}
+        appointment={selectedAppointment}
       />
 
       {showHealthRecordModal && selectedAppointment && (

@@ -1,6 +1,6 @@
-import { FaPaw, FaClock, FaPhone, FaEnvelope, FaUserMd, FaCheckCircle, FaTimesCircle, FaBan, FaCheck, FaExclamationTriangle } from "react-icons/fa";
+import { FaPaw, FaClock, FaPhone, FaEnvelope, FaUserMd, FaCheckCircle, FaTimesCircle, FaBan, FaCheck, FaExclamationTriangle, FaFileAlt } from "react-icons/fa";
 
-export default function AppointmentCard({ appointment, onStatusChange, onComplete }) {
+export default function AppointmentCard({ appointment, onStatusChange, onComplete, onViewDetails }) {
   const getStatusBadge = (status) => {
     const styles = {
       pending: "bg-yellow-100 text-yellow-700",
@@ -17,7 +17,6 @@ export default function AppointmentCard({ appointment, onStatusChange, onComplet
     );
   };
 
-  // Check if appointment needs vet assignment
   const needsVetAssignment = appointment.status === 'pending' && !appointment.assigned_vet;
 
   return (
@@ -30,7 +29,7 @@ export default function AppointmentCard({ appointment, onStatusChange, onComplet
               <div className="flex items-center gap-3 mb-2">
                 <FaPaw className="text-primary text-xl" />
                 <h3 className="text-xl font-semibold text-gray-900">{appointment.pet_name}</h3>
-                <span className="text-gray-500">({appointment.pet_type})</span>
+                <span className="text-gray-500 capitalize">({appointment.pet_type})</span>
                 {getStatusBadge(appointment.status)}
               </div>
               <p className="text-gray-600 font-medium">{appointment.owner_name}</p>
@@ -56,6 +55,16 @@ export default function AppointmentCard({ appointment, onStatusChange, onComplet
             </div>
           </div>
 
+          {/* Pet Details */}
+          {(appointment.pet_breed) && (
+            <div className="flex gap-4 text-sm text-gray-600">
+              {appointment.pet_breed && (
+                <span><span className="font-medium">Breed:</span> {appointment.pet_breed}</span>
+              )}
+            </div>
+          )}
+
+          {/* Notes */}
           {appointment.notes && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <p className="text-sm text-gray-700">
@@ -85,18 +94,24 @@ export default function AppointmentCard({ appointment, onStatusChange, onComplet
         </div>
 
         {/* Right Section - Actions */}
-        <div className="flex flex-col gap-2 lg:min-w-[200px]">
+        <div className="flex flex-col items-start justify-center gap-2 lg:min-w-[200px]">
+          <button
+            onClick={() => onViewDetails(appointment)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition text-sm font-medium"
+          >
+            <FaFileAlt /> View Details
+          </button>
           {appointment.status === 'pending' && (
             <>
               <button
                 onClick={() => onStatusChange(appointment.id, 'approved', appointment)}
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium"
               >
                 <FaCheckCircle /> Approve
               </button>
               <button
                 onClick={() => onStatusChange(appointment.id, 'rejected', appointment)}
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-medium"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-medium"
               >
                 <FaTimesCircle /> Reject
               </button>
@@ -106,7 +121,7 @@ export default function AppointmentCard({ appointment, onStatusChange, onComplet
           {appointment.status === 'approved' && (
             <button
               onClick={() => onComplete(appointment)}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
             >
               <FaCheck /> Complete
             </button>
@@ -115,10 +130,16 @@ export default function AppointmentCard({ appointment, onStatusChange, onComplet
           {(appointment.status === 'approved' || appointment.status === 'pending') && (
             <button
               onClick={() => onStatusChange(appointment.id, 'cancelled', appointment)}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition text-sm font-medium"
+              className="w-full sm:w-fit flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition text-sm font-medium"
             >
               <FaBan /> Cancel
             </button>
+          )}
+
+          {appointment.status === 'completed' && (
+            <div className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-green-600 font-medium bg-green-50 rounded-lg">
+              <FaCheck /> Completed
+            </div>
           )}
         </div>
       </div>

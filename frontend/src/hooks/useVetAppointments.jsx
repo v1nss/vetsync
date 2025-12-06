@@ -32,7 +32,7 @@ export function useVetAppointments() {
         date: "2024-12-15",
         time: "10:00 AM",
         service: "General Checkup",
-        status: "approved",
+        status: "pending",
         urgency: "routine",
         notes: "First time visit. Dog seems healthy but owner wants routine checkup.",
         clinic_name: "VetCare Clinic",
