@@ -20,6 +20,16 @@ export const getAppointmentsByOwner = async () => {
     }
 }
 
+export const getAppointmentsByVet = async () => {
+    try {
+        const res = await api.get("/appointments/vet");
+        // console.log("Fetched appointments for vet:", res.data);
+        return res.data;
+    } catch (err) {
+        console.error("Error fetching appointments for vet:", err.message);
+    }
+}
+
 export const deleteAppointment = async (appointmentId) => {
     try {
         const res = await api.delete(`/appointments/delete/${appointmentId}`);

@@ -4,7 +4,7 @@ import Navbar from "../../components/Navbar.jsx";
 import { useAuth } from "../../context/AuthContext";
 
 export default function VetProfilePage() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   
   // Profile state
   const [profile, setProfile] = useState({
@@ -36,18 +36,11 @@ export default function VetProfilePage() {
   // Fetch vet profile data
   useEffect(() => {
     fetchProfile();
-  }, [token]);
+  }, []);
 
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      // Replace with your actual API endpoint
-      const response = await fetch('/api/vet/profile', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      const data = await response.json();
       
       setProfile({
         firstName: data.firstName || "",

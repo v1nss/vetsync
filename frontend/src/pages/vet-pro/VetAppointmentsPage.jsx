@@ -29,6 +29,8 @@ export default function VetAppointmentsPage() {
     message: ''
   });
 
+  console.log("VetAppointmentsPage User:", user);
+
   useEffect(() => {
     filterAppointments();
   }, [appointments, searchTerm, statusFilter]);

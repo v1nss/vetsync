@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { getAppointmentsByVet } from "../global/api/appointment";
 
 export function useVetAppointments() {
   const { user } = useAuth();
@@ -18,84 +19,117 @@ export function useVetAppointments() {
   const fetchVetAppointments = async () => {
     // TODO: Replace with actual API call
     // const response = await fetch(`/api/vet/appointments?vet_id=${user.id}`);
-    
-    const mockAppointments = [
-      {
-        id: 1,
-        pet_name: "Max",
-        pet_type: "Dog",
-        pet_breed: "Golden Retriever",
-        pet_age: "3 years",
-        owner_name: "John Doe",
-        owner_email: "john@email.com",
-        owner_phone: "+1234567890",
-        date: "2024-12-15",
-        time: "10:00 AM",
-        service: "General Checkup",
-        status: "pending",
-        urgency: "routine",
-        notes: "First time visit. Dog seems healthy but owner wants routine checkup.",
-        clinic_name: "VetCare Clinic",
-        assigned_vet: user?.full_name || "Dr. Sarah Johnson"
-      },
-      {
-        id: 2,
-        pet_name: "Luna",
-        pet_type: "Cat",
-        pet_breed: "Siamese",
-        pet_age: "5 years",
-        owner_name: "Jane Smith",
-        owner_email: "jane@email.com",
-        owner_phone: "+0987654321",
-        date: "2024-12-15",
-        time: "2:00 PM",
-        service: "Vaccination",
-        status: "approved",
-        urgency: "routine",
-        notes: "Annual rabies vaccine due.",
-        clinic_name: "VetCare Clinic",
-        assigned_vet: user?.full_name || "Dr. Sarah Johnson"
-      },
-      {
-        id: 3,
-        pet_name: "Buddy",
-        pet_type: "Dog",
-        pet_breed: "Labrador",
-        pet_age: "7 years",
-        owner_name: "Mike Wilson",
-        owner_email: "mike@email.com",
-        owner_phone: "+1122334455",
-        date: "2024-12-16",
-        time: "9:00 AM",
-        service: "Surgery Consultation",
-        status: "approved",
-        urgency: "urgent",
-        notes: "Hip dysplasia. Owner reports limping.",
-        clinic_name: "VetCare Clinic",
-        assigned_vet: user?.full_name || "Dr. Sarah Johnson"
-      },
-      {
-        id: 4,
-        pet_name: "Charlie",
-        pet_type: "Dog",
-        pet_breed: "Beagle",
-        pet_age: "2 years",
-        owner_name: "Emily Brown",
-        owner_email: "emily@email.com",
-        owner_phone: "+5544332211",
-        date: "2024-12-14",
-        time: "11:00 AM",
-        service: "Dental Cleaning",
-        status: "completed",
-        urgency: "routine",
-        notes: "Routine dental cleaning completed successfully.",
-        clinic_name: "VetCare Clinic",
-        assigned_vet: user?.full_name || "Dr. Sarah Johnson"
-      }
-    ];
+    try {
+      const res = await getAppointmentsByVet();
+      console.log("Raw vet appointments data:", res.appointments);
+      const transformedAppointments = (res.appointments || []).map(apt => ({
+        id: apt.appointment_id,
+        pet_name: apt.pet?.name || 'N/A',
+        pet_type: apt.pet?.species || 'N/A',
+        pet_breed: apt.pet?.breed || apt.pet?.species || 'N/A',
+        pet_birthdate: apt.pet?.birthdate || null,
+        pet_gender: apt.pet?.gender || null,
+        pet_id: apt.pet_id,
+        owner_name: apt.owner?.User?.full_name || 'N/A',
+        owner_email: apt.owner?.User?.email || 'N/A',
+        owner_phone: apt.owner?.User?.phone_number || 'N/A',
+        date: apt.date,
+        time: apt.time,
+        service: apt.service || 'General Checkup',
+        status: apt.status,
+        notes: apt.notes || '',
+        assigned_vet: user?.full_name || 'N/A',
+        
+        // apt.vet_professional_id ? 
+        //   vetsData.find(v => v.user_id === apt.vet_professional_id)?.User?.full_name: null,
+        vet_id: apt.vet_professional_id
+      }));
 
-    setAppointments(mockAppointments);
-    calculateStats(mockAppointments);
+      setAppointments(transformedAppointments);
+      calculateStats(transformedAppointments);
+      
+      console.log("Fetched vet appointments:", transformedAppointments);
+    } catch (err) {
+      console.error("Error fetching vet appointments:", err.message);
+    }
+    
+    // const mockAppointments = [
+    //   {
+    //     id: 1,
+    //     pet_name: "Max",
+    //     pet_type: "Dog",
+    //     pet_breed: "Golden Retriever",
+    //     pet_age: "3 years",
+    //     owner_name: "John Doe",
+    //     owner_email: "john@email.com",
+    //     owner_phone: "+1234567890",
+    //     date: "2024-12-15",
+    //     time: "10:00 AM",
+    //     service: "General Checkup",
+    //     status: "pending",
+    //     urgency: "routine",
+    //     notes: "First time visit. Dog seems healthy but owner wants routine checkup.",
+    //     clinic_name: "VetCare Clinic",
+    //     assigned_vet: user?.full_name || "Dr. Sarah Johnson"
+    //   },
+    //   {
+    //     id: 2,
+    //     pet_name: "Luna",
+    //     pet_type: "Cat",
+    //     pet_breed: "Siamese",
+    //     pet_age: "5 years",
+    //     owner_name: "Jane Smith",
+    //     owner_email: "jane@email.com",
+    //     owner_phone: "+0987654321",
+    //     date: "2024-12-15",
+    //     time: "2:00 PM",
+    //     service: "Vaccination",
+    //     status: "approved",
+    //     urgency: "routine",
+    //     notes: "Annual rabies vaccine due.",
+    //     clinic_name: "VetCare Clinic",
+    //     assigned_vet: user?.full_name || "Dr. Sarah Johnson"
+    //   },
+    //   {
+    //     id: 3,
+    //     pet_name: "Buddy",
+    //     pet_type: "Dog",
+    //     pet_breed: "Labrador",
+    //     pet_age: "7 years",
+    //     owner_name: "Mike Wilson",
+    //     owner_email: "mike@email.com",
+    //     owner_phone: "+1122334455",
+    //     date: "2024-12-16",
+    //     time: "9:00 AM",
+    //     service: "Surgery Consultation",
+    //     status: "approved",
+    //     urgency: "urgent",
+    //     notes: "Hip dysplasia. Owner reports limping.",
+    //     clinic_name: "VetCare Clinic",
+    //     assigned_vet: user?.full_name || "Dr. Sarah Johnson"
+    //   },
+    //   {
+    //     id: 4,
+    //     pet_name: "Charlie",
+    //     pet_type: "Dog",
+    //     pet_breed: "Beagle",
+    //     pet_age: "2 years",
+    //     owner_name: "Emily Brown",
+    //     owner_email: "emily@email.com",
+    //     owner_phone: "+5544332211",
+    //     date: "2024-12-14",
+    //     time: "11:00 AM",
+    //     service: "Dental Cleaning",
+    //     status: "completed",
+    //     urgency: "routine",
+    //     notes: "Routine dental cleaning completed successfully.",
+    //     clinic_name: "VetCare Clinic",
+    //     assigned_vet: user?.full_name || "Dr. Sarah Johnson"
+    //   }
+    // ];
+
+    // setAppointments(mockAppointments);
+    // calculateStats(mockAppointments);
   };
 
   const calculateStats = (appointments) => {

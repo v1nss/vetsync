@@ -87,7 +87,7 @@ export const getAppointmentsByOwner = async (req, res) => {
         {
           model: Pet,
           as: "pet",
-          attributes: ["name", "species", "breed", "birthdate"]
+          attributes: ["name", "species", "breed", "birthdate", "gender"]
         },
         {
           model: Clinic,
@@ -132,7 +132,7 @@ export const fetchAppointmentsByClinic = async (req, res) => {
         {
           model: Pet,
           as: "pet",
-          attributes: ["name", "species", "breed", "birthdate"]
+          attributes: ["name", "species", "breed", "birthdate", "gender"]
         },
         {
           model: Clinic,
@@ -148,6 +148,50 @@ export const fetchAppointmentsByClinic = async (req, res) => {
   } catch (err) {
     console.error("Error fetching appointments by clinic", err.message);
     throw err;
+  }
+};
+
+export const getAppointmentsByVet = async (req, res) => {
+  try {
+    const vetProfessionalId = req.user.id; // from JWT 
+    const appointments = await Appointment.findAll({
+      where: {
+        vet_professional_id: vetProfessionalId
+      },
+       include: [
+        {
+          model: PetOwner,
+          as: "owner",
+          attributes: ["address"],
+
+          include: [
+            {
+              model: User,
+              attributes: ["full_name", "email", "phone_number"]
+            }
+          ]
+        },
+        {
+          model: Pet,
+          as: "pet",
+          attributes: ["name", "species", "breed", "birthdate", "gender"]
+        },
+        {
+          model: Clinic,
+          as: "clinic",
+          attributes: ["name", "address", "contact_number"]
+        }
+      ],
+      order: [["date", "ASC"], ["time", "ASC"]]
+    });
+    return res
+      .status(200)
+      .json({ appointments });
+  } catch (err) {
+    console.error("Error fetching appointments for vet", err.message);
+    res
+      .status(500)
+      .json({ message: "Error fetching appointments for vet", error: err.message });
   }
 };
 

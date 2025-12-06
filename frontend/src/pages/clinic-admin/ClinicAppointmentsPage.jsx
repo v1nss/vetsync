@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useContext } from "react";
 import { FaCalendarAlt, FaClipboardList, FaClock, FaCheckCircle, FaHourglassHalf } from "react-icons/fa";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import NotificationModal from "../../components/NotificationModal";
@@ -11,6 +11,7 @@ import AddHealthRecordModal from "../../components/EHR/AddHealthRecordModal";
 import { fetchAppointmentsByClinic, updateAppointmentStatus, assignVetToAppointment } from "../../global/api/appointment";
 import { fetchMyClinic } from "../../global/api/clinicAdmin";
 import { fetchClinicVets } from "../../global/api/clinicAdmin";
+import {ClinicStatusContext} from "../../context/ClinicStatusContext";
 
 const STATUS_MESSAGES = {
   approved: {
@@ -49,7 +50,7 @@ export default function ClinicAppointmentsPage() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showHealthRecordModal, setShowHealthRecordModal] = useState(false);
   const [pendingApproval, setPendingApproval] = useState(false);
-  
+  const {clinic} = useContext(ClinicStatusContext);
   const [confirmation, setConfirmation] = useState({
     isOpen: false,
     type: 'danger',
@@ -84,7 +85,8 @@ export default function ClinicAppointmentsPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const clinic = await fetchMyClinic();
+        
+        // const clinic = await fetchMyClinic();
         if (clinic && clinic.clinic_id) {
           setClinicId(clinic.clinic_id);
           
