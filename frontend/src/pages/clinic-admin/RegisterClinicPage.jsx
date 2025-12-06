@@ -15,9 +15,11 @@ const Input = ({ label, name, type = "text", placeholder, required, value, onCha
   </div>
 );
 
-const DocumentUpload = ({ label, name, preview, onFileChange, onRemove, error }) => (
+const DocumentUpload = ({ label, name, preview, onFileChange, onRemove, error, required = false }) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+    <label className={`block text-sm font-medium text-gray-700 mb-2 ${required ? 'label-required' : ''}`}>
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
     {preview ? (
       <div className="relative w-full h-40 border-2 border-gray-200 rounded-xl overflow-hidden">
         <button type="button" onClick={onRemove}
@@ -53,10 +55,22 @@ export default function RegisterClinicPage() {
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
-    name: "", address: "", city: "", state: "", zipCode: "",
-    contact_number: "", email: "", hours: "", description: "",
+    name: "", street: "", barangay: "", city: "", province: "", zipcode: "", landmark: "",
+    contact_number: "", email: "", description: "",
     latitude: "", longitude: ""
   });
+
+  const [schedules, setSchedules] = useState({
+    monday: { open_time: "", close_time: "", is_closed: false },
+    tuesday: { open_time: "", close_time: "", is_closed: false },
+    wednesday: { open_time: "", close_time: "", is_closed: false },
+    thursday: { open_time: "", close_time: "", is_closed: false },
+    friday: { open_time: "", close_time: "", is_closed: false },
+    saturday: { open_time: "", close_time: "", is_closed: false },
+    sunday: { open_time: "", close_time: "", is_closed: false },
+  });
+
+  const [applyToAllTimes, setApplyToAllTimes] = useState({ open_time: "", close_time: "" });
 
   const [services, setServices] = useState([]);
   const [serviceInput, setServiceInput] = useState("");
@@ -117,24 +131,45 @@ export default function RegisterClinicPage() {
 
   const handleSingleFileChange = (e, docType) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file) {
+      // Clear file if user cancels selection
+      setFiles((prev) => ({ ...prev, [docType]: null }));
+      setPreviews((prev) => ({ ...prev, [docType]: null }));
+      return;
+    }
 
+    // Validate file size (5MB max)
     if (file.size > 5000000) {
       setErrors((prev) => ({ ...prev, [docType]: "File too large (max 5MB)." }));
+      setFiles((prev) => ({ ...prev, [docType]: null }));
+      setPreviews((prev) => ({ ...prev, [docType]: null }));
       return;
     }
 
+    // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      setErrors((prev) => ({ ...prev, [docType]: "Invalid file type." }));
+      setErrors((prev) => ({ ...prev, [docType]: "Invalid file type. Please upload JPG, PNG, or WEBP." }));
+      setFiles((prev) => ({ ...prev, [docType]: null }));
+      setPreviews((prev) => ({ ...prev, [docType]: null }));
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => setPreviews((prev) => ({ ...prev, [docType]: reader.result }));
-    reader.readAsDataURL(file);
-    setFiles((prev) => ({ ...prev, [docType]: file }));
+    // Clear any previous errors
     if (errors[docType]) setErrors((prev) => ({ ...prev, [docType]: "" }));
+
+    // Read file for preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviews((prev) => ({ ...prev, [docType]: reader.result }));
+    };
+    reader.onerror = () => {
+      setErrors((prev) => ({ ...prev, [docType]: "Error reading file. Please try again." }));
+    };
+    reader.readAsDataURL(file);
+    
+    // Store file
+    setFiles((prev) => ({ ...prev, [docType]: file }));
   };
 
   const removeImage = (imageType, index) => {
@@ -147,6 +182,51 @@ export default function RegisterClinicPage() {
     setPreviews((prev) => ({ ...prev, [docType]: null }));
   };
 
+  const handleScheduleChange = (day, field, value) => {
+    setSchedules((prev) => ({
+      ...prev,
+      [day]: {
+        ...prev[day],
+        [field]: value,
+      },
+    }));
+  };
+
+  const toggleDayClosed = (day) => {
+    setSchedules((prev) => ({
+      ...prev,
+      [day]: {
+        ...prev[day],
+        is_closed: !prev[day].is_closed,
+        open_time: !prev[day].is_closed ? prev[day].open_time : "",
+        close_time: !prev[day].is_closed ? prev[day].close_time : "",
+      },
+    }));
+  };
+
+  const applyTimeToAllDays = () => {
+    if (!applyToAllTimes.open_time || !applyToAllTimes.close_time) {
+      setErrors((prev) => ({ ...prev, applyToAll: "Please set both open and close times" }));
+      return;
+    }
+    
+    setSchedules((prev) => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach((day) => {
+        if (!updated[day].is_closed) {
+          updated[day] = {
+            ...updated[day],
+            open_time: applyToAllTimes.open_time,
+            close_time: applyToAllTimes.close_time,
+          };
+        }
+      });
+      return updated;
+    });
+    
+    if (errors.applyToAll) setErrors((prev) => ({ ...prev, applyToAll: "" }));
+  };
+
   const validateStep = (step) => {
     const newErrors = {};
     if (step === 1) {
@@ -156,7 +236,16 @@ export default function RegisterClinicPage() {
       else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Invalid email format";
     }
     if (step === 2) {
-      if (!formData.address.trim()) newErrors.address = "Address is required";
+      if (!formData.street.trim()) newErrors.street = "Street address is required";
+      if (!formData.city.trim()) newErrors.city = "City is required";
+      if (!formData.province.trim()) newErrors.province = "Province is required";
+      if (!formData.zipcode.trim()) newErrors.zipcode = "ZIP code is required";
+      if (services.length === 0) newErrors.services = "At least one service is required";
+    }
+    if (step === 4) {
+      if (!files.secdti) newErrors.secdti = "SEC/DTI Certificate is required";
+      if (!files.mayorsPermit) newErrors.mayorsPermit = "Mayor's Permit is required";
+      if (!files.bir) newErrors.bir = "BIR Certificate is required";
     }
     return newErrors;
   };
@@ -168,7 +257,7 @@ export default function RegisterClinicPage() {
       setErrors(newErrors);
       return;
     }
-    setCurrentStep((prev) => Math.min(prev + 1, 3));
+    setCurrentStep((prev) => Math.min(prev + 1, 4));
   };
 
   const handleMapClick = () => {
@@ -181,8 +270,15 @@ export default function RegisterClinicPage() {
     e.preventDefault();
     const newErrors = validateStep(1);
     Object.assign(newErrors, validateStep(2));
+    Object.assign(newErrors, validateStep(4));
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      // Navigate to the step with errors
+      if (newErrors.secdti || newErrors.mayorsPermit || newErrors.bir) {
+        setCurrentStep(4);
+      } else if (newErrors.services || newErrors.street || newErrors.city || newErrors.province || newErrors.zipcode) {
+        setCurrentStep(2);
+      }
       return;
     }
     setSubmitStatus("pending");
@@ -202,7 +298,19 @@ export default function RegisterClinicPage() {
       await loginUser(receivedUserData.user.email, receivedUserData.user.password);
       
       // Step 3: Register the clinic with images
-      const clinicData = { ...formData, services: JSON.stringify(services) };
+      // Format schedules array
+      const schedulesArray = Object.entries(schedules).map(([day_of_week, schedule]) => ({
+        day_of_week,
+        open_time: schedule.is_closed ? null : schedule.open_time || null,
+        close_time: schedule.is_closed ? null : schedule.close_time || null,
+        is_closed: schedule.is_closed,
+      }));
+
+      const clinicData = { 
+        ...formData, 
+        service: services, // Send as array, not stringified
+        schedules: schedulesArray,
+      };
       const clinicFormData = new FormData();
       clinicFormData.append('clinic', JSON.stringify(clinicData));
       
@@ -212,9 +320,14 @@ export default function RegisterClinicPage() {
       });
       
       // Append document images (sent as documentImages array for backend compatibility)
-      if (files.secdti) clinicFormData.append('documentImages', files.secdti);
-      if (files.mayorsPermit) clinicFormData.append('documentImages', files.mayorsPermit);
-      if (files.bir) clinicFormData.append('documentImages', files.bir);
+      // Validate and append required documents
+      if (!files.secdti || !files.mayorsPermit || !files.bir) {
+        throw new Error("All required documents must be uploaded");
+      }
+      
+      clinicFormData.append('documentImages', files.secdti);
+      clinicFormData.append('documentImages', files.mayorsPermit);
+      clinicFormData.append('documentImages', files.bir);
       
       const clinicResponse = await registerClinic(clinicFormData);
       
@@ -236,19 +349,20 @@ export default function RegisterClinicPage() {
       <div className="bg-white sm:p-8 rounded-2xl sm:shadow-lg w-full max-w-xl">
         <img src="/vetsync-logo-wname.png" alt="VetSync Logo" className="h-12 mx-auto mb-6" />
         <h2 className="text-2xl font-semibold text-center">Register Your Clinic</h2>
-        <p className="text-center text-gray-600 mb-6">Step {currentStep} of 3</p>
+        <p className="text-center text-gray-600 mb-6">Step {currentStep} of 4</p>
 
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-3">
-            {[1, 2, 3].map((step) => (
+            {[1, 2, 3, 4].map((step) => (
               <div key={step} className="flex items-center flex-1">
                 <div className={`h-1 flex-1 rounded ${currentStep >= step ? "bg-primary" : "bg-gray-200"}`} />
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-3 text-xs text-gray-600">
+          <div className="grid grid-cols-4 text-xs text-gray-600">
             <span className="text-left">Basic Info</span>
             <span className="text-center">Clinic Details</span>
+            <span className="text-center">Schedule</span>
             <span className="text-right">Documents</span>
           </div>
         </div>
@@ -271,18 +385,36 @@ export default function RegisterClinicPage() {
           {currentStep === 2 && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold mb-4">Clinic Details</h3>
-              <Input label="Street Address" name="address" placeholder="Enter street address" required 
-                value={formData.address} onChange={handleChange} error={errors.address} />
+              <Input label="Street Address" name="street" placeholder="Enter street address" required 
+                value={formData.street} onChange={handleChange} error={errors.street} />
+              <Input label="Province" name="province" placeholder="Enter province" required 
+                value={formData.province} onChange={handleChange} error={errors.province} />
               <div className="grid grid-cols-3 gap-3">
-                <Input label="City" name="city" placeholder="City" value={formData.city} onChange={handleChange} />
-                <Input label="State" name="state" placeholder="State" value={formData.state} onChange={handleChange} />
-                <Input label="ZIP" name="zipCode" placeholder="ZIP" value={formData.zipCode} onChange={handleChange} />
+                <Input label="City" name="city" placeholder="City" required
+                  value={formData.city} onChange={handleChange} error={errors.city} />
+                <Input label="Barangay" name="barangay" placeholder="Barangay" 
+                  value={formData.barangay} onChange={handleChange} />
+                <Input label="ZIP Code" name="zipcode" placeholder="ZIP" required
+                  value={formData.zipcode} onChange={handleChange} error={errors.zipcode} />
               </div>
-              <Input label="Operating Hours" name="hours" placeholder="e.g., Mon-Fri 9AM-5PM" 
-                value={formData.hours} onChange={handleChange} />
-              
+              <Input label="Landmark (Optional)" name="landmark" placeholder="e.g., Near SM Mall" 
+                value={formData.landmark} onChange={handleChange} />
+
               <div>
-                <label className="block text-sm text-gray-700 mb-2">Services</label>
+                <label className="block text-sm text-gray-700 mb-2">Location Pin</label>
+                <button type="button" onClick={handleMapClick}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-2xl hover:border-primary transition-all">
+                  <FaMapMarkerAlt className="text-primary" />
+                  <span className="text-sm text-gray-600">
+                    {formData.latitude && formData.longitude ? `Location: ${formData.latitude}, ${formData.longitude}` : "Click to pin location on map"}
+                  </span>
+                </button>
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-700 mb-2">
+                  Services <span className="text-red-500">*</span>
+                </label>
                 <div className="flex gap-2 mb-2">
                   <input type="text" value={serviceInput} onChange={(e) => setServiceInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
@@ -305,17 +437,7 @@ export default function RegisterClinicPage() {
                     ))}
                   </div>
                 )}
-              </div>
-              
-              <div>
-                <label className="block text-sm text-gray-700 mb-2">Location Pin</label>
-                <button type="button" onClick={handleMapClick}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-2xl hover:border-primary transition-all">
-                  <FaMapMarkerAlt className="text-primary" />
-                  <span className="text-sm text-gray-600">
-                    {formData.latitude && formData.longitude ? `Location: ${formData.latitude}, ${formData.longitude}` : "Click to pin location on map"}
-                  </span>
-                </button>
+                {errors.services && <p className="text-red-500 text-xs mt-1">{errors.services}</p>}
               </div>
 
               <div>
@@ -328,8 +450,94 @@ export default function RegisterClinicPage() {
           )}
 
           {currentStep === 3 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold mb-4">Operating Hours</h3>
+              
+              {/* Apply to All Days Section */}
+              <div className="mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-sm font-medium text-gray-700">Apply to All Days:</span>
+                  <input
+                    type="time"
+                    value={applyToAllTimes.open_time}
+                    onChange={(e) => setApplyToAllTimes((prev) => ({ ...prev, open_time: e.target.value }))}
+                    className="flex-1 text-sm px-3 py-2 border border-gray-300 rounded-lg max-w-[120px]"
+                    placeholder="Open"
+                  />
+                  <span className="text-gray-500 text-sm">to</span>
+                  <input
+                    type="time"
+                    value={applyToAllTimes.close_time}
+                    onChange={(e) => setApplyToAllTimes((prev) => ({ ...prev, close_time: e.target.value }))}
+                    className="flex-1 text-sm px-3 py-2 border border-gray-300 rounded-lg max-w-[120px]"
+                    placeholder="Close"
+                  />
+                  <button
+                    type="button"
+                    onClick={applyTimeToAllDays}
+                    className="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-[#FEA08E] transition whitespace-nowrap"
+                  >
+                    Apply
+                  </button>
+                </div>
+                {errors.applyToAll && <p className="text-red-500 text-xs mt-1">{errors.applyToAll}</p>}
+                <p className="text-xs text-gray-500 mt-1">This will apply the time to all open days only</p>
+              </div>
+
+              <div className="space-y-3">
+                {Object.entries(schedules).map(([day, schedule]) => (
+                  <div key={day} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl">
+                    <div className="w-24">
+                      <span className="text-sm font-medium text-gray-700 capitalize">{day}</span>
+                    </div>
+                    <div className="flex-1 flex items-center gap-2">
+                      {schedule.is_closed ? (
+                        <span className="text-sm text-gray-500">Closed</span>
+                      ) : (
+                        <>
+                          <input
+                            type="time"
+                            value={schedule.open_time}
+                            onChange={(e) => handleScheduleChange(day, "open_time", e.target.value)}
+                            className="flex-1 text-sm px-3 py-2 border border-gray-300 rounded-lg"
+                          />
+                          <span className="text-gray-500">to</span>
+                          <input
+                            type="time"
+                            value={schedule.close_time}
+                            onChange={(e) => handleScheduleChange(day, "close_time", e.target.value)}
+                            className="flex-1 text-sm px-3 py-2 border border-gray-300 rounded-lg"
+                          />
+                        </>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => toggleDayClosed(day)}
+                      className={`px-3 py-1 text-xs rounded-lg transition ${
+                        schedule.is_closed
+                          ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                          : "bg-green-100 text-green-700 hover:bg-green-200"
+                      }`}
+                    >
+                      {schedule.is_closed ? "Open" : "Close"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {currentStep === 4 && (
             <div className="space-y-6">
               <h3 className="text-lg font-semibold mb-4">Documents & Photos</h3>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                <p className="text-sm text-blue-800">
+                  <strong>Required Documents:</strong> Please upload all three required certificates (SEC/DTI, Mayor's Permit, and BIR Certificate). 
+                  All documents must be in image format (JPG, PNG, or WEBP) and under 5MB.
+                </p>
+              </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Clinic Photos (Optional - Max 10)</label>
@@ -362,17 +570,35 @@ export default function RegisterClinicPage() {
                 {errors.clinicImages && <p className="text-red-500 text-xs mt-1">{errors.clinicImages}</p>}
               </div>
 
-              <DocumentUpload label="SEC/DTI Certificate" name="secdti" preview={previews.secdti}
+              <DocumentUpload 
+                label="SEC/DTI Certificate" 
+                name="secdti" 
+                preview={previews.secdti}
                 onFileChange={(e) => handleSingleFileChange(e, 'secdti')}
-                onRemove={() => removeSingleImage('secdti')} error={errors.secdti} />
+                onRemove={() => removeSingleImage('secdti')} 
+                error={errors.secdti}
+                required={true}
+              />
 
-              <DocumentUpload label="Mayor's Permit" name="mayorsPermit" preview={previews.mayorsPermit}
+              <DocumentUpload 
+                label="Mayor's Permit" 
+                name="mayorsPermit" 
+                preview={previews.mayorsPermit}
                 onFileChange={(e) => handleSingleFileChange(e, 'mayorsPermit')}
-                onRemove={() => removeSingleImage('mayorsPermit')} error={errors.mayorsPermit} />
+                onRemove={() => removeSingleImage('mayorsPermit')} 
+                error={errors.mayorsPermit}
+                required={true}
+              />
 
-              <DocumentUpload label="BIR Certificate" name="bir" preview={previews.bir}
+              <DocumentUpload 
+                label="BIR Certificate" 
+                name="bir" 
+                preview={previews.bir}
                 onFileChange={(e) => handleSingleFileChange(e, 'bir')}
-                onRemove={() => removeSingleImage('bir')} error={errors.bir} />
+                onRemove={() => removeSingleImage('bir')} 
+                error={errors.bir}
+                required={true}
+              />
 
               {submitStatus === "pending" && (
                 <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-2xl text-sm">
@@ -390,7 +616,7 @@ export default function RegisterClinicPage() {
                 <FaChevronLeft className="text-sm" />Back
               </button>
             )}
-            {currentStep < 3 ? (
+            {currentStep < 4 ? (
               <button type="button" onClick={handleNext}
                 className="flex-1 flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-2xl hover:bg-[#FEA08E]">
                 Next<FaChevronRight className="text-sm" />

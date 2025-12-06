@@ -2,6 +2,33 @@ import { getClinicByOwnerId, registerClinic, updateClinic, getAllApprovedClinics
 import { uploadFiles, deleteMultipleFiles } from "../../global/utils/drive.js";
 import ClinicAdmin from "../models/users/clinicAdminModel.js";
 import Clinic from "../models/clinicModel.js";
+import ClinicAddress from "../models/clinicAddressModel.js";
+import ClinicSchedule from "../models/clinicScheduleModel.js";
+
+// Helper function to format clinic data for frontend (backward compatibility)
+const formatClinicForResponse = (clinic) => {
+  if (!clinic) return clinic;
+  
+  const clinicData = clinic.toJSON ? clinic.toJSON() : clinic;
+  
+  // Format address as string for backward compatibility
+  // Keep the original address object but add a formatted string
+  if (clinicData.address && typeof clinicData.address === 'object') {
+    const addressParts = [
+      clinicData.address.street,
+      clinicData.address.barangay,
+      clinicData.address.city,
+      clinicData.address.province,
+      clinicData.address.zipcode
+    ].filter(Boolean);
+    // Replace address object with formatted string for backward compatibility
+    clinicData.address = addressParts.length > 0 
+      ? addressParts.join(', ') 
+      : '';
+  }
+  
+  return clinicData;
+};
 
 // Helper function to upload multiple files to Google Drive
 const uploadMultipleFiles = async (files, folderId) => {
@@ -49,26 +76,23 @@ export const registerNewClinic = async (req, res) => {
     
     // Add image data to clinic data
     clinicData.clinic_images = clinicImages;
-    clinicData.document_images = documentImages;
-
-      const admin = await ClinicAdmin.findOne({ where: { user_id: adminUserId } });
-  if (!admin) throw new Error("Only clinic admins can register clinics");
-
-//   const { name, address, contact_number, email } = clinicData; //for validation if needed
-
-  const newClinic = await Clinic.create({
-    owner_id: adminUserId,
-    ...clinicData,
-  });
-  // return newClinic;
     
-  //   const newClinic = await registerClinic(clinicData, adminUserId);
+    // Handle document images - map to the expected field names
+    if (documentImages.length > 0) {
+      // Assuming documents are uploaded in order: secdti, mayor_permit, bir
+      clinicData.secdti_url = documentImages[0] || null;
+      clinicData.mayor_permit_url = documentImages[1] || null;
+      clinicData.bir_url = documentImages[2] || null;
+    }
+
+    // Use the service function which handles address and schedule creation
+    const newClinic = await registerClinic(clinicData, adminUserId);
     
    return res
       .status(201)
       .json({ 
         message: "Clinic registered successfully", 
-        clinic: newClinic 
+        clinic: formatClinicForResponse(newClinic)
       });
   } catch (error) {
     console.error("Error from clinic controller:", error);
@@ -164,7 +188,7 @@ export const fetchClinicByOwnerId = async (req, res) => {
 
     res.status(200).json({
       message: "Clinic fetched successfully", 
-      clinic: clinic,
+      clinic: formatClinicForResponse(clinic),
       hasClinic: true
     });
   } catch (err) {
@@ -192,7 +216,7 @@ export const fetchMyClinic = async (req, res) => {
 
     res.status(200).json({ 
       message: "Clinic fetched successfully", 
-      clinic: clinic,
+      clinic: formatClinicForResponse(clinic),
       hasClinic: true 
     });
   } catch (err) {
@@ -207,7 +231,7 @@ export const fetchApprovedClinics = async (req, res) => {
 
     res.status(200).json({
       message: "Approved clinics fetched successfully",
-      clinics: clinics,
+      clinics: clinics.map(formatClinicForResponse),
       count: clinics.length,
     });
   } catch (err) {
@@ -226,7 +250,7 @@ export const fetchClinicById = async (req, res) => {
 
     res.status(200).json({
       message: "Clinic fetched successfully",
-      clinic: clinic,
+      clinic: formatClinicForResponse(clinic),
     });
   } catch (err) {
     console.error("Error fetching clinic by ID:", err.message);
@@ -258,7 +282,7 @@ export const searchClinics = async (req, res) => {
 
     res.status(200).json({
       message: "Search results fetched successfully",
-      clinics: clinics,
+      clinics: clinics.map(formatClinicForResponse),
       count: clinics.length,
       searchTerm: searchTerm,
     });

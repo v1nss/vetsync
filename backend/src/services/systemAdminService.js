@@ -4,6 +4,8 @@ import ClinicAdmin from '../models/users/clinicAdminModel.js';
 import VetProfessional from '../models/users/vetProfessionalModel.js';
 import PetOwner from '../models/users/petOwnerModel.js';
 import Clinic from '../models/clinicModel.js';
+import ClinicAddress from '../models/clinicAddressModel.js';
+import ClinicSchedule from '../models/clinicScheduleModel.js';
 
 export const registerSystemAdmin = async (adminData) => {
 
@@ -55,28 +57,37 @@ export const getAllClinics = async (status) => {
           as: "owner",
           attributes: ["id", "full_name", "email"],
         },
+        { model: ClinicAddress, as: "address" },
+        { model: ClinicSchedule, as: "schedules" },
       ],
       order: [["clinic_id", "ASC"]],
     });
 
-    return clinics.map((c) => ({
-      clinic_id: c.clinic_id,
-      name: c.name,
-      address: c.address,
-      contact_number: c.contact_number,
-      email: c.email,
-      description: c.description,
-      status: c.status,
-      clinic_images: c.clinic_images || [],
-      document_images: c.document_images || [],
-      owner: c.owner
-        ? {
-            id: c.owner.id,
-            name: c.owner.full_name,
-            email: c.owner.email,
-          }
-        : null,
-    }));
+    return clinics.map((c) => {
+      // Format address as string for backward compatibility
+      const addressString = c.address 
+        ? `${c.address.street}, ${c.address.barangay}, ${c.address.city}, ${c.address.province} ${c.address.zipcode}`.replace(/,\s*,/g, ',').trim()
+        : '';
+
+      return {
+        clinic_id: c.clinic_id,
+        name: c.name,
+        address: addressString,
+        contact_number: c.contact_number,
+        email: c.email,
+        description: c.description,
+        status: c.status,
+        clinic_images: c.clinic_images || [],
+        document_images: c.document_images || [],
+        owner: c.owner
+          ? {
+              id: c.owner.id,
+              name: c.owner.full_name,
+              email: c.owner.email,
+            }
+          : null,
+      };
+    });
   } catch (err) {
     console.error("Failed to fetch clinics:", err.message);
     throw err;
