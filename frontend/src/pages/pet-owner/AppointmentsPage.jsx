@@ -180,6 +180,30 @@ export default function AppointmentPage() {
     return "Time not set";
   };
 
+  const formatAddress = (address) => {
+  if (!address) return "Address not available";
+
+  const {
+    street,
+    barangay,
+    city,
+    province,
+    zipcode,
+    landmark
+  } = address;
+
+  // Build parts and remove null/undefined/empty values
+  const parts = [
+    street,
+    barangay,
+    city,
+    province,
+    zipcode ? ` ${zipcode}` : null
+  ].filter(Boolean);
+
+  return parts.join(", ");
+};
+
   // Helper function to safely get nested data
   const getPetName = (appointment) => {
     return appointment.pet?.name || "Pet";
@@ -194,7 +218,7 @@ export default function AppointmentPage() {
   };
 
   const getClinicAddress = (appointment) => {
-    return appointment.clinic?.address  || "Address not available";
+    return formatAddress(appointment?.clinic?.address);
   };
 
   const getClinicPhone = (appointment) => {

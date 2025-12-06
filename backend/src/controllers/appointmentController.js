@@ -2,7 +2,7 @@ import Appointment from "../models/appointmentModel.js";
 import Pet from "../models/petModel.js";
 import User from "../models/users/userModel.js";
 import Clinic from "../models/clinicModel.js";
-
+import ClinicAddress from "../models/clinicAddressModel.js";
 import {
   createAppointment,
   approveAppointment,
@@ -80,7 +80,7 @@ export const getAppointmentsByOwner = async (req, res) => {
           include: [
             {
               model: User,
-              attributes: ["full_name", "email", "phone_number"]
+              attributes: ["first_name","last_name", "email", "phone_number"]
             }
           ]
         },
@@ -92,7 +92,8 @@ export const getAppointmentsByOwner = async (req, res) => {
         {
           model: Clinic,
           as: "clinic",
-          attributes: ["name", "address", "contact_number"]
+          attributes: ["name", "contact_number"],
+          include: [{ model: ClinicAddress, as: "address" }]
         }
       ],
       order: [["date", "ASC"], ["time", "ASC"]]
@@ -125,7 +126,7 @@ export const fetchAppointmentsByClinic = async (req, res) => {
           include: [
             {
               model: User,
-              attributes: ["full_name", "email", "phone_number"]
+              attributes: ["first_name", "last_name", "email", "phone_number"]
             }
           ]
         },
@@ -137,7 +138,8 @@ export const fetchAppointmentsByClinic = async (req, res) => {
         {
           model: Clinic,
           as: "clinic",
-          attributes: ["name", "address", "contact_number"]
+          attributes: ["name", "contact_number"],
+          include: [{ model: ClinicAddress, as: "address" }]
         }
       ],
       order: [["date", "ASC"], ["time", "ASC"]]
@@ -167,7 +169,7 @@ export const getAppointmentsByVet = async (req, res) => {
           include: [
             {
               model: User,
-              attributes: ["full_name", "email", "phone_number"]
+              attributes: ["first_name", "last_name", "email", "phone_number"]
             }
           ]
         },
@@ -179,7 +181,8 @@ export const getAppointmentsByVet = async (req, res) => {
         {
           model: Clinic,
           as: "clinic",
-          attributes: ["name", "address", "contact_number"]
+          attributes: ["name",  "contact_number"],
+          include: [{ model: ClinicAddress, as: "address" }]
         }
       ],
       order: [["date", "ASC"], ["time", "ASC"]]
