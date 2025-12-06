@@ -2,7 +2,6 @@ import { FaEye } from "react-icons/fa";
 import DriveImage from '../DriveImage';
 
 export default function UserTable({ users, onViewDetails }) {
-  console.log("Rendering UserTable with users:", users);
   return (
     <div className="hidden lg:block overflow-x-auto max-w-full">
       <table className="w-full">

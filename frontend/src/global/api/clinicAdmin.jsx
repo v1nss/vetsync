@@ -16,28 +16,28 @@ export const updateClinic = async (clinicId, clinicData, newImages = { clinicIma
     
     // Separate new images from existing images
     const existingClinicImages = (clinicData.clinic_images || []).filter(img => !img.isNew);
-    const existingDocImages = (clinicData.document_images || []).filter(img => !img.isNew);
     
     // Prepare clinic data without the file objects
     const dataToSend = {
       ...clinicData,
       clinic_images: existingClinicImages,
-      document_images: existingDocImages
     };
     
     formData.append('clinic', JSON.stringify(dataToSend));
     
-    // Append new clinic image files
-    const newClinicImgs = (clinicData.clinic_images || []).filter(img => img.isNew && img.file);
-    newClinicImgs.forEach(img => {
-      formData.append('clinicImages', img.file);
-    });
+    // Append new clinic image files from newImages parameter
+    if (newImages.clinicImages && newImages.clinicImages.length > 0) {
+      newImages.clinicImages.forEach(file => {
+        formData.append('clinicImages', file);
+      });
+    }
     
-    // Append new document image files
-    const newDocImgs = (clinicData.document_images || []).filter(img => img.isNew && img.file);
-    newDocImgs.forEach(img => {
-      formData.append('documentImages', img.file);
-    });
+    // Append new document image files from newImages parameter (in order: secdti, mayor_permit, bir)
+    if (newImages.documentImages && newImages.documentImages.length > 0) {
+      newImages.documentImages.forEach(file => {
+        formData.append('documentImages', file);
+      });
+    }
     
     const res = await api.patch(`/clinics/update/${clinicId}`, formData, {
       headers: {

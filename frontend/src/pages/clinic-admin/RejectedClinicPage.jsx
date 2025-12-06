@@ -17,7 +17,7 @@ export default function RejectedClinicPage() {
 
   useEffect(() => {
     if (!isRejected) {
-      navigate('/');
+      navigate('/pending');
     }
   }, [isRejected, navigate]);
 
@@ -136,7 +136,7 @@ const handleEditClinic = () => {
                         </p>
                         {latestRejectionLog.User && (
                           <p className="text-xs text-red-600 mt-1">
-                            <span className="font-medium">Reviewed by:</span> {latestRejectionLog.User.full_name}
+                            <span className="font-medium">Reviewed by:</span> {latestRejectionLog.User.first_name} {latestRejectionLog.User.last_name} (System Admin)
                           </p>
                         )}
                       </div>

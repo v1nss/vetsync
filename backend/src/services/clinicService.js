@@ -90,16 +90,91 @@ export const updateClinic = async (clinicId, updateData, adminUserId) => {
   const admin = await ClinicAdmin.findOne({ where: { user_id: adminUserId } });
 
   if (!admin) throw new Error("Only clinic admins can update clinic details"); 
-    const clinic = await Clinic.findOne({ where: { clinic_id: clinicId } });
+  
+  const clinic = await Clinic.findOne({ where: { clinic_id: clinicId } });
 
-    if (!clinic) throw new Error("Clinic not found");
+  if (!clinic) throw new Error("Clinic not found");
 
-    if (clinic.owner_id !== adminUserId) {
-        throw new Error("You do not have permission to update this clinic");
+  if (clinic.owner_id !== adminUserId) {
+    throw new Error("You do not have permission to update this clinic");
+  }
+
+  // Extract address and schedule data from updateData
+  const { 
+    street, barangay, city, province, zipcode, landmark, latitude, longitude,
+    schedules,
+    ...clinicFields 
+  } = updateData;
+
+  // Validate service array if provided
+  if (clinicFields.service !== undefined) {
+    if (!Array.isArray(clinicFields.service) || clinicFields.service.length === 0) {
+      throw new Error("At least one service is required");
     }
+    clinicFields.service = clinicFields.service.filter(s => s && typeof s === 'string' && s.trim().length > 0);
+    if (clinicFields.service.length === 0) {
+      throw new Error("At least one valid service is required");
+    }
+  }
 
-    await clinic.update(updateData);
-    return clinic;
+  // Update clinic
+  await clinic.update(clinicFields);
+
+  // Update or create address if provided
+  if (street || barangay || city || province || zipcode) {
+    const existingAddress = await ClinicAddress.findOne({ where: { clinic_id: clinicId } });
+    if (existingAddress) {
+      await existingAddress.update({
+        street: street || existingAddress.street || "",
+        barangay: barangay || existingAddress.barangay || "",
+        city: city || existingAddress.city || "",
+        province: province || existingAddress.province || "",
+        zipcode: zipcode || existingAddress.zipcode || "",
+        landmark: landmark !== undefined ? landmark : existingAddress.landmark,
+        latitude: latitude !== undefined ? latitude : existingAddress.latitude,
+        longitude: longitude !== undefined ? longitude : existingAddress.longitude,
+      });
+    } else {
+      await ClinicAddress.create({
+        clinic_id: clinicId,
+        street: street || "",
+        barangay: barangay || "",
+        city: city || "",
+        province: province || "",
+        zipcode: zipcode || "",
+        landmark: landmark || null,
+        latitude: latitude || null,
+        longitude: longitude || null,
+      });
+    }
+  }
+
+  // Update schedules if provided
+  if (schedules && Array.isArray(schedules)) {
+    // Delete existing schedules
+    await ClinicSchedule.destroy({ where: { clinic_id: clinicId } });
+    
+    // Create new schedules
+    const schedulePromises = schedules.map(schedule => 
+      ClinicSchedule.create({
+        clinic_id: clinicId,
+        day_of_week: schedule.day_of_week,
+        open_time: schedule.open_time || null,
+        close_time: schedule.close_time || null,
+        is_closed: schedule.is_closed || false,
+      })
+    );
+    await Promise.all(schedulePromises);
+  }
+
+  // Return clinic with associations
+  return await Clinic.findOne({
+    where: { clinic_id: clinicId },
+    include: [
+      { model: ClinicAddress, as: "address" },
+      { model: ClinicSchedule, as: "schedules" },
+    ],
+  });
 }
 
 export const getClinicByOwnerId = async (owner_id) => {

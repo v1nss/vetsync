@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { updateClinic } from "../../global/api/clinicAdmin";
 import { useAuth } from "../../context/AuthContext";
-import { FaChevronLeft, FaChevronRight, FaCamera, FaTimes } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight, FaCamera, FaTimes, FaMapMarkerAlt } from "react-icons/fa";
 import { fetchMyClinic } from "../../global/api/clinicAdmin";
 import ClinicAdminNavbar from "../../components/ClinicAdminNavbar";
 import DriveImage from "../../components/DriveImage";
@@ -16,12 +16,72 @@ const Input = ({ label, name, type = "text", placeholder, required, value, onCha
   </div>
 );
 
+const DocumentUpload = ({ label, name, preview, onFileChange, onRemove, error, required = false }) => (
+  <div>
+    <label className={`block text-sm font-medium text-gray-700 mb-2 ${required ? 'label-required' : ''}`}>
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    {preview ? (
+      <div className="relative w-full h-40 border-2 border-gray-200 rounded-xl overflow-hidden">
+        <button type="button" onClick={onRemove}
+          className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-all shadow-md z-10">
+          <FaTimes className="text-sm" />
+        </button>
+        <img src={preview} alt={label} className="w-full h-full object-cover" />
+      </div>
+    ) : (
+      <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:border-primary transition-all">
+        <input type="file" accept="image/jpeg,image/jpg,image/png,image/webp" onChange={onFileChange} className="hidden" id={name} />
+        <label htmlFor={name} className="cursor-pointer">
+          <FaCamera className="text-3xl text-gray-400 mx-auto mb-2" />
+          <p className="text-sm text-gray-600 mb-2">Upload {label}</p>
+          <span className="inline-block px-4 py-2 bg-primary text-white text-sm rounded-2xl hover:bg-[#FEA08E] transition">
+            Choose File
+          </span>
+          <p className="text-xs text-gray-400 mt-2">JPG, PNG, WEBP - Max 5MB</p>
+        </label>
+      </div>
+    )}
+    {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+  </div>
+);
+
 export default function EditClinicPage() {
   const navigate = useNavigate();
   const { user, token } = useAuth();
   const location = useLocation();
   const existingClinic = location.state?.clinic;
   const isResubmission = location.state?.isResubmission;
+console.log("Existing Clinic Data:", existingClinic);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState({
+    name: "", street: "", barangay: "", city: "", province: "", zipcode: "", landmark: "",
+    contact_number: "", email: "", description: "",
+    latitude: "", longitude: "", status: "pending",
+  });
+
+  const [schedules, setSchedules] = useState({
+    monday: { open_time: "", close_time: "", is_closed: false },
+    tuesday: { open_time: "", close_time: "", is_closed: false },
+    wednesday: { open_time: "", close_time: "", is_closed: false },
+    thursday: { open_time: "", close_time: "", is_closed: false },
+    friday: { open_time: "", close_time: "", is_closed: false },
+    saturday: { open_time: "", close_time: "", is_closed: false },
+    sunday: { open_time: "", close_time: "", is_closed: false },
+  });
+
+  const [applyToAllTimes, setApplyToAllTimes] = useState({ open_time: "", close_time: "" });
+
+  const [services, setServices] = useState([]);
+  const [serviceInput, setServiceInput] = useState("");
+
+  const [editedClinic, setEditedClinic] = useState(null);
+  const [files, setFiles] = useState({ clinicImages: [], secdti: null, mayorsPermit: null, bir: null });
+  const [previews, setPreviews] = useState({ clinicImages: [], secdti: null, mayorsPermit: null, bir: null });
+  const [oldDocumentIds, setOldDocumentIds] = useState({ secdti: null, mayorsPermit: null, bir: null });
+  const [errors, setErrors] = useState({});
+  const [submitStatus, setSubmitStatus] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadClinicData = async () => {
@@ -31,7 +91,7 @@ export default function EditClinicPage() {
           clinic = await fetchMyClinic();
         }
 
-        if (clinic.status == "pending") {
+        if (clinic.status === "pending") {
           navigate("/clinic-admin/pending");
           return;
         }
@@ -41,25 +101,90 @@ export default function EditClinicPage() {
           return;
         }
 
-        // Set clinic data similar to ClinicManagementPage
+        // Set clinic data
         setEditedClinic({
           ...clinic,
           clinic_images: clinic?.clinic_images || [],
-          document_images: clinic?.document_images || [],
         });
+
+        // Extract address data
+        const address = clinic?.address || {};
+        const addressString = clinic?.address || "";
+        // Parse address if it's a string, otherwise use address object
+        let addressData = {};
+        if (typeof addressString === 'string' && addressString) {
+          // Try to parse address string (format: "street, barangay, city, province zipcode")
+          const parts = addressString.split(',').map(s => s.trim());
+          addressData = {
+            street: parts[0]?.trim() || "",
+            barangay: parts[1]?.trim() || "",
+            city: parts[2]?.trim() || "",
+            province: parts[3]?.trim() || "",
+            zipcode: parts[4]?.trim() || "",
+          };
+        } else if (address && typeof address === 'object') {
+          addressData = {
+            street: address.street || "",
+            barangay: address.barangay || "",
+            city: address.city || "",
+            province: address.province || "",
+            zipcode: address.zipcode || "",
+            landmark: address.landmark || "",
+            latitude: address.latitude || "",
+            longitude: address.longitude || "",
+          };
+        }
         
+        // Set form data
         setFormData({
           name: clinic?.name || "",
-          address: clinic?.address || "",
-          city: clinic?.city || "",
-          state: clinic?.state || "",
-          zipCode: clinic?.zipCode || "",
+          ...addressData,
           contact_number: clinic?.contact_number || "",
           email: clinic?.email || "",
-          hours: clinic?.hours || "",
           description: clinic?.description || "",
           status: "pending",
         });
+
+        // Set services
+        if (clinic?.service && Array.isArray(clinic.service)) {
+          setServices(clinic.service);
+        } else if (clinic?.service) {
+          try {
+            setServices(JSON.parse(clinic.service));
+          } catch {
+            setServices([]);
+          }
+        }
+
+        // Set schedules
+        if (clinic?.schedules && Array.isArray(clinic.schedules)) {
+          const schedulesObj = {};
+          clinic.schedules.forEach(schedule => {
+            schedulesObj[schedule.day_of_week] = {
+              open_time: schedule.open_time || "",
+              close_time: schedule.close_time || "",
+              is_closed: schedule.is_closed || false,
+            };
+          });
+          setSchedules(schedulesObj);
+        }
+
+        // Set document previews and store old document IDs for deletion
+        if (clinic?.secdti_url) {
+          const secdtiUrl = typeof clinic.secdti_url === 'object' ? clinic.secdti_url : { link: clinic.secdti_url, id: null };
+          setPreviews(prev => ({ ...prev, secdti: secdtiUrl.link || clinic.secdti_url }));
+          setOldDocumentIds(prev => ({ ...prev, secdti: secdtiUrl.id || null }));
+        }
+        if (clinic?.mayor_permit_url) {
+          const mayorPermitUrl = typeof clinic.mayor_permit_url === 'object' ? clinic.mayor_permit_url : { link: clinic.mayor_permit_url, id: null };
+          setPreviews(prev => ({ ...prev, mayorsPermit: mayorPermitUrl.link || clinic.mayor_permit_url }));
+          setOldDocumentIds(prev => ({ ...prev, mayorsPermit: mayorPermitUrl.id || null }));
+        }
+        if (clinic?.bir_url) {
+          const birUrl = typeof clinic.bir_url === 'object' ? clinic.bir_url : { link: clinic.bir_url, id: null };
+          setPreviews(prev => ({ ...prev, bir: birUrl.link || clinic.bir_url }));
+          setOldDocumentIds(prev => ({ ...prev, bir: birUrl.id || null }));
+        }
 
       } catch (error) {
         console.error("Failed to load clinic data:", error);
@@ -72,116 +197,171 @@ export default function EditClinicPage() {
     loadClinicData();
   }, [existingClinic, navigate]);
 
-  const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
-    name: existingClinic?.name || "",
-    address: existingClinic?.address || "",
-    city: existingClinic?.city || "",
-    state: existingClinic?.state || "",
-    zipCode: existingClinic?.zipCode || "",
-    contact_number: existingClinic?.contact_number || "",
-    email: existingClinic?.email || "",
-    hours: existingClinic?.hours || "",
-    description: existingClinic?.description || "",
-    status: "pending",
-  });
-
-  const [editedClinic, setEditedClinic] = useState(null);
-  const [errors, setErrors] = useState({});
-  const [submitStatus, setSubmitStatus] = useState(null);
-  const [loading, setLoading] = useState(true);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  // Handle clinic image upload - similar to ClinicManagementPage
-  const handleClinicImageUpload = (e, imageType) => {
-    const files = Array.from(e.target.files);
-    if (files.length > 0) {
-      // Check total images limit for clinic_images
-      if (imageType === 'clinic_images') {
-        const currentTotal = (editedClinic?.clinic_images || []).length;
-        if (currentTotal + files.length > 10) {
-          setErrors((prev) => ({
-            ...prev,
-            pictures: `You can only upload ${10 - currentTotal} more image(s). Maximum is 10 images.`,
-          }));
-          return;
-        }
-      }
-
-      // Validate file sizes
-      const invalidFiles = files.filter(file => file.size > 5000000);
-      if (invalidFiles.length > 0) {
-        setErrors((prev) => ({
-          ...prev,
-          [imageType === 'clinic_images' ? 'pictures' : 'license']: "File size must be less than 5MB",
-        }));
-        return;
-      }
-
-      const readers = files.map(file => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve({
-            id: `temp_${Date.now()}_${Math.random()}`,
-            name: file.name,
-            link: reader.result,
-            isNew: true,
-            file: file // Store file for upload
-          });
-          reader.readAsDataURL(file);
-        });
-      });
-      Promise.all(readers).then(results => {
-        setEditedClinic(prev => ({
-          ...prev,
-          [imageType]: [...(prev[imageType] || []), ...results]
-        }));
-      });
-      
-      // Clear errors
-      if (errors[imageType === 'clinic_images' ? 'pictures' : 'license']) {
-        setErrors((prev) => ({ ...prev, [imageType === 'clinic_images' ? 'pictures' : 'license']: "" }));
-      }
+  const addService = () => {
+    if (serviceInput.trim() && !services.includes(serviceInput.trim())) {
+      setServices([...services, serviceInput.trim()]);
+      setServiceInput("");
     }
   };
 
-  // Remove clinic image - similar to ClinicManagementPage
-  const removeClinicImage = (imageType, index) => {
-    setEditedClinic(prev => ({
+  const removeService = (index) => {
+    setServices(services.filter((_, i) => i !== index));
+  };
+
+  const handleScheduleChange = (day, field, value) => {
+    setSchedules((prev) => ({
       ...prev,
-      [imageType]: (prev[imageType] || []).filter((_, i) => i !== index)
+      [day]: {
+        ...prev[day],
+        [field]: value,
+      },
     }));
+  };
+
+  const toggleDayClosed = (day) => {
+    setSchedules((prev) => ({
+      ...prev,
+      [day]: {
+        ...prev[day],
+        is_closed: !prev[day].is_closed,
+        open_time: !prev[day].is_closed ? prev[day].open_time : "",
+        close_time: !prev[day].is_closed ? prev[day].close_time : "",
+      },
+    }));
+  };
+
+  const applyTimeToAllDays = () => {
+    if (!applyToAllTimes.open_time || !applyToAllTimes.close_time) {
+      setErrors((prev) => ({ ...prev, applyToAll: "Please set both open and close times" }));
+      return;
+    }
+    
+    setSchedules((prev) => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach((day) => {
+        if (!updated[day].is_closed) {
+          updated[day] = {
+            ...updated[day],
+            open_time: applyToAllTimes.open_time,
+            close_time: applyToAllTimes.close_time,
+          };
+        }
+      });
+      return updated;
+    });
+    
+    if (errors.applyToAll) setErrors((prev) => ({ ...prev, applyToAll: "" }));
+  };
+
+  const handleMultipleFileChange = (e, imageType) => {
+    const selectedFiles = Array.from(e.target.files);
+    const maxImages = 10;
+    const remaining = maxImages - files[imageType].length;
+    
+    if (selectedFiles.length > remaining) {
+      setErrors((prev) => ({ ...prev, [imageType]: `Maximum ${maxImages} images allowed.` }));
+      return;
+    }
+
+    const validFiles = [];
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    for (const file of selectedFiles) {
+      if (file.size > 5000000) {
+        setErrors((prev) => ({ ...prev, [imageType]: `File too large (max 5MB).` }));
+        return;
+      }
+      if (!allowedTypes.includes(file.type)) {
+        setErrors((prev) => ({ ...prev, [imageType]: `Invalid file type.` }));
+        return;
+      }
+      validFiles.push(file);
+    }
+
+    validFiles.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => setPreviews((prev) => ({ ...prev, [imageType]: [...prev[imageType], reader.result] }));
+      reader.readAsDataURL(file);
+    });
+
+    setFiles((prev) => ({ ...prev, [imageType]: [...prev[imageType], ...validFiles] }));
+    if (errors[imageType]) setErrors((prev) => ({ ...prev, [imageType]: "" }));
+  };
+
+  const handleSingleFileChange = (e, docType) => {
+    const file = e.target.files[0];
+    if (!file) {
+      setFiles((prev) => ({ ...prev, [docType]: null }));
+      setPreviews((prev) => ({ ...prev, [docType]: null }));
+      return;
+    }
+
+    // The old document ID is already stored in oldDocumentIds
+
+    if (file.size > 5000000) {
+      setErrors((prev) => ({ ...prev, [docType]: "File too large (max 5MB)." }));
+      setFiles((prev) => ({ ...prev, [docType]: null }));
+      setPreviews((prev) => ({ ...prev, [docType]: null }));
+      return;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setErrors((prev) => ({ ...prev, [docType]: "Invalid file type. Please upload JPG, PNG, or WEBP." }));
+      setFiles((prev) => ({ ...prev, [docType]: null }));
+      setPreviews((prev) => ({ ...prev, [docType]: null }));
+      return;
+    }
+
+    if (errors[docType]) setErrors((prev) => ({ ...prev, [docType]: "" }));
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviews((prev) => ({ ...prev, [docType]: reader.result }));
+    };
+    reader.onerror = () => {
+      setErrors((prev) => ({ ...prev, [docType]: "Error reading file. Please try again." }));
+    };
+    reader.readAsDataURL(file);
+    
+    setFiles((prev) => ({ ...prev, [docType]: file }));
+  };
+
+  const removeImage = (imageType, index) => {
+    setFiles((prev) => ({ ...prev, [imageType]: prev[imageType].filter((_, i) => i !== index) }));
+    setPreviews((prev) => ({ ...prev, [imageType]: prev[imageType].filter((_, i) => i !== index) }));
+  };
+
+  const removeSingleImage = (docType) => {
+    setFiles((prev) => ({ ...prev, [docType]: null }));
+    setPreviews((prev) => ({ ...prev, [docType]: null }));
   };
 
   const validateStep = (step) => {
     const newErrors = {};
-    
     if (step === 1) {
       if (!formData.name.trim()) newErrors.name = "Clinic name is required";
       if (!formData.contact_number.trim()) newErrors.contact_number = "Phone number is required";
       if (!formData.email.trim()) newErrors.email = "Email is required";
       else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Invalid email format";
     }
-    
     if (step === 2) {
-      if (!formData.address.trim()) newErrors.address = "Address is required";
+      if (!formData.street.trim()) newErrors.street = "Street address is required";
+      if (!formData.city.trim()) newErrors.city = "City is required";
+      if (!formData.province.trim()) newErrors.province = "Province is required";
+      if (!formData.zipcode.trim()) newErrors.zipcode = "ZIP code is required";
+      if (services.length === 0) newErrors.services = "At least one service is required";
     }
-    
-    return newErrors;
-  };
-
-  const validate = () => {
-    const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Clinic name is required";
-    if (!formData.address.trim()) newErrors.address = "Address is required";
-    if (!formData.contact_number.trim()) newErrors.contact_number = "Phone number is required";
-    if (!formData.email.trim()) newErrors.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Invalid email format";
+    if (step === 4) {
+      if (!files.secdti && !previews.secdti) newErrors.secdti = "SEC/DTI Certificate is required";
+      if (!files.mayorsPermit && !previews.mayorsPermit) newErrors.mayorsPermit = "Mayor's Permit is required";
+      if (!files.bir && !previews.bir) newErrors.bir = "BIR Certificate is required";
+    }
     return newErrors;
   };
 
@@ -192,14 +372,25 @@ export default function EditClinicPage() {
       setErrors(newErrors);
       return;
     }
-    setCurrentStep((prev) => Math.min(prev + 1, 3));
+    setCurrentStep((prev) => Math.min(prev + 1, 4));
+  };
+
+  const handleMapClick = () => {
+    alert("Map integration: Click to pin location");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const newErrors = validate();
+    const newErrors = validateStep(1);
+    Object.assign(newErrors, validateStep(2));
+    Object.assign(newErrors, validateStep(4));
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      if (newErrors.secdti || newErrors.mayorsPermit || newErrors.bir) {
+        setCurrentStep(4);
+      } else if (newErrors.services || newErrors.street || newErrors.city || newErrors.province || newErrors.zipcode) {
+        setCurrentStep(2);
+      }
       return;
     }
     setSubmitStatus("loading");
@@ -209,22 +400,39 @@ export default function EditClinicPage() {
         throw new Error("Clinic data not loaded");
       }
 
-      // Prepare clinic data similar to ClinicManagementPage - merge formData with editedClinic
-      const clinicDataToUpdate = {
-        ...editedClinic,
-        ...formData,
-        clinic_images: editedClinic.clinic_images || [],
-        document_images: editedClinic.document_images || [],
+      // Format schedules array
+      const schedulesArray = Object.entries(schedules).map(([day_of_week, schedule]) => ({
+        day_of_week,
+        open_time: schedule.is_closed ? null : schedule.open_time || null,
+        close_time: schedule.is_closed ? null : schedule.close_time || null,
+        is_closed: schedule.is_closed,
+      }));
+      console.log("formdata:", formData);
+      const clinicData = { 
+        ...formData, 
+        service: services,
+        schedules: schedulesArray,
       };
-      
-      await updateClinic(editedClinic.clinic_id, clinicDataToUpdate);
-      
-      setSubmitStatus("submitted");
-      
-      setTimeout(() => {
-        navigate("/clinic-admin/clinic", { replace: true });
-      }, 2000);
 
+      // Prepare clinic data with existing images
+      const clinicDataToUpdate = {
+        ...clinicData,
+        clinic_images: editedClinic.clinic_images || [],
+        // Include old document IDs that need to be deleted when new ones are uploaded
+        documentsToDelete: {
+          secdti: files.secdti && oldDocumentIds.secdti ? oldDocumentIds.secdti : null,
+          mayorsPermit: files.mayorsPermit && oldDocumentIds.mayorsPermit ? oldDocumentIds.mayorsPermit : null,
+          bir: files.bir && oldDocumentIds.bir ? oldDocumentIds.bir : null,
+        }
+      };
+
+      await updateClinic(editedClinic.clinic_id, clinicDataToUpdate, { 
+        clinicImages: files.clinicImages, 
+        documentImages: [files.secdti, files.mayorsPermit, files.bir].filter(Boolean) 
+      });
+
+      setSubmitStatus("submitted");
+      navigate("/clinic-admin/pending");
     } catch (err) {
       console.error("Update error:", err);
       setErrors({ submit: err.response?.data?.message || err.message || "Failed to update clinic. Please try again." });
@@ -232,7 +440,16 @@ export default function EditClinicPage() {
     }
   };
 
-  const totalImages = (editedClinic?.clinic_images || []).length;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading clinic data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -251,19 +468,20 @@ export default function EditClinicPage() {
           )}
           
           <h2 className="text-2xl font-semibold text-center">Edit Clinic Information</h2>
-          <p className="text-center text-gray-600 mb-6">Step {currentStep} of 3</p>
+          <p className="text-center text-gray-600 mb-6">Step {currentStep} of 4</p>
 
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-3">
-              {[1, 2, 3].map((step) => (
+              {[1, 2, 3, 4].map((step) => (
                 <div key={step} className="flex items-center flex-1">
                   <div className={`h-1 flex-1 rounded ${currentStep >= step ? "bg-primary" : "bg-gray-200"}`} />
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-3 text-xs text-gray-600">
+            <div className="grid grid-cols-4 text-xs text-gray-600">
               <span className="text-left">Basic Info</span>
               <span className="text-center">Clinic Details</span>
+              <span className="text-center">Schedule</span>
               <span className="text-right">Documents</span>
             </div>
           </div>
@@ -292,18 +510,61 @@ export default function EditClinicPage() {
             {currentStep === 2 && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold mb-4">Clinic Details</h3>
-                <Input label="Street Address" name="address" placeholder="Enter street address" required 
-                  value={formData.address} onChange={handleChange} error={errors.address} />
+                <Input label="Street Address" name="street" placeholder="Enter street address" required 
+                  value={formData.street} onChange={handleChange} error={errors.street} />
+                <Input label="Province" name="province" placeholder="Enter province" required 
+                  value={formData.province} onChange={handleChange} error={errors.province} />
                 <div className="grid grid-cols-3 gap-3">
-                  <Input label="City" name="city" placeholder="City" 
-                    value={formData.city} onChange={handleChange} />
-                  <Input label="State" name="state" placeholder="State" 
-                    value={formData.state} onChange={handleChange} />
-                  <Input label="ZIP" name="zipCode" placeholder="ZIP" 
-                    value={formData.zipCode} onChange={handleChange} />
+                  <Input label="City" name="city" placeholder="City" required
+                    value={formData.city} onChange={handleChange} error={errors.city} />
+                  <Input label="Barangay" name="barangay" placeholder="Barangay" 
+                    value={formData.barangay} onChange={handleChange} />
+                  <Input label="ZIP Code" name="zipcode" placeholder="ZIP" required
+                    value={formData.zipcode} onChange={handleChange} error={errors.zipcode} />
                 </div>
-                <Input label="Operating Hours" name="hours" placeholder="e.g., Mon-Fri 9AM-5PM" 
-                  value={formData.hours} onChange={handleChange} />
+                <Input label="Landmark (Optional)" name="landmark" placeholder="e.g., Near SM Mall" 
+                  value={formData.landmark} onChange={handleChange} />
+
+                <div>
+                  <label className="block text-sm text-gray-700 mb-2">Location Pin</label>
+                  <button type="button" onClick={handleMapClick}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-2xl hover:border-primary transition-all">
+                    <FaMapMarkerAlt className="text-primary" />
+                    <span className="text-sm text-gray-600">
+                      {formData.latitude && formData.longitude ? `Location: ${formData.latitude}, ${formData.longitude}` : "Click to pin location on map"}
+                    </span>
+                  </button>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-gray-700 mb-2">
+                    Services <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex gap-2 mb-2">
+                    <input type="text" value={serviceInput} onChange={(e) => setServiceInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
+                      className="focus:outline-none flex-1 text-sm px-4 py-3 border border-gray-300 rounded-2xl"
+                      placeholder="e.g., Vaccination, Surgery, Grooming" />
+                    <button type="button" onClick={addService}
+                      className="px-6 py-3 bg-primary text-white rounded-2xl hover:bg-[#FEA08E] transition">
+                      Add
+                    </button>
+                  </div>
+                  {services.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {services.map((service, index) => (
+                        <span key={index} className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
+                          {service}
+                          <button type="button" onClick={() => removeService(index)} className="text-red-500 hover:text-red-700">
+                            <FaTimes className="text-xs" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {errors.services && <p className="text-red-500 text-xs mt-1">{errors.services}</p>}
+                </div>
+
                 <div>
                   <label className="block text-sm text-gray-700 mb-2">Description (Optional)</label>
                   <textarea name="description" value={formData.description} onChange={handleChange} rows="4"
@@ -315,11 +576,97 @@ export default function EditClinicPage() {
 
             {currentStep === 3 && (
               <div className="space-y-4">
+                <h3 className="text-lg font-semibold mb-4">Operating Hours</h3>
+                
+                {/* Apply to All Days Section */}
+                <div className="mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-sm font-medium text-gray-700">Apply to All Days:</span>
+                    <input
+                      type="time"
+                      value={applyToAllTimes.open_time}
+                      onChange={(e) => setApplyToAllTimes((prev) => ({ ...prev, open_time: e.target.value }))}
+                      className="flex-1 text-sm px-3 py-2 border border-gray-300 rounded-lg max-w-[120px]"
+                      placeholder="Open"
+                    />
+                    <span className="text-gray-500 text-sm">to</span>
+                    <input
+                      type="time"
+                      value={applyToAllTimes.close_time}
+                      onChange={(e) => setApplyToAllTimes((prev) => ({ ...prev, close_time: e.target.value }))}
+                      className="flex-1 text-sm px-3 py-2 border border-gray-300 rounded-lg max-w-[120px]"
+                      placeholder="Close"
+                    />
+                    <button
+                      type="button"
+                      onClick={applyTimeToAllDays}
+                      className="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-[#FEA08E] transition whitespace-nowrap"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                  {errors.applyToAll && <p className="text-red-500 text-xs mt-1">{errors.applyToAll}</p>}
+                  <p className="text-xs text-gray-500 mt-1">This will apply the time to all open days only</p>
+                </div>
+
+                <div className="space-y-3">
+                  {Object.entries(schedules).map(([day, schedule]) => (
+                    <div key={day} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl">
+                      <div className="w-24">
+                        <span className="text-sm font-medium text-gray-700 capitalize">{day}</span>
+                      </div>
+                      <div className="flex-1 flex items-center gap-2">
+                        {schedule.is_closed ? (
+                          <span className="text-sm text-gray-500">Closed</span>
+                        ) : (
+                          <>
+                            <input
+                              type="time"
+                              value={schedule.open_time}
+                              onChange={(e) => handleScheduleChange(day, "open_time", e.target.value)}
+                              className="flex-1 text-sm px-3 py-2 border border-gray-300 rounded-lg"
+                            />
+                            <span className="text-gray-500">to</span>
+                            <input
+                              type="time"
+                              value={schedule.close_time}
+                              onChange={(e) => handleScheduleChange(day, "close_time", e.target.value)}
+                              className="flex-1 text-sm px-3 py-2 border border-gray-300 rounded-lg"
+                            />
+                          </>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => toggleDayClosed(day)}
+                        className={`px-3 py-1 text-xs rounded-lg transition ${
+                          schedule.is_closed
+                            ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            : "bg-green-100 text-green-700 hover:bg-green-200"
+                        }`}
+                      >
+                        {schedule.is_closed ? "Open" : "Close"}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {currentStep === 4 && (
+              <div className="space-y-6">
                 <h3 className="text-lg font-semibold mb-4">Documents & Photos</h3>
+                
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                  <p className="text-sm text-blue-800">
+                    <strong>Required Documents:</strong> Please upload all three required certificates (SEC/DTI, Mayor's Permit, and BIR Certificate). 
+                    All documents must be in image format (JPG, PNG, or WEBP) and under 5MB.
+                  </p>
+                </div>
+                
                 <div>
-                  <label className="block text-sm text-gray-700 mb-2">Clinic Photos (Max 10)</label>
-                  
-                  {/* All Images - Existing and New Combined */}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Clinic Photos (Optional - Max 10)</label>
+                  {/* Existing clinic images */}
                   {(editedClinic?.clinic_images && editedClinic.clinic_images.length > 0) && (
                     <div className="grid grid-cols-3 gap-3 mb-3">
                       {editedClinic.clinic_images.map((image, idx) => (
@@ -329,14 +676,14 @@ export default function EditClinicPage() {
                             alt={image?.name || `Image ${idx + 1}`}
                             className="w-full h-full object-cover relative z-0"
                           />
-                          {image.isNew && (
-                            <div className="absolute top-1 left-1 z-20">
-                              <span className="bg-green-500 text-white text-xs px-2 py-1 rounded">New</span>
-                            </div>
-                          )}
                           <button 
                             type="button" 
-                            onClick={() => removeClinicImage('clinic_images', idx)}
+                            onClick={() => {
+                              setEditedClinic(prev => ({
+                                ...prev,
+                                clinic_images: (prev.clinic_images || []).filter((_, i) => i !== idx)
+                              }));
+                            }}
                             className="absolute top-1 right-1 z-30 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-all shadow-md"
                           >
                             <FaTimes className="text-xs" />
@@ -345,64 +692,65 @@ export default function EditClinicPage() {
                       ))}
                     </div>
                   )}
-                  
-                  {totalImages < 10 && (
-                    <div className="border border-gray-300 rounded-2xl p-6 text-center">
-                      <input type="file" accept="image/*" multiple onChange={(e) => handleClinicImageUpload(e, 'clinic_images')} className="hidden" id="pictures" />
-                      <label htmlFor="pictures" className="cursor-pointer">
+                  {/* New clinic images preview */}
+                  {previews.clinicImages.length > 0 && (
+                    <div className="flex gap-3 mb-3 overflow-x-auto pb-2">
+                      {previews.clinicImages.map((preview, index) => (
+                        <div key={index} className="relative shrink-0 w-32 h-32 border-2 border-gray-200 rounded-xl overflow-hidden">
+                          <button type="button" onClick={() => removeImage('clinicImages', index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-all shadow-md z-10">
+                            <FaTimes className="text-xs" />
+                          </button>
+                          <img src={preview} alt={`Clinic ${index + 1}`} className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {((editedClinic?.clinic_images?.length || 0) + previews.clinicImages.length) < 10 && (
+                    <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:border-primary transition-all">
+                      <input type="file" accept="image/jpeg,image/jpg,image/png,image/webp" multiple 
+                        onChange={(e) => handleMultipleFileChange(e, 'clinicImages')} className="hidden" id="clinicImages" />
+                      <label htmlFor="clinicImages" className="cursor-pointer">
                         <FaCamera className="text-3xl text-gray-400 mx-auto mb-2" />
-                        <p className="text-sm text-gray-600 mb-2">
-                          {totalImages === 0 ? "Upload clinic photos" : `Add more (${10 - totalImages} left)`}
-                        </p>
+                        <p className="text-sm text-gray-600 mb-2">Upload clinic photos</p>
                         <span className="inline-block px-4 py-2 bg-primary text-white text-sm rounded-2xl hover:bg-[#FEA08E] transition">
                           Choose Files
                         </span>
                       </label>
                     </div>
                   )}
-                  {errors.pictures && <p className="text-red-500 text-xs mt-1">{errors.pictures}</p>}
+                  {errors.clinicImages && <p className="text-red-500 text-xs mt-1">{errors.clinicImages}</p>}
                 </div>
-                
-                <div>
-                  <label className="block text-sm text-gray-700 mb-2">License/Permit Documents</label>
-                  
-                  {/* All License Images - Existing and New Combined */}
-                  {(editedClinic?.document_images && editedClinic.document_images.length > 0) && (
-                    <div className="grid grid-cols-3 gap-3 mb-3">
-                      {editedClinic.document_images.map((image, idx) => (
-                        <div key={image?.id || idx} className="relative group border-2 border-gray-200 rounded-xl overflow-hidden hover:border-primary transition-all aspect-square bg-gray-100">
-                          <DriveImage 
-                            image={image} 
-                            alt={image?.name || `Document ${idx + 1}`}
-                            className="w-full h-full object-cover relative z-0"
-                          />
-                          {image.isNew && (
-                            <div className="absolute top-1 left-1 z-20">
-                              <span className="bg-green-500 text-white text-xs px-2 py-1 rounded">New</span>
-                            </div>
-                          )}
-                          <button 
-                            type="button" 
-                            onClick={() => removeClinicImage('document_images', idx)}
-                            className="absolute top-1 right-1 z-30 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-all shadow-md"
-                          >
-                            <FaTimes className="text-xs" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  
-                  <div className="border border-gray-300 rounded-2xl p-6 text-center">
-                    <input type="file" accept="image/*,application/pdf" multiple onChange={(e) => handleClinicImageUpload(e, 'document_images')} className="hidden" id="license" />
-                    <label htmlFor="license" className="cursor-pointer">
-                      <FaCamera className="text-3xl text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600 mb-2">Upload license/permit documents</p>
-                      <span className="inline-block px-4 py-2 bg-primary text-white text-sm rounded-2xl hover:bg-[#FEA08E] transition">Choose Files</span>
-                    </label>
-                  </div>
-                  {errors.license && <p className="text-red-500 text-xs mt-1">{errors.license}</p>}
-                </div>
+
+                <DocumentUpload 
+                  label="SEC/DTI Certificate" 
+                  name="secdti" 
+                  preview={previews.secdti}
+                  onFileChange={(e) => handleSingleFileChange(e, 'secdti')}
+                  onRemove={() => removeSingleImage('secdti')} 
+                  error={errors.secdti}
+                  required={true}
+                />
+
+                <DocumentUpload 
+                  label="Mayor's Permit" 
+                  name="mayorsPermit" 
+                  preview={previews.mayorsPermit}
+                  onFileChange={(e) => handleSingleFileChange(e, 'mayorsPermit')}
+                  onRemove={() => removeSingleImage('mayorsPermit')} 
+                  error={errors.mayorsPermit}
+                  required={true}
+                />
+
+                <DocumentUpload 
+                  label="BIR Certificate" 
+                  name="bir" 
+                  preview={previews.bir}
+                  onFileChange={(e) => handleSingleFileChange(e, 'bir')}
+                  onRemove={() => removeSingleImage('bir')} 
+                  error={errors.bir}
+                  required={true}
+                />
 
                 {submitStatus === "submitted" && (
                   <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-2xl text-sm">
@@ -420,7 +768,7 @@ export default function EditClinicPage() {
                   <FaChevronLeft className="text-sm" />Back
                 </button>
               )}
-              {currentStep < 3 ? (
+              {currentStep < 4 ? (
                 <button type="button" onClick={handleNext}
                   className="flex-1 flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-2xl hover:bg-[#FEA08E]">
                   Next<FaChevronRight className="text-sm" />

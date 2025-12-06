@@ -146,12 +146,62 @@ export const updateClinicDetails = async (req, res) => {
     }
     
     // Upload new document images if provided
-    if (req.files?.documentImages) {
+    if (req.files?.documentImages && req.files.documentImages.length > 0) {
       const newDocumentImages = await uploadMultipleFiles(req.files.documentImages, DOCUMENT_IMAGES_FOLDER_ID);
-      // Merge with existing images
-      updateData.document_images = [...(updateData.document_images || []), ...newDocumentImages];
+      
+      // Delete old documents if new ones are being uploaded
+      const documentsToDelete = updateData.documentsToDelete || {};
+      const oldDocIdsToDelete = [];
+      
+      // Helper function to extract document ID from various formats
+      const getDocumentId = (doc) => {
+        if (!doc) return null;
+        if (typeof doc === 'object' && doc.id) return doc.id;
+        if (typeof doc === 'string') {
+          // Try to extract ID from Google Drive link (format: /d/FILE_ID)
+          const match = doc.match(/\/d\/([a-zA-Z0-9_-]+)/);
+          return match ? match[1] : null;
+        }
+        return null;
+      };
+      
+      // Handle SEC/DTI Certificate (first document)
+      if (newDocumentImages.length > 0) {
+        const oldSecdtiId = documentsToDelete.secdti || getDocumentId(currentClinic.secdti_url);
+        if (oldSecdtiId) {
+          oldDocIdsToDelete.push(oldSecdtiId);
+        }
+        updateData.secdti_url = newDocumentImages[0];
+      }
+      
+      // Handle Mayor's Permit (second document)
+      if (newDocumentImages.length > 1) {
+        const oldMayorPermitId = documentsToDelete.mayorsPermit || getDocumentId(currentClinic.mayor_permit_url);
+        if (oldMayorPermitId) {
+          oldDocIdsToDelete.push(oldMayorPermitId);
+        }
+        updateData.mayor_permit_url = newDocumentImages[1];
+      }
+      
+      // Handle BIR Certificate (third document)
+      if (newDocumentImages.length > 2) {
+        const oldBirId = documentsToDelete.bir || getDocumentId(currentClinic.bir_url);
+        if (oldBirId) {
+          oldDocIdsToDelete.push(oldBirId);
+        }
+        updateData.bir_url = newDocumentImages[2];
+      }
+      
+      // Delete old document images from Google Drive
+      if (oldDocIdsToDelete.length > 0) {
+        console.log(`Deleting ${oldDocIdsToDelete.length} old document images from Drive:`, oldDocIdsToDelete);
+        await deleteMultipleFiles(oldDocIdsToDelete);
+      }
     }
     
+    // Remove documentsToDelete from updateData before passing to service
+    delete updateData.documentsToDelete;
+    console.log(updateData)
     const updatedClinic = await updateClinic(clinicId, updateData, adminUserId);
 
     res
