@@ -200,7 +200,7 @@ export const getAllApprovedClinics = async () => {
       {
         model: User,
         as: "owner",
-        attributes: ["id", "full_name", "email"], // Only include necessary fields
+        attributes: ["id", "first_name", "email"], // Only include necessary fields
       },
       { model: ClinicAddress, as: "address" },
       { model: ClinicSchedule, as: "schedules" },
@@ -221,7 +221,7 @@ export const getClinicById = async (clinicId) => {
       {
         model: User,
         as: "owner",
-        attributes: ["id", "full_name", "email"],
+        attributes: ["id", "first_name", "email"],
       },
       { model: ClinicAddress, as: "address" },
       { model: ClinicSchedule, as: "schedules" },
@@ -250,7 +250,7 @@ export const searchApprovedClinics = async (searchTerm) => {
       {
         model: User,
         as: "owner",
-        attributes: ["id", "full_name", "email"],
+        attributes: ["id", "first_name", "email"],
       },
       { 
         model: ClinicAddress, 

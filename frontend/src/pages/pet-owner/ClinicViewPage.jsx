@@ -6,14 +6,15 @@ import { BsGrid3X3Gap } from "react-icons/bs";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { slugify } from "../../utils/slugify";
 import Navbar from "../../components/Navbar.jsx";
-import React from "react";
+import React, {useEffect} from "react";
+import { fetchClinicById } from "../../global/api/clinic";
 
 export default function ClinicViewPage({ onLike }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { slug } = useParams();
-  let clinic = location.state?.clinic;
-
+  const [clinic, setClinic] = React.useState(location.state?.clinic);
+  const [loading, setLoading] = React.useState(false);
   const [liked, setLiked] = React.useState(clinic?.liked || false);
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [isOverflowing, setIsOverflowing] = React.useState(false);
@@ -25,7 +26,7 @@ export default function ClinicViewPage({ onLike }) {
   const clinicImages = clinic?.clinic_images || [];
   const hasMultipleImages = clinicImages.length > 1;
 
-  React.useEffect(() => {
+  useEffect(() => {
     const checkOverflow = () => {
       const el = descRef.current;
       if (el) {
@@ -41,7 +42,7 @@ export default function ClinicViewPage({ onLike }) {
     return () => window.removeEventListener("resize", checkOverflow);
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (showAllPhotos) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -52,9 +53,64 @@ export default function ClinicViewPage({ onLike }) {
     };
   }, [showAllPhotos]);
 
-  if (!clinic) {
-    const clinics = JSON.parse(localStorage.getItem("clinics") || "[]");
-    clinic = clinics?.find(c => slugify(c.name) === slug);
+  // Fetch full clinic details if schedules or service are missing
+  useEffect(() => {
+    const loadClinicData = async () => {
+      // Get initial clinic from location state or localStorage
+      let currentClinic = location.state?.clinic;
+
+      // Get clinic_id (could be clinic_id or id)
+      const clinicId = currentClinic.clinic_id || currentClinic.id;
+      
+      // Check if schedules and service are present
+      const hasSchedules = currentClinic?.schedules && Array.isArray(currentClinic.schedules) && currentClinic.schedules.length > 0;
+      const hasService = (currentClinic?.service && (Array.isArray(currentClinic.service) ? currentClinic.service.length > 0 : true)) ||
+                         (currentClinic?.services && (Array.isArray(currentClinic.services) ? currentClinic.services.length > 0 : true));
+      
+      // If clinic exists but missing schedules or service, fetch full details
+      if (clinicId && (!hasSchedules || !hasService)) {
+        try {
+          setLoading(true);
+          console.log("Fetching clinic details for ID:", clinicId);
+          const fullClinicData = await fetchClinicById(clinicId);
+          console.log("Fetched clinic data:", fullClinicData);
+          
+          if (fullClinicData) {
+            // Use the fetched data directly
+            setClinic(fullClinicData);
+          } else {
+            // Fallback to current clinic if fetch returns nothing
+            setClinic(currentClinic);
+          }
+        } catch (error) {
+          console.error("Failed to fetch full clinic details:", error);
+          // Keep the existing clinic data if fetch fails
+          setClinic(currentClinic);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        // Clinic already has schedules and service, use it as is
+        setClinic(currentClinic);
+      }
+    };
+
+    loadClinicData();
+  }, [slug]);
+
+  // Update liked state when clinic changes
+  useEffect(() => {
+    if (clinic) {
+      setLiked(clinic.liked || false);
+    }
+  }, [clinic]);
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading clinic details...</p>
+      </div>
+    );
   }
 
   if (!clinic) {
@@ -80,6 +136,40 @@ export default function ClinicViewPage({ onLike }) {
     if (typeof imageObj === 'string') return imageObj;
     return imageObj?.link || imageObj?.directLink || imageObj?.viewLink || '/placeholder-clinic.jpg';
   };
+
+  // Helper function to format time from 24-hour to 12-hour format
+  const formatTime = (time) => {
+    if (!time) return '';
+    // If time is in HH:MM format, convert to 12-hour format
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
+  // Helper function to format address
+  const formatAddress = (address, addressString) => {
+    if (typeof address === 'string') return address;
+    if (address && typeof address === 'object') {
+      const parts = [
+        address.street,
+        address.barangay,
+        address.city,
+        address.province,
+        address.zipcode
+      ].filter(Boolean);
+      let formattedAddress = parts.join(', ');
+      if (address.landmark) {
+        formattedAddress += ` (${address.landmark})`;
+      }
+      return formattedAddress || addressString || 'Address not available';
+    }
+    return addressString || 'Address not available';
+  };
+
+  // Get formatted address for display and map
+  const displayAddress = clinic ? formatAddress(clinic.address, clinic.address_string) : 'Address not available';
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % clinicImages.length);
@@ -264,10 +354,38 @@ export default function ClinicViewPage({ onLike }) {
                 
                 <div className="flex items-start gap-3">
                   <FaLocationDot className="text-gray-700 text-xl mt-1 shrink-0" />
-                  <span className="text-gray-700">{clinic.address}</span>
+                  <span className="text-gray-700">{displayAddress}</span>
                 </div>
                 
-                {clinic.hours && (
+                {/* Operating Hours */}
+                {clinic.schedules && Array.isArray(clinic.schedules) && clinic.schedules.length > 0 && (
+                  <div className="flex items-start gap-3">
+                    <FaClock className="text-gray-700 text-xl mt-1 shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      {clinic.schedules.map((schedule, idx) => {
+                        const dayName = schedule.day_of_week.charAt(0).toUpperCase() + schedule.day_of_week.slice(1);
+                        const isClosed = schedule.is_closed || false;
+                        const openTime = schedule.open_time ? formatTime(schedule.open_time) : '';
+                        const closeTime = schedule.close_time ? formatTime(schedule.close_time) : '';
+                        
+                        return (
+                          <div key={idx} className="flex items-center justify-between text-gray-700">
+                            <span className="font-medium">{dayName}</span>
+                            {isClosed ? (
+                              <span className="text-gray-500">Closed</span>
+                            ) : openTime && closeTime ? (
+                              <span>{openTime} - {closeTime}</span>
+                            ) : (
+                              <span className="text-gray-400 italic">Not set</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {/* Fallback to old hours format if schedules not available */}
+                {(!clinic.schedules || !Array.isArray(clinic.schedules) || clinic.schedules.length === 0) && clinic.hours && (
                   <div className="flex items-center gap-3">
                     <FaClock className="text-gray-700 text-xl" />
                     <span className="text-gray-700 font-medium">{clinic.hours}</span>
@@ -277,36 +395,43 @@ export default function ClinicViewPage({ onLike }) {
             </div>
 
             {/* Services */}
-            {clinic.services && clinic.services.length > 0 && (
-              <div className="pb-8 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Services Offered</h2>
-                <div className="flex flex-wrap gap-2">
-                  {clinic.services.map((service, index) => (
-                    <span
-                      key={index}
-                      className="px-4 py-2 bg-gray-100 text-gray-800 rounded-full text-sm font-medium border border-gray-200"
-                    >
-                      {service}
-                    </span>
-                  ))}
+            {(() => {
+              // Handle both service (array) and services (legacy) fields
+              let services = [];
+              if (clinic.service && Array.isArray(clinic.service)) {
+                services = clinic.service;
+              } else if (clinic.services && Array.isArray(clinic.services)) {
+                services = clinic.services;
+              } else if (clinic.service && typeof clinic.service === 'string') {
+                try {
+                  services = JSON.parse(clinic.service);
+                } catch {
+                  services = [];
+                }
+              } else if (clinic.services && typeof clinic.services === 'string') {
+                try {
+                  services = JSON.parse(clinic.services);
+                } catch {
+                  services = [];
+                }
+              }
+              
+              return services.length > 0 ? (
+                <div className="pb-8 border-b border-gray-200">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Services Offered</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {services.map((service, index) => (
+                      <span
+                        key={index}
+                        className="px-4 py-2 bg-gray-100 text-gray-800 rounded-full text-sm font-medium border border-gray-200"
+                      >
+                        {service}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-
-            {/* { Services placeholders } */}
-            <div className="pb-8 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Services Offered</h2>
-              <div className="flex flex-wrap gap-2">
-                {["General Checkup", "Vaccinations", "Emergency Services", "Grooming", "Diagnostics"].map((service, index) => (
-                  <span
-                    key={index}
-                    className="px-4 py-2 bg-gray-100 text-gray-800 rounded-full text-sm font-medium border border-gray-200"
-                  >
-                    {service}
-                  </span>
-                ))}
-              </div>
-            </div>
+              ) : null;
+            })()}
 
             {/* Description */}
             <div className="pb-8 border-b border-gray-200">
@@ -336,10 +461,10 @@ export default function ClinicViewPage({ onLike }) {
                   width="100%"
                   height="100%"
                   loading="lazy"
-                  src={`https://www.google.com/maps?q=${encodeURIComponent(clinic.address)}&output=embed`}
+                  src={`https://www.google.com/maps?q=${encodeURIComponent(displayAddress)}&output=embed`}
                 ></iframe>
               </div>
-              <p className="text-gray-700 mt-4">{clinic.address}</p>
+              <p className="text-gray-700 mt-4">{displayAddress}</p>
             </div>
           </div>
 

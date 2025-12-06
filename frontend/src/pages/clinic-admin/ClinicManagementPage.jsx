@@ -14,7 +14,6 @@ export default function ClinicManagementPage() {
   const [editedClinic, setEditedClinic] = useState(null);
   const [newService, setNewService] = useState("");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [currentDocImageIndex, setCurrentDocImageIndex] = useState(0);
   
   // Full-screen image viewer
   const [viewerImages, setViewerImages] = useState(null);
@@ -26,9 +25,8 @@ export default function ClinicManagementPage() {
         if (data) {
           setClinic(data); 
           setEditedClinic(data); 
-          // Reset image indices when data loads
+          // Reset image index when data loads
           setCurrentImageIndex(0);
-          setCurrentDocImageIndex(0);
         }
       })
       .catch(err => console.error("Failed to fetch clinic data:", err))
@@ -84,9 +82,25 @@ export default function ClinicManagementPage() {
   };
 
   const handleInputChange = (field, value) => setEditedClinic(prev => ({ ...prev, [field]: value }));
-  const handleOperatingHoursChange = (day, value) => setEditedClinic(prev => ({ ...prev, operating_hours: { ...prev.operating_hours, [day]: value } }));
-  const addService = () => { if (newService.trim()) { setEditedClinic(prev => ({ ...prev, services: [...(prev.services || []), newService.trim()] })); setNewService(""); } };
-  const removeService = (index) => setEditedClinic(prev => ({ ...prev, services: prev.services.filter((_, i) => i !== index) }));
+  const addService = () => { 
+    if (newService.trim()) { 
+      const currentServices = currentData?.service || currentData?.services || [];
+      setEditedClinic(prev => ({ 
+        ...prev, 
+        service: Array.isArray(currentServices) ? [...currentServices, newService.trim()] : [newService.trim()],
+        services: Array.isArray(currentServices) ? [...currentServices, newService.trim()] : [newService.trim()]
+      })); 
+      setNewService(""); 
+    } 
+  };
+  const removeService = (index) => {
+    const currentServices = currentData?.service || currentData?.services || [];
+    setEditedClinic(prev => ({ 
+      ...prev, 
+      service: currentServices.filter((_, i) => i !== index),
+      services: currentServices.filter((_, i) => i !== index)
+    }));
+  };
   
   // Handle clinic image upload
   const handleClinicImageUpload = (e, imageType) => {
@@ -125,9 +139,6 @@ export default function ClinicManagementPage() {
     if (imageType === 'clinic_images' && currentImageIndex >= ((editedClinic?.clinic_images?.length || 1) - 1)) {
       setCurrentImageIndex(Math.max(0, currentImageIndex - 1));
     }
-    if (imageType === 'document_images' && currentDocImageIndex >= ((editedClinic?.document_images?.length || 1) - 1)) {
-      setCurrentDocImageIndex(Math.max(0, currentDocImageIndex - 1));
-    }
   };
 
   const nextImage = () => {
@@ -154,7 +165,52 @@ export default function ClinicManagementPage() {
   const currentData = isEditing ? editedClinic : clinic;
   
   const InputField = ({ label, icon: Icon, field, type = "text", rows }) => {
-    const isEmpty = !currentData?.[field] || currentData[field].trim() === '';
+    // Special handling for address field
+    if (field === 'address') {
+      const address = currentData?.address;
+      let addressString = '';
+      
+      if (typeof address === 'string') {
+        addressString = address;
+      } else if (address && typeof address === 'object') {
+        const parts = [
+          address.street,
+          address.barangay,
+          address.city,
+          address.province,
+          address.zipcode
+        ].filter(Boolean);
+        addressString = parts.join(', ');
+        if (address.landmark) {
+          addressString += ` (${address.landmark})`;
+        }
+      }
+      
+      const isEmpty = !addressString || addressString.trim() === '';
+      
+      return (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            {Icon && <Icon className="inline mr-2 text-primary" />}{label}
+          </label>
+          {isEditing ? (
+            <textarea 
+              value={addressString} 
+              onChange={(e) => handleInputChange(field, e.target.value)} 
+              rows={rows} 
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent" 
+              placeholder={`Enter ${label.toLowerCase()}...`} 
+            />
+          ) : (
+            <p className={isEmpty ? "text-gray-400 italic" : "text-gray-900"}>
+              {isEmpty ? `No ${label.toLowerCase()} provided` : addressString}
+            </p>
+          )}
+        </div>
+      );
+    }
+    
+    const isEmpty = !currentData?.[field] || (typeof currentData[field] === 'string' && currentData[field].trim() === '');
     return (
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -175,16 +231,22 @@ export default function ClinicManagementPage() {
     );
   };
 
-  const OperatingHourRow = ({ day, field, placeholder }) => (
-    <div className="flex items-center justify-between py-3 border-b border-gray-100">
-      <span className="font-medium text-gray-700">{day}</span>
-      {isEditing ? (
-        <input type="text" value={currentData?.operating_hours?.[field]} onChange={(e) => handleOperatingHoursChange(field, e.target.value)} placeholder={placeholder} className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" />
-      ) : (
-        <span className="text-gray-900">{currentData?.operating_hours?.[field]}</span>
-      )}
-    </div>
-  );
+  // Helper function to format time
+  const formatTime = (time) => {
+    if (!time) return '';
+    // If time is in HH:MM format, convert to 12-hour format
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
+  // Helper function to get schedule for a day
+  const getScheduleForDay = (dayOfWeek) => {
+    if (!currentData?.schedules || !Array.isArray(currentData.schedules)) return null;
+    return currentData.schedules.find(s => s.day_of_week === dayOfWeek);
+  };
 
   return (
     <main>
@@ -327,112 +389,107 @@ export default function ClinicManagementPage() {
                 ) : null}
               </div>
 
-              {/* Document Images Carousel */}
-              {((currentData?.document_images && currentData.document_images.length > 0) || isEditing) && (
+              {/* Required Documents - Display Only (Not Editable) */}
+              {(currentData?.secdti_url || currentData?.mayor_permit_url || currentData?.bir_url) && (
                 <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
                   <div className="p-4 border-b border-gray-200 bg-blue-50">
                     <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                       <FaImage className="text-blue-500" />
-                      Documents
+                      Required Documents
                     </h3>
+                    <p className="text-xs text-gray-500 mt-1">Documents cannot be edited here. Use Edit Clinic page to update.</p>
                   </div>
-                  <div className="relative aspect-square">
-                    {currentData?.document_images && currentData.document_images.length > 0 ? (
-                      <>
-                        <DriveImage 
-                          image={currentData.document_images[currentDocImageIndex]} 
-                          alt={currentData.document_images[currentDocImageIndex]?.name || 'Document image'} 
-                          className="w-full h-full object-cover" 
-                        />
-                        {currentData.document_images.length > 1 && (
-                          <>
-                            <button 
-                              onClick={() => setCurrentDocImageIndex((prev) => 
-                                (prev - 1 + currentData.document_images.length) % currentData.document_images.length
-                              )} 
-                              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition"
+                  <div className="p-4 space-y-4">
+                    {/* SEC/DTI Certificate */}
+                    {currentData?.secdti_url && (
+                      <div className="border border-blue-200 rounded-xl overflow-hidden">
+                        <div className="p-3 bg-blue-50 border-b border-blue-200">
+                          <h4 className="text-sm font-semibold text-gray-900">SEC/DTI Certificate</h4>
+                        </div>
+                        <div 
+                          className="relative aspect-video bg-blue-50 group cursor-pointer"
+                          onClick={() => openImageViewer([currentData.secdti_url], 0)}
+                        >
+                          <DriveImage 
+                            image={currentData.secdti_url} 
+                            alt="SEC/DTI Certificate"
+                            className="w-full h-full object-cover" 
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openImageViewer([currentData.secdti_url], 0);
+                              }}
+                              className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-lg transition opacity-0 group-hover:opacity-100"
                             >
-                              <FaChevronLeft />
+                              <FaExpand />
                             </button>
-                            <button 
-                              onClick={() => setCurrentDocImageIndex((prev) => 
-                                (prev + 1) % currentData.document_images.length
-                              )} 
-                              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition"
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Mayor's Permit */}
+                    {currentData?.mayor_permit_url && (
+                      <div className="border border-blue-200 rounded-xl overflow-hidden">
+                        <div className="p-3 bg-blue-50 border-b border-blue-200">
+                          <h4 className="text-sm font-semibold text-gray-900">Mayor's Permit</h4>
+                        </div>
+                        <div 
+                          className="relative aspect-video bg-blue-50 group cursor-pointer"
+                          onClick={() => openImageViewer([currentData.mayor_permit_url], 0)}
+                        >
+                          <DriveImage 
+                            image={currentData.mayor_permit_url} 
+                            alt="Mayor's Permit"
+                            className="w-full h-full object-cover" 
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openImageViewer([currentData.mayor_permit_url], 0);
+                              }}
+                              className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-lg transition opacity-0 group-hover:opacity-100"
                             >
-                              <FaChevronRight />
+                              <FaExpand />
                             </button>
-                            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
-                              {currentDocImageIndex + 1} / {currentData.document_images.length}
-                            </div>
-                          </>
-                        )}
-                      </>
-                    ) : (
-                      <div className="w-full h-full bg-blue-50 flex flex-col items-center justify-center">
-                        <FaImage className="text-blue-200 text-6xl mb-2" />
-                        <p className="text-blue-300 text-sm">No documents uploaded</p>
-                        {isEditing && (
-                          <label className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg cursor-pointer hover:bg-blue-600 transition flex items-center gap-2">
-                            <FaCamera />
-                            Add Documents
-                            <input
-                              type="file"
-                              accept="image/*"
-                              multiple
-                              onChange={(e) => handleClinicImageUpload(e, 'document_images')}
-                              className="hidden"
-                            />
-                          </label>
-                        )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* BIR Certificate */}
+                    {currentData?.bir_url && (
+                      <div className="border border-blue-200 rounded-xl overflow-hidden">
+                        <div className="p-3 bg-blue-50 border-b border-blue-200">
+                          <h4 className="text-sm font-semibold text-gray-900">BIR Certificate</h4>
+                        </div>
+                        <div 
+                          className="relative aspect-video bg-blue-50 group cursor-pointer"
+                          onClick={() => openImageViewer([currentData.bir_url], 0)}
+                        >
+                          <DriveImage 
+                            image={currentData.bir_url} 
+                            alt="BIR Certificate"
+                            className="w-full h-full object-cover" 
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openImageViewer([currentData.bir_url], 0);
+                              }}
+                              className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-lg transition opacity-0 group-hover:opacity-100"
+                            >
+                              <FaExpand />
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
-                  {(currentData?.document_images && currentData.document_images.length > 0) || isEditing ? (
-                    <div className="p-4 bg-blue-50 border-t border-blue-200">
-                      <div className="flex gap-2 overflow-x-auto pb-2">
-                        {(currentData?.document_images || []).map((image, idx) => (
-                          <div key={image?.id || idx} className="relative shrink-0">
-                            <DriveImage 
-                              image={image} 
-                              alt={image?.name || `Document ${idx + 1}`}
-                              className={`w-16 h-16 object-cover rounded-lg cursor-pointer transition ${
-                                idx === currentDocImageIndex ? 'ring-2 ring-blue-500' : 'opacity-60 hover:opacity-100'
-                              }`}
-                            />
-                            <div 
-                              onClick={() => setCurrentDocImageIndex(idx)}
-                              className="absolute inset-0 cursor-pointer"
-                            />
-                            {isEditing && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  removeClinicImage('document_images', idx);
-                                }}
-                                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition shadow-md z-10"
-                              >
-                                <FaTimes className="text-xs" />
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                        {isEditing && (
-                          <label className="shrink-0 w-16 h-16 border-2 border-dashed border-blue-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-blue-500 transition">
-                            <FaPlus className="text-blue-400" />
-                            <input
-                              type="file"
-                              accept="image/*"
-                              multiple
-                              onChange={(e) => handleClinicImageUpload(e, 'document_images')}
-                              className="hidden"
-                            />
-                          </label>
-                        )}
-                      </div>
-                    </div>
-                  ) : null}
                 </div>
               )}
 
@@ -480,35 +537,57 @@ export default function ClinicManagementPage() {
                 <h2 className="text-xl font-bold text-gray-900 mb-6">
                   <FaClock className="inline mr-2 text-primary" />Operating Hours
                 </h2>
-                <div className="space-y-4">
-                  <OperatingHourRow day="Monday - Friday" field="weekdays" placeholder="9:00 AM - 6:00 PM" />
-                  <OperatingHourRow day="Saturday" field="saturday" placeholder="9:00 AM - 4:00 PM" />
-                  <OperatingHourRow day="Sunday" field="sunday" placeholder="Closed" />
+                <div className="space-y-3">
+                  {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((dayOfWeek) => {
+                    const schedule = getScheduleForDay(dayOfWeek);
+                    const dayName = dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1);
+                    const isClosed = schedule?.is_closed || false;
+                    const openTime = schedule?.open_time ? formatTime(schedule.open_time) : '';
+                    const closeTime = schedule?.close_time ? formatTime(schedule.close_time) : '';
+                    
+                    return (
+                      <div key={dayOfWeek} className="flex items-center justify-between py-3 border-b border-gray-100">
+                        <span className="font-medium text-gray-700">{dayName}</span>
+                        {isClosed ? (
+                          <span className="text-gray-500">Closed</span>
+                        ) : openTime && closeTime ? (
+                          <span className="text-gray-900">{openTime} - {closeTime}</span>
+                        ) : (
+                          <span className="text-gray-400 italic">Not set</span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
               <div className="bg-white rounded-2xl border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold text-gray-900">Services Offered</h2>
-                  {isEditing && <span className="text-sm text-gray-600">{currentData?.services?.length || 0} services</span>}
+                  {isEditing && <span className="text-sm text-gray-600">{(currentData?.service || currentData?.services || []).length} services</span>}
                 </div>
                 <div className="space-y-4">
-                  {currentData?.services && currentData.services.length > 0 ? (
-                    <div className="flex flex-wrap gap-3">
-                      {currentData.services.map((service, idx) => (
-                        <div key={idx} className="group relative px-4 py-2 bg-blue-50 text-primary/80 rounded-xl border border-blue-200 font-medium">
-                          {service}
-                          {isEditing && (
-                            <button onClick={() => removeService(idx)} className="ml-2 text-red-500 hover:text-red-700">
-                              <FaTimes className="text-sm" />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-400 italic text-center py-4">No services added yet</p>
-                  )}
+                  {(() => {
+                    const services = currentData?.service || currentData?.services || [];
+                    const servicesArray = Array.isArray(services) ? services : (typeof services === 'string' ? JSON.parse(services || '[]') : []);
+                    
+                    return servicesArray.length > 0 ? (
+                      <div className="flex flex-wrap gap-3">
+                        {servicesArray.map((service, idx) => (
+                          <div key={idx} className="group relative px-4 py-2 bg-blue-50 text-primary/80 rounded-xl border border-blue-200 font-medium">
+                            {service}
+                            {isEditing && (
+                              <button onClick={() => removeService(idx)} className="ml-2 text-red-500 hover:text-red-700">
+                                <FaTimes className="text-sm" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-400 italic text-center py-4">No services added yet</p>
+                    );
+                  })()}
                   {isEditing && (
                     <div className="flex gap-2 pt-4 border-t border-gray-200">
                       <input type="text" value={newService} onChange={(e) => setNewService(e.target.value)} onKeyPress={(e) => e.key === "Enter" && addService()} placeholder="Add new service..." className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent" />
