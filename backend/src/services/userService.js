@@ -11,7 +11,7 @@ export const registerUser = async (userData) => {
   // Parse the user JSON sent in form-data
   const user = JSON.parse(body.user);
   console.log("Parsed user data: ", user);
-  const { full_name, email, password, user_type, address, clinic_name } = user;
+  const { first_name, last_name, email, password, user_type, address, clinic_name } = user;
   // Check if email already exists
   const existing = await User.findOne({ where: { email } });
   if (existing) throw new Error("Email already registered");
@@ -43,7 +43,8 @@ export const registerUser = async (userData) => {
   // Create user
   try {
     const newUser = await User.create({
-      full_name,
+      first_name,
+      last_name,
       email,
       password_hash: hashedPassword,
       user_type,

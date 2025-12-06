@@ -9,7 +9,7 @@ const VetProfessional = sequelize.define("VetProfessional", {
     primaryKey: true,
     references: { model: User, key: "id" },
   },
-//   license_number: { type: DataTypes.STRING, allowNull: false },
+  license_number: { type: DataTypes.STRING, allowNull: false },
   specialization: DataTypes.STRING,
   clinic_admin_id: { 
     type: DataTypes.INTEGER,

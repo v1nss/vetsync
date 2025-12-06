@@ -19,7 +19,9 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [user, setUser] = useState({
-    full_name: "",
+    // full_name: "",
+    first_name: "",
+    last_name: "",
     email: "",
     user_type: "",
     clinic_name: "",
@@ -67,8 +69,12 @@ export default function RegisterPage() {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!user.full_name.trim() || user.full_name.trim().length < 2) 
-      newErrors.full_name = "Full name must be at least 2 characters";
+    // if (!user.full_name.trim() || user.full_name.trim().length < 2) 
+    //   newErrors.full_name = "Full name must be at least 2 characters";
+    if (!user.first_name.trim() || user.first_name.trim().length < 2) 
+      newErrors.first_name = "First name must be at least 2 characters";
+    if (!user.last_name.trim() || user.last_name.trim().length < 2) 
+      newErrors.last_name = "Last name must be at least 2 characters";
     if (!user.email.trim()) newErrors.email = "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) 
       newErrors.email = "Invalid email format";
@@ -135,7 +141,9 @@ export default function RegisterPage() {
     setConfirmPassword("");
     setErrors({});
     setUser({
-      full_name: "",
+      // full_name: "",
+      first_name: "",
+      last_name: "",
       email: "",
       user_type: "",
       clinic_name: "",
@@ -249,7 +257,7 @@ export default function RegisterPage() {
                 )}
               </div>
 
-              <div className="mb-4">
+              {/* <div className="mb-4">
                 <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="name">
                   Full Name
                 </label>
@@ -263,6 +271,38 @@ export default function RegisterPage() {
                   value={user.full_name}
                 />
                 {errors.full_name && ( <p className="text-red-500 text-xs mt-1">{errors.full_name}</p> )}
+              </div> */}
+
+              <div className="mb-4">
+                <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="first-name">
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  id="first-name"
+                  className={`focus:outline-none w-full text-sm px-4 py-3 border rounded-2xl ${ errors.full_name ? 'border-red-500' : 'border-gray-300' }`}
+                  placeholder="Enter your first name"
+                  onChange={handleOnChange}
+                  name="first_name"
+                  value={user.first_name}
+                />
+                {errors.first_name && ( <p className="text-red-500 text-xs mt-1">{errors.first_name}</p> )}
+              </div>
+
+              <div className="mb-4">
+                <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="last-name">
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  id="last-name"
+                  className={`focus:outline-none w-full text-sm px-4 py-3 border rounded-2xl ${ errors.full_name ? 'border-red-500' : 'border-gray-300' }`}
+                  placeholder="Enter your last name"
+                  onChange={handleOnChange}
+                  name="last_name"
+                  value={user.last_name}
+                />
+                {errors.last_name && ( <p className="text-red-500 text-xs mt-1">{errors.last_name}</p> )}
               </div>
 
               <div className="mb-4">

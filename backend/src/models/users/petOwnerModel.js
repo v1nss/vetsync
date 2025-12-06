@@ -9,9 +9,6 @@ const PetOwner = sequelize.define("PetOwner", {
     references: { model: User, key: "id" },
   },
   address: DataTypes.TEXT,
-//   pet_name: DataTypes.STRING,
-//   pet_type: DataTypes.STRING, 
-//  should create pets table for better database design and to support one -> many relation for petOwner and pets
 }, {
   tableName: "pet_owners",
   timestamps: false,

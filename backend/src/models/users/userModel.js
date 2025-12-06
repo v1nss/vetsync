@@ -5,7 +5,8 @@ const User = sequelize.define("User", {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   email: { type: DataTypes.STRING, unique: true, allowNull: false },
   password_hash: { type: DataTypes.STRING, allowNull: false },
-  full_name: { type: DataTypes.STRING, allowNull: false },
+  first_name: { type: DataTypes.STRING, allowNull: false },
+  last_name: { type: DataTypes.STRING, allowNull: false },
   user_type: {
     type: DataTypes.ENUM("pet_owner", "vet_professional", "clinic_admin", "system_admin"),
     allowNull: false,
