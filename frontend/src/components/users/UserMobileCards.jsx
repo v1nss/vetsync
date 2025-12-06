@@ -25,15 +25,15 @@ export default function UserMobileCards({ users, onViewDetails }) {
                   {user?.profile_image_url ? (
                       <DriveImage
                         image={user.profile_image_url}
-                        alt={user.full_name}
+                        alt={user.first_name}
                         className="w-full h-full object-cover rounded-full"
                         fallbackIcon={false}
                       />
                     ) : null}
-                    {!user?.profile_image_url && user.full_name.charAt(0)}
+                    {!user?.profile_image_url && user.first_name.charAt(0)}
                 </div>
                 <div>
-                  <div className="font-semibold text-gray-900">{user.full_name}</div>
+                  <div className="font-semibold text-gray-900">{user.first_name} {user.last_name}</div>
                   <div className="text-xs text-gray-500">{user.email}</div>
                 </div>
               </div>

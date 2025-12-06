@@ -24,15 +24,15 @@ export default function UserDetailsModal({ user, onClose }) {
               {user?.profile_image_url ? (
                   <DriveImage
                     image={user.profile_image_url}
-                    alt={user.full_name}
+                    alt={user.first_name}
                     className="w-full h-full object-cover rounded-full"
                     fallbackIcon={false}
                   />
                 ) : null}
-                {!user?.profile_image_url && user.full_name.charAt(0)}
+                {!user?.profile_image_url && user.first_name.charAt(0)}
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-900">{user.full_name}</h3>
+              <h3 className="text-2xl font-bold text-gray-900">{user.first_name} {user.last_name}</h3>
               <p className="text-gray-600">{user.email}</p>
             </div>
           </div>
