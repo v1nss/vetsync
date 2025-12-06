@@ -4,7 +4,8 @@ import DriveImage from "../DriveImage";
 
 export default function AddVetModal({ isOpen, onClose, onSubmit, vet }) {
   const [formData, setFormData] = useState({
-    name: "",
+    first_name: "",
+    last_name: "",
     email: "",
     password: "",
     specialization: "",
@@ -18,7 +19,8 @@ export default function AddVetModal({ isOpen, onClose, onSubmit, vet }) {
   useEffect(() => {
     if (vet) {
       setFormData({
-        name: vet.name || vet.full_name || "",
+        first_name: vet.first_name || "",
+        last_name: vet.last_name || "",
         email: vet.email || "",
         password: "",
         specialization: vet.specialization || "",
@@ -33,7 +35,7 @@ export default function AddVetModal({ isOpen, onClose, onSubmit, vet }) {
       setProfilePreview(null);
       setProfilePicture(null);
     } else {
-      setFormData({ name: "", email: "", password: "", specialization: "", license_number: "" });
+      setFormData({ first_name: "", last_name: "", email: "", password: "", specialization: "", license_number: "" });
       setProfilePicture(null);
       setProfilePreview(null);
       setExistingProfileImage(null);
@@ -135,18 +137,29 @@ export default function AddVetModal({ isOpen, onClose, onSubmit, vet }) {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
             <input
               type="text"
-              name="name"
-              value={formData.name}
+              name="first_name"
+              value={formData.first_name}
               onChange={handleChange}
               required
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-primary"
-              placeholder="Dr. John Doe"
+              placeholder="John"
             />
           </div>
-
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+            <input
+              type="text"
+              name="last_name"
+              value={formData.last_name}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-primary"
+              placeholder="Doe"
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
             <input

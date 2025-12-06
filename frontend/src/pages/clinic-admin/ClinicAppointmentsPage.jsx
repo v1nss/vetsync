@@ -103,7 +103,7 @@ export default function ClinicAppointmentsPage() {
             pet_birthdate: apt.pet?.birthdate || null,
             pet_gender: apt.pet?.gender || null,
             pet_id: apt.pet_id,
-            owner_name: apt.owner?.User?.full_name || 'N/A',
+            owner_name: apt.owner?.User?.first_name + " " + apt.owner?.User?.last_name || 'N/A',
             owner_email: apt.owner?.User?.email || 'N/A',
             owner_phone: apt.owner?.User?.phone_number || 'N/A',
             date: apt.date,
@@ -112,7 +112,7 @@ export default function ClinicAppointmentsPage() {
             status: apt.status,
             notes: apt.notes || '',
             assigned_vet: apt.vet_professional_id ? 
-              vetsData.find(v => v.user_id === apt.vet_professional_id)?.User?.full_name: null,
+              vetsData.find(v => v.user_id === apt.vet_professional_id)?.User?.first_name: null,
             vet_id: apt.vet_professional_id
           }));
           
@@ -195,7 +195,7 @@ export default function ClinicAppointmentsPage() {
           pet_birthdate: apt.pet?.birthdate || null,
           pet_gender: apt.pet?.gender || null,
           pet_id: apt.pet_id,
-          owner_name: apt.owner?.User?.full_name || 'N/A',
+          owner_name: apt.owner?.User?.first_name + " " + apt.owner?.User?.last_name || 'N/A',
           owner_email: apt.owner?.User?.email || 'N/A',
           owner_phone: apt.owner?.User?.phone_number || 'N/A',
           date: apt.date,
@@ -204,7 +204,7 @@ export default function ClinicAppointmentsPage() {
           status: apt.status,
           notes: apt.notes || '',
           assigned_vet: apt.vet_professional_id ? 
-            vets.find(v => v.user_id === apt.vet_professional_id)?.User?.full_name: null,
+            vets.find(v => v.user_id === apt.vet_professional_id)?.User?.first_name: null,
           vet_id: apt.vet_professional_id
         }));
         setAppointments(transformedAppointments);
@@ -256,7 +256,7 @@ export default function ClinicAppointmentsPage() {
           pet_birthdate: apt.pet?.birthdate || null,
           pet_gender: apt.pet?.gender || null,
           pet_id: apt.pet_id,
-          owner_name: apt.owner?.User?.full_name || 'N/A',
+          owner_name: apt.owner?.User?.first_name + " " + apt.owner?.User?.last_name || 'N/A',
           owner_email: apt.owner?.User?.email || 'N/A',
           owner_phone: apt.owner?.User?.phone_number || 'N/A',
           date: apt.date,
@@ -265,7 +265,7 @@ export default function ClinicAppointmentsPage() {
           status: apt.status,
           notes: apt.notes || '',
           assigned_vet: apt.vet_professional_id ? 
-            vets.find(v => v.user_id === apt.vet_professional_id)?.User?.full_name || 'Assigned' : null,
+            vets.find(v => v.user_id === apt.vet_professional_id)?.User?.first_name || 'Assigned' : null,
           vet_id: apt.vet_professional_id
         }));
         setAppointments(transformedAppointments);
@@ -293,7 +293,7 @@ export default function ClinicAppointmentsPage() {
         });
       } else {
         const assignedVet = vets.find(v => (v.user_id || v.id) === vetId);
-        const vetName = assignedVet?.name || assignedVet?.User?.full_name || 'Veterinarian';
+        const vetName = assignedVet?.name || assignedVet?.User?.first_name || 'Veterinarian';
         setNotification({
           isOpen: true,
           type: 'success',
@@ -338,7 +338,7 @@ export default function ClinicAppointmentsPage() {
           pet_birthdate: apt.pet?.birthdate || null,
           pet_gender: apt.pet?.gender || null,
           pet_id: apt.pet_id,
-          owner_name: apt.owner?.User?.full_name || 'N/A',
+          owner_name: apt.owner?.User?.first_name + " " + apt.owner?.User?.last_name || 'N/A',
           owner_email: apt.owner?.User?.email || 'N/A',
           owner_phone: apt.owner?.User?.phone_number || 'N/A',
           date: apt.date,

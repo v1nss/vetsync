@@ -81,7 +81,7 @@ export const fetchVetProfessionalsByClinic = async (req, res) => {
       include: [
         {
           model: User,
-          attributes: ["id", "full_name", "email", "phone_number", "profile_image_url"]
+          attributes: ["id", "first_name", "last_name", "email", "phone_number", "profile_image_url"]
         }
       ]
     });

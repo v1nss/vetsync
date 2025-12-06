@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 
 export default function AssignVetModal({ isOpen, onClose, appointment, vets, onAssign }) {
   const [selectedVet, setSelectedVet] = useState("");
-
   useEffect(() => {
     if (isOpen && appointment) {
       setSelectedVet(appointment.vet_id || "");
@@ -40,7 +39,7 @@ export default function AssignVetModal({ isOpen, onClose, appointment, vets, onA
             <option value="">Choose a vet...</option>
             {vets.map((vet) => (
               <option key={vet.user_id} value={vet.user_id}>
-                {vet.User?.full_name} - {vet.specialization}
+                Dr. {vet.User?.first_name} - {vet.specialization}
               </option>
             ))}
           </select>

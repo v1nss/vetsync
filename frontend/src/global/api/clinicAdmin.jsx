@@ -57,16 +57,7 @@ export const addVetProfessional = async (vetData, profilePicture) => {
   try {
     const formData = new FormData();
     
-    // Prepare vet data
-    const dataToSend = {
-      full_name: vetData.name,
-      email: vetData.email,
-      password: vetData.password,
-      specialization: vetData.specialization,
-      license_number: vetData.license_number,
-    };
-    
-    formData.append('user', JSON.stringify(dataToSend));
+    formData.append('user', JSON.stringify(vetData));
     
     // Append profile picture if provided
     if (profilePicture) {

@@ -70,8 +70,8 @@ export const registerVetProfessional = async (req, adminUserId) => {
   
   // Parse the user JSON sent in form-data
   const data = body.user ? JSON.parse(body.user) : body;
-  const { full_name, email, password, specialization, license_number } = data;
-
+  const { first_name, last_name, email, password, specialization, license_number } = data;
+  console.log("Registering vet professional with data:", data);
   const admin = await ClinicAdmin.findOne({ where: { user_id: adminUserId } });
 
   if (!admin)
@@ -104,7 +104,8 @@ export const registerVetProfessional = async (req, adminUserId) => {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const user = await User.create({
-    full_name,
+    first_name, 
+    last_name, 
     email,
     password_hash: hashedPassword,
     user_type: "vet_professional",
@@ -115,6 +116,7 @@ export const registerVetProfessional = async (req, adminUserId) => {
     user_id: user.id,
     clinic_admin_id: adminUserId,
     specialization,
+    license_number,
   });
 
   return user;

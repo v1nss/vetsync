@@ -78,7 +78,7 @@ export default function AppointmentCard({ appointment, onStatusChange, onComplet
             <div className="flex items-center gap-2 text-sm">
               <FaUserMd className="text-green-600" />
               <span className="text-gray-600">
-                Assigned to: <span className="font-medium text-gray-900">{appointment.assigned_vet}</span>
+                Assigned to: <span className="font-medium text-gray-900">Dr. {appointment.assigned_vet}</span>
               </span>
             </div>
           ) : (

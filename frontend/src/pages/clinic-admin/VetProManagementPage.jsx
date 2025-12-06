@@ -37,7 +37,8 @@ export default function VetProManagementPage() {
       
       const transformedVets = vets.map(vet => ({
         id: vet.user_id,
-        name: vet.User.full_name,
+        first_name: vet.User.first_name,
+        last_name: vet.User.last_name,
         email: vet.User.email,
         specialization: vet.specialization,
         license_number: vet.license_number || 'N/A',
@@ -205,7 +206,7 @@ export default function VetProManagementPage() {
                     {vets.map((vet) => (
                       <tr key={vet.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="font-medium text-gray-900">{vet.name}</div>
+                          <div className="font-medium text-gray-900">{vet.first_name} {vet.last_name}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-600">{vet.email}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-600">{vet.specialization}</td>

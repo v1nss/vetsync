@@ -172,7 +172,7 @@ export default function AppointmentDetailsModal({ isOpen, onClose, appointment }
                   {appointment.assigned_vet && (
                     <div>
                       <label className="text-sm font-medium text-gray-600">Assigned Veterinarian</label>
-                      <p className="text-gray-900 font-medium">{appointment.assigned_vet}</p>
+                      <p className="text-gray-900 font-medium">Dr. {appointment.assigned_vet}</p>
                     </div>
                   )}
                 </div>
