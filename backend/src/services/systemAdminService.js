@@ -9,7 +9,7 @@ import ClinicSchedule from '../models/clinicScheduleModel.js';
 
 export const registerSystemAdmin = async (adminData) => {
 
-  const { full_name, email, password } = adminData;
+  const { first_name, last_name, email, password } = adminData;
 
     const existing = await User.findOne({ where: { email } });
     if (existing) throw new Error('Email already registered');
@@ -18,7 +18,8 @@ export const registerSystemAdmin = async (adminData) => {
     
     try {
       const user = await User.create({  
-        full_name,
+        first_name,
+        last_name,
         email,
         password_hash: hashedPassword, 
         user_type: 'system_admin',
@@ -55,7 +56,7 @@ export const getAllClinics = async (status) => {
         {
           model: User,
           as: "owner",
-          attributes: ["id", "full_name", "email"],
+          attributes: ["id", "first_name", "last_name", "email"],
         },
         { model: ClinicAddress, as: "address" },
         { model: ClinicSchedule, as: "schedules" },
@@ -78,11 +79,13 @@ export const getAllClinics = async (status) => {
         description: c.description,
         status: c.status,
         clinic_images: c.clinic_images || [],
-        document_images: c.document_images || [],
+        secdti_url: c.secdti_url,
+        mayor_permit_url: c.mayor_permit_url,
+        bir_url: c.bir_url,
         owner: c.owner
           ? {
               id: c.owner.id,
-              name: c.owner.full_name,
+              name: c.owner.first_name + ' ' + c.owner.last_name,
               email: c.owner.email,
             }
           : null,

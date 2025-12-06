@@ -7,8 +7,6 @@ import ImageViewerModal from '../ImageViewerModal';
 export default function ReviewModal({ clinic, onClose, onStatusUpdate, loading, getStatusBadge }) {
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [currentClinicImageIndex, setCurrentClinicImageIndex] = useState(0);
-  const [currentDocImageIndex, setCurrentDocImageIndex] = useState(0);
-  
   // Full-screen image viewer states
   const [viewerImages, setViewerImages] = useState(null);
   const [viewerIndex, setViewerIndex] = useState(null);
@@ -73,38 +71,52 @@ export default function ReviewModal({ clinic, onClose, onStatusUpdate, loading, 
                     Clinic Photos ({clinic.clinic_images.length})
                   </h3>
                   <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-                    <div className="relative aspect-video bg-gray-100 group cursor-pointer">
+                    <div 
+                      className="relative aspect-video bg-gray-100 group cursor-pointer"
+                      onClick={() => openImageViewer(clinic.clinic_images, currentClinicImageIndex)}
+                    >
                       <DriveImage 
                         image={clinic.clinic_images[currentClinicImageIndex]} 
                         alt={clinic.clinic_images[currentClinicImageIndex]?.name || `Clinic image ${currentClinicImageIndex + 1}`}
                         className="w-full h-full object-cover" 
                       />
-                      {/* Full Screen Button */}
-                      <button
-                        onClick={() => openImageViewer(clinic.clinic_images, currentClinicImageIndex)}
-                        className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-lg transition opacity-0 group-hover:opacity-100"
-                      >
-                        <FaExpand />
-                      </button>
+                      {/* Full Screen Overlay */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openImageViewer(clinic.clinic_images, currentClinicImageIndex);
+                          }}
+                          className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-lg transition opacity-0 group-hover:opacity-100"
+                        >
+                          <FaExpand />
+                        </button>
+                      </div>
                       {clinic.clinic_images.length > 1 && (
                         <>
                           <button 
-                            onClick={() => setCurrentClinicImageIndex((prev) => 
-                              (prev - 1 + clinic.clinic_images.length) % clinic.clinic_images.length
-                            )} 
-                            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCurrentClinicImageIndex((prev) => 
+                                (prev - 1 + clinic.clinic_images.length) % clinic.clinic_images.length
+                              );
+                            }} 
+                            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition z-10"
                           >
                             <FaChevronLeft />
                           </button>
                           <button 
-                            onClick={() => setCurrentClinicImageIndex((prev) => 
-                              (prev + 1) % clinic.clinic_images.length
-                            )} 
-                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCurrentClinicImageIndex((prev) => 
+                                (prev + 1) % clinic.clinic_images.length
+                              );
+                            }} 
+                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition z-10"
                           >
                             <FaChevronRight />
                           </button>
-                          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm pointer-events-none">
                             {currentClinicImageIndex + 1} / {clinic.clinic_images.length}
                           </div>
                         </>
@@ -133,73 +145,104 @@ export default function ReviewModal({ clinic, onClose, onStatusUpdate, loading, 
                 </div>
               )}
 
-              {/* Document Images Carousel */}
-              {clinic.document_images && clinic.document_images.length > 0 && (
-                <div>
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <FaFileAlt className="text-blue-500" />
-                    Required Documents ({clinic.document_images.length})
-                  </h3>
-                  <div className="bg-white border border-blue-200 rounded-2xl overflow-hidden">
-                    <div className="relative aspect-video bg-blue-50 group cursor-pointer">
-                      <DriveImage 
-                        image={clinic.document_images[currentDocImageIndex]} 
-                        alt={clinic.document_images[currentDocImageIndex]?.name || `Document ${currentDocImageIndex + 1}`}
-                        className="w-full h-full object-cover" 
-                      />
-                      {/* Full Screen Button */}
-                      <button
-                        onClick={() => openImageViewer(clinic.document_images, currentDocImageIndex)}
-                        className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-lg transition opacity-0 group-hover:opacity-100"
+              {/* Required Documents - Separate Containers */}
+              <div>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <FaFileAlt className="text-blue-500" />
+                  Required Documents
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* SEC/DTI Certificate */}
+                  {clinic.secdti_url && (
+                    <div className="bg-white border border-blue-200 rounded-2xl overflow-hidden">
+                      <div className="p-3 bg-blue-50 border-b border-blue-200">
+                        <h4 className="text-sm font-semibold text-gray-900">SEC/DTI Certificate</h4>
+                      </div>
+                      <div 
+                        className="relative aspect-video bg-blue-50 group cursor-pointer"
+                        onClick={() => openImageViewer([clinic.secdti_url], 0)}
                       >
-                        <FaExpand />
-                      </button>
-                      {clinic.document_images.length > 1 && (
-                        <>
-                          <button 
-                            onClick={() => setCurrentDocImageIndex((prev) => 
-                              (prev - 1 + clinic.document_images.length) % clinic.document_images.length
-                            )} 
-                            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition"
+                        <DriveImage 
+                          image={clinic.secdti_url} 
+                          alt="SEC/DTI Certificate"
+                          className="w-full h-full object-cover" 
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openImageViewer([clinic.secdti_url], 0);
+                            }}
+                            className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-lg transition opacity-0 group-hover:opacity-100"
                           >
-                            <FaChevronLeft />
+                            <FaExpand />
                           </button>
-                          <button 
-                            onClick={() => setCurrentDocImageIndex((prev) => 
-                              (prev + 1) % clinic.document_images.length
-                            )} 
-                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition"
-                          >
-                            <FaChevronRight />
-                          </button>
-                          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
-                            {currentDocImageIndex + 1} / {clinic.document_images.length}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                    <div className="p-3 bg-blue-50 border-t border-blue-200">
-                      <div className="flex gap-2 overflow-x-auto pb-1">
-                        {clinic.document_images.map((image, idx) => (
-                          <div 
-                            key={image?.id || idx} 
-                            onClick={() => setCurrentDocImageIndex(idx)}
-                            className="shrink-0"
-                          >
-                            <DriveImage 
-                              image={image} 
-                              alt={image?.name || `Doc thumbnail ${idx + 1}`}
-                              className={`w-16 h-16 object-cover rounded-lg cursor-pointer transition ${
-                                idx === currentDocImageIndex ? 'ring-2 ring-blue-500' : 'opacity-60 hover:opacity-100'
-                              }`}
-                            />
-                          </div>
-                        ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
+
+                  {/* Mayor's Permit */}
+                  {clinic.mayor_permit_url && (
+                    <div className="bg-white border border-blue-200 rounded-2xl overflow-hidden">
+                      <div className="p-3 bg-blue-50 border-b border-blue-200">
+                        <h4 className="text-sm font-semibold text-gray-900">Mayor's Permit</h4>
+                      </div>
+                      <div 
+                        className="relative aspect-video bg-blue-50 group cursor-pointer"
+                        onClick={() => openImageViewer([clinic.mayor_permit_url], 0)}
+                      >
+                        <DriveImage 
+                          image={clinic.mayor_permit_url} 
+                          alt="Mayor's Permit"
+                          className="w-full h-full object-cover" 
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openImageViewer([clinic.mayor_permit_url], 0);
+                            }}
+                            className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-lg transition opacity-0 group-hover:opacity-100"
+                          >
+                            <FaExpand />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* BIR Certificate */}
+                  {clinic.bir_url && (
+                    <div className="bg-white border border-blue-200 rounded-2xl overflow-hidden">
+                      <div className="p-3 bg-blue-50 border-b border-blue-200">
+                        <h4 className="text-sm font-semibold text-gray-900">BIR Certificate</h4>
+                      </div>
+                      <div 
+                        className="relative aspect-video bg-blue-50 group cursor-pointer"
+                        onClick={() => openImageViewer([clinic.bir_url], 0)}
+                      >
+                        <DriveImage 
+                          image={clinic.bir_url} 
+                          alt="BIR Certificate"
+                          className="w-full h-full object-cover" 
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openImageViewer([clinic.bir_url], 0);
+                            }}
+                            className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-lg transition opacity-0 group-hover:opacity-100"
+                          >
+                            <FaExpand />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
 
               {/* Clinic Details */}
               <div>

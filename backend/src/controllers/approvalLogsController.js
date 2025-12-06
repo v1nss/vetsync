@@ -1,4 +1,5 @@
 import ApprovalLog from "../models/approvalLogsModel.js";
+import User from "../models/users/userModel.js";
 
 export const createApprovalLog = async (req, res) => {
   try {
@@ -31,8 +32,6 @@ export const createApprovalLog = async (req, res) => {
   }
 };
 
-import User from "../models/users/userModel.js";
-
 export const getApprovalLogsByClinicId = async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -43,7 +42,7 @@ export const getApprovalLogsByClinicId = async (req, res) => {
         {
           model: User,
           as: 'User',
-          attributes: ["id", "full_name", "email"],
+          attributes: ["id", "first_name", "last_name", "email"],
         },
       ],
     });
