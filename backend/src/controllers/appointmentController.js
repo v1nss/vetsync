@@ -8,7 +8,7 @@ import {
   approveAppointment,
   completeAppointment
 } from "../services/appointmentService.js";
-import { PetOwner } from "../models/index.js";
+import { PetOwner, VetProfessional } from "../models/index.js";
 
 export const createNewAppointment = async (req, res) => {
   try {
@@ -77,6 +77,16 @@ export const getAppointmentsByOwner = async (req, res) => {
           as: "owner",
           attributes: ["address"],
 
+          include: [
+            {
+              model: User,
+              attributes: ["first_name","last_name", "email", "phone_number"]
+            }
+          ]
+        },
+        {
+          model: VetProfessional,
+          as: "vet",
           include: [
             {
               model: User,

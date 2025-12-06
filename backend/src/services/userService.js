@@ -71,7 +71,6 @@ export const registerVetProfessional = async (req, adminUserId) => {
   // Parse the user JSON sent in form-data
   const data = body.user ? JSON.parse(body.user) : body;
   const { first_name, last_name, email, password, specialization, license_number } = data;
-  console.log("Registering vet professional with data:", data);
   const admin = await ClinicAdmin.findOne({ where: { user_id: adminUserId } });
 
   if (!admin)
@@ -175,7 +174,7 @@ export const updateVetProfessional = async (req, vetUserId, adminUserId) => {
   
   // Parse the user JSON sent in form-data
   const data = body.user ? JSON.parse(body.user) : body;
-  const { full_name, email, specialization, license_number } = data;
+  const { first_name, last_name, email, specialization, license_number } = data;
 
   // Verify the admin has permission
   const admin = await ClinicAdmin.findOne({ where: { user_id: adminUserId } });
@@ -236,7 +235,8 @@ export const updateVetProfessional = async (req, vetUserId, adminUserId) => {
 
   // Update user record
   const updateData = {};
-  if (full_name) updateData.full_name = full_name;
+  if (first_name) updateData.first_name = first_name;
+  if (last_name) updateData.last_name = last_name;
   if (email) updateData.email = email;
   if (userProfile) updateData.profile_image_url = userProfile;
 
@@ -246,8 +246,7 @@ export const updateVetProfessional = async (req, vetUserId, adminUserId) => {
   if (vetProfessional) {
     const vetUpdateData = {};
     if (specialization) vetUpdateData.specialization = specialization;
-    // Note: license_number is commented out in the model, so we skip it
-    // if (license_number) vetUpdateData.license_number = license_number;
+    if (license_number) vetUpdateData.license_number = license_number;
     
     await vetProfessional.update(vetUpdateData);
   }

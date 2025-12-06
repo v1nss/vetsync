@@ -93,7 +93,8 @@ export const updateVetProfessional = async (vetId, vetData, profilePicture) => {
     
     // Prepare vet data
     const dataToSend = {
-      full_name: vetData.name,
+      first_name: vetData.first_name,
+      last_name: vetData.last_name,
       email: vetData.email,
       specialization: vetData.specialization,
       license_number: vetData.license_number,

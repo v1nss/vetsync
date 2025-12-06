@@ -132,7 +132,10 @@ export default function ViewDetailsModal({ isOpen, onClose, appointment }) {
               <div className="bg-gray-50 rounded-xl p-4 space-y-3">
                 <div>
                   <label className="text-sm font-medium text-gray-600">Name</label>
-                  <p className="text-gray-900 font-medium">{appointment.owner_name || appointment.owner?.User?.full_name || 'N/A'}</p>
+                  <p className="text-gray-900 font-medium">{appointment.owner?.User
+                    ? `${appointment.owner.User.first_name} ${appointment.owner.User.last_name}`
+                    : 'N/A'}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2 text-gray-900">
                   <FaPhone className="text-primary text-sm" />

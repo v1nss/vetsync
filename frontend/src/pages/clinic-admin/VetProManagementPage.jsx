@@ -88,7 +88,7 @@ export default function VetProManagementPage() {
       if (!selectedVet || !selectedVet.id) {
         throw new Error("No vet selected for update");
       }
-      
+      console.log("Updating vet with ID:", vetData);
       await updateVetProfessional(selectedVet.id, vetData, profilePicture);
       await fetchVets();
       setIsModalOpen(false);
@@ -99,7 +99,7 @@ export default function VetProManagementPage() {
         isOpen: true,
         type: 'success',
         title: 'Vet Updated! ✅',
-        message: `${vetData.name}'s information has been successfully updated.`
+        message: `${vetData.first_name} ${vetData.last_name}'s information has been successfully updated.`
       });
     } catch (err) {
       console.error("Failed to update vet:", err);

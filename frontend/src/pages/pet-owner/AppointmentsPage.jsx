@@ -72,8 +72,6 @@ export default function AppointmentPage() {
   const appointments = activeTab === "upcoming" ? upcomingAppointments : pastAppointments;
 
   const handleViewDetails = (appointment) => {
-    console.log(appointment.owner.User.email)
-    console.log(appointment)
     setViewDetailsModal({ isOpen: true, appointment });
   };
 
@@ -113,7 +111,6 @@ export default function AppointmentPage() {
   };
 
   const handleConfirmCancel = async (appointmentId) => {
-    console.log("Cancelling appointment with ID:", appointmentId);
     try {
       const res = await deleteAppointment(appointmentId);
       console.log("Appointment deleted successfully:", res.data);
@@ -229,8 +226,8 @@ export default function AppointmentPage() {
     // Handle vet from VetProfessional model
     const vet = appointment.vet;
     if (vet) {
-      const firstName = vet.first_name || vet.firstName || '';
-      const lastName = vet.last_name || vet.lastName || '';
+      const firstName = vet.User?.first_name || '';
+      const lastName = vet.User?.last_name || '';
       return `Dr. ${firstName} ${lastName}`.trim();
     }
     return appointment.vet_name || appointment.veterinarian || "Veterinarian";
