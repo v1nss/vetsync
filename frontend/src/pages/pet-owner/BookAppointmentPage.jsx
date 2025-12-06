@@ -25,16 +25,87 @@ export default function BookAppointmentPage() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const timeSlots = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"];
   const defaultServices = ["General Checkup", "Vaccinations", "Emergency Services", "Grooming", "Diagnostics"];
-  const services = clinic?.services || defaultServices;
+  const services = clinic?.service || clinic?.services || defaultServices;
+  
+  // Helper function to get day of week from date string
+  const getDayOfWeek = (dateString) => {
+    const date = new Date(dateString);
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    return days[date.getDay()];
+  };
 
+  // Helper function to check if a date is available (not closed)
+  const isDateAvailable = (dateString) => {
+    if (!clinic?.schedules || !Array.isArray(clinic.schedules)) return true; // Default to available if no schedule
+    
+    const dayOfWeek = getDayOfWeek(dateString);
+    const schedule = clinic.schedules.find(s => s.day_of_week === dayOfWeek);
+    
+    if (!schedule) return true; // If no schedule for this day, allow it
+    return !schedule.is_closed; // Return true if not closed
+  };
+
+  // Helper function to generate time slots in 30-minute intervals
+  const generateTimeSlots = (openTime, closeTime) => {
+    if (!openTime || !closeTime) return [];
+    
+    const slots = [];
+    const [openHour, openMin] = openTime.split(':').map(Number);
+    const [closeHour, closeMin] = closeTime.split(':').map(Number);
+    
+    let currentHour = openHour;
+    let currentMin = openMin;
+    
+    while (currentHour < closeHour || (currentHour === closeHour && currentMin < closeMin)) {
+      const timeString = `${String(currentHour).padStart(2, '0')}:${String(currentMin).padStart(2, '0')}`;
+      slots.push(timeString);
+      
+      // Add 30 minutes
+      currentMin += 30;
+      if (currentMin >= 60) {
+        currentMin = 0;
+        currentHour += 1;
+      }
+    }
+    
+    return slots;
+  };
+
+  // Get time slots for selected date
+  const getTimeSlotsForDate = (dateString) => {
+    if (!dateString || !clinic?.schedules || !Array.isArray(clinic.schedules)) {
+      // Fallback to default time slots if no schedule
+      return ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"];
+    }
+    
+    const dayOfWeek = getDayOfWeek(dateString);
+    const schedule = clinic.schedules.find(s => s.day_of_week === dayOfWeek);
+    
+    if (!schedule || schedule.is_closed || !schedule.open_time || !schedule.close_time) {
+      return []; // No available time slots if closed or no schedule
+    }
+    
+    return generateTimeSlots(schedule.open_time, schedule.close_time);
+  };
+
+  const timeSlots = appointmentDate ? getTimeSlotsForDate(appointmentDate) : [];
   useEffect(() => {
     fetchAllPetsById()
       .then(res => setPets(res || []))
       .catch(err => console.error("Unable to get pets:", err))
       .finally(() => setLoading(false));
   }, []);
+
+  // Reset time when date changes if current time is not available for new date
+  useEffect(() => {
+    if (appointmentDate && appointmentTime) {
+      const newTimeSlots = getTimeSlotsForDate(appointmentDate);
+      if (!newTimeSlots.includes(appointmentTime)) {
+        setAppointmentTime("");
+      }
+    }
+  }, [appointmentDate]);
 
   const getMinDate = () => new Date().toISOString().split('T')[0];
   const getMaxDate = () => {
@@ -58,7 +129,7 @@ export default function BookAppointmentPage() {
 
     const payload = {
       pet_id: selectedPet?.pet_id || null,
-      clinic_id: clinic.id,
+      clinic_id: clinic.clinic_id || clinic.id,
       service: selectedService === "others" ? otherService : selectedService,
       date: appointmentDate,
       time: appointmentTime,
@@ -221,12 +292,31 @@ export default function BookAppointmentPage() {
                   <input
                     type="date"
                     value={appointmentDate}
-                    onChange={(e) => setAppointmentDate(e.target.value)}
+                    onChange={(e) => {
+                      const selectedDate = e.target.value;
+                      if (isDateAvailable(selectedDate)) {
+                        setAppointmentDate(selectedDate);
+                        setAppointmentTime(""); // Reset time when date changes
+                      } else {
+                        alert("This clinic is closed on this day. Please select another date.");
+                      }
+                    }}
                     min={getMinDate()}
                     max={getMaxDate()}
                     className="w-full border border-gray-200 p-4 rounded-xl text-lg focus:border-primary focus:outline-none"
+                    onInvalid={(e) => {
+                      const selectedDate = e.target.value;
+                      if (selectedDate && !isDateAvailable(selectedDate)) {
+                        e.target.setCustomValidity("This clinic is closed on this day. Please select another date.");
+                      } else {
+                        e.target.setCustomValidity("");
+                      }
+                    }}
                   />
                   <p className="text-sm text-gray-500 mt-2">Select a date within the next 3 months</p>
+                  {appointmentDate && !isDateAvailable(appointmentDate) && (
+                    <p className="text-sm text-red-500 mt-2">⚠️ This clinic is closed on this day</p>
+                  )}
                 </div>
 
                 {appointmentDate && (
@@ -234,18 +324,34 @@ export default function BookAppointmentPage() {
                     <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                       <FaClock className="text-primary" /> Select time
                     </h2>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                      {timeSlots.map((time) => (
+                    {timeSlots.length > 0 ? (
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                        {timeSlots.map((time) => (
+                          <button
+                            key={time}
+                            type="button"
+                            onClick={() => setAppointmentTime(time)}
+                            className={`p-3 rounded-lg border text-sm font-medium transition-all ${appointmentTime === time ? "border-primary bg-primary text-white" : "border-gray-200 hover:border-gray-300"}`}
+                          >
+                            {time}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">No available time slots for this day. The clinic may be closed.</p>
                         <button
-                          key={time}
                           type="button"
-                          onClick={() => setAppointmentTime(time)}
-                          className={`p-3 rounded-lg border text-sm font-medium transition-all ${appointmentTime === time ? "border-primary bg-primary text-white" : "border-gray-200 hover:border-gray-300"}`}
+                          onClick={() => {
+                            setAppointmentDate("");
+                            setAppointmentTime("");
+                          }}
+                          className="mt-4 text-primary font-semibold hover:underline"
                         >
-                          {time}
+                          Select a different date
                         </button>
-                      ))}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -301,15 +407,52 @@ export default function BookAppointmentPage() {
               <h4 className="font-semibold text-gray-900 mb-3">{clinic.name}</h4>
               <div className="space-y-3 text-sm">
                 {[
-                  { icon: FaLocationDot, value: clinic.address },
-                  { icon: FaPhoneAlt, value: clinic.contact_number },
-                  { icon: FaClock, value: clinic.hours }
+                  { icon: FaLocationDot, value: typeof clinic.address === 'string' ? clinic.address : (clinic.address_string || 'Address not available') },
+                  { icon: FaPhoneAlt, value: clinic.contact_number }
                 ].filter(item => item.value).map((item, idx) => (
                   <div key={idx} className="flex items-start gap-2 text-gray-700">
                     <item.icon className={`${idx === 0 ? 'mt-1' : ''} text-primary shrink-0`} />
                     <span>{item.value}</span>
                   </div>
                 ))}
+                
+                {/* Operating Hours */}
+                {clinic.schedules && Array.isArray(clinic.schedules) && clinic.schedules.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex items-center gap-2 mb-3">
+                      <FaClock className="text-primary shrink-0" />
+                      <span className="font-semibold text-gray-900">Operating Hours</span>
+                    </div>
+                    <div className="space-y-2 text-xs">
+                      {clinic.schedules.map((schedule, idx) => {
+                        const dayName = schedule.day_of_week.charAt(0).toUpperCase() + schedule.day_of_week.slice(1);
+                        const isClosed = schedule.is_closed || false;
+                        const openTime = schedule.open_time ? schedule.open_time.substring(0, 5) : '';
+                        const closeTime = schedule.close_time ? schedule.close_time.substring(0, 5) : '';
+                        
+                        return (
+                          <div key={idx} className="flex justify-between text-gray-700">
+                            <span className="font-medium">{dayName}</span>
+                            {isClosed ? (
+                              <span className="text-gray-400">Closed</span>
+                            ) : openTime && closeTime ? (
+                              <span>{openTime} - {closeTime}</span>
+                            ) : (
+                              <span className="text-gray-400">Not set</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {/* Fallback to old hours format */}
+                {(!clinic.schedules || !Array.isArray(clinic.schedules) || clinic.schedules.length === 0) && clinic.hours && (
+                  <div className="flex items-start gap-2 text-gray-700">
+                    <FaClock className="text-primary shrink-0 mt-1" />
+                    <span>{clinic.hours}</span>
+                  </div>
+                )}
               </div>
               <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
                 <p className="text-sm text-blue-900"><strong>Note:</strong> The clinic will confirm your appointment within 24 hours.</p>

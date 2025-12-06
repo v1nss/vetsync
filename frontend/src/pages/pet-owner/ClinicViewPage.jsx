@@ -71,9 +71,7 @@ export default function ClinicViewPage({ onLike }) {
       if (clinicId && (!hasSchedules || !hasService)) {
         try {
           setLoading(true);
-          console.log("Fetching clinic details for ID:", clinicId);
           const fullClinicData = await fetchClinicById(clinicId);
-          console.log("Fetched clinic data:", fullClinicData);
           
           if (fullClinicData) {
             // Use the fetched data directly
