@@ -21,6 +21,7 @@ export const createEHR = async (vetProfessionalId, ehrData, files) => {
     clinic_id, 
     appointment_id, 
     visit_date,
+    service,
     prescriptions = [],
     vaccinations = [],
     dewormings = [],
@@ -59,6 +60,7 @@ export const createEHR = async (vetProfessionalId, ehrData, files) => {
   const ehr = await EHR.create({
     pet_owner_id,
     pet_id,
+    service,
     vet_professional_id: vetProfessionalId,
     clinic_id,
     appointment_id: appointment_id || null,

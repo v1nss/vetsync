@@ -25,6 +25,10 @@ const Pet = sequelize.define("Pet", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  owner_email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
   breed: {
     type: DataTypes.STRING,
     allowNull: true,

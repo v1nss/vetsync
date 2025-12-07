@@ -33,3 +33,28 @@ export const getVetClinicEHRs = async () => {
   }
 };
 
+// Search pets by owner email
+export const searchPetsByOwnerEmail = async (email) => {
+  try {
+    const res = await api.get(`/clinic-patients/search-pets?email=${encodeURIComponent(email)}`);
+    return res.data;
+  } catch (err) {
+    console.error("Error searching pets by email:", err);
+    throw err;
+  }
+};
+
+// Add patient to clinic (create EHR and clinic_patient entry)
+export const addPatientToClinic = async (petId, ehrData = {}) => {
+  try {
+    const res = await api.post("/clinic-patients/add-patient", {
+      pet_id: petId,
+      ehrData,
+    });
+    return res.data;
+  } catch (err) {
+    console.error("Error adding patient to clinic:", err);
+    throw err;
+  }
+};
+

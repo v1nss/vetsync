@@ -3,6 +3,7 @@ import { FiChevronLeft, FiPlus } from "react-icons/fi";
 import HealthRecordsTable from "./HealthRecordsTable";
 import HealthRecordModal from "./HealthRecordModal.jsx";
 import AddHealthRecordModal from "./AddHealthRecordModal.jsx";
+import AddHealthRecordModalNoAppointment from "./AddHealthRecordModalNoAppointment.jsx";
 import NotificationModal from "../NotificationModal";
 import { getVetClinicEHRs } from "../../global/api/clinicPatient";
 import { useAuth } from "../../context/AuthContext";
@@ -27,7 +28,7 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
         try {
           // Fetch all EHRs for the clinic
           const res = await getVetClinicEHRs();
-          
+          console.log(res)
           if (res && res.ehrs) {
             // Filter EHRs for this specific pet
             const petEHRs = res.ehrs.filter(ehr => ehr.pet_id === patient.pet_id);
@@ -43,7 +44,7 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
                 veterinarian: ehr.vetProfessional?.User 
                   ? `Dr. ${ehr.vetProfessional.User.first_name} ${ehr.vetProfessional.User.last_name}`
                   : "Veterinarian",
-                reason: ehr.appointment?.service || "General Checkup",
+                reason: ehr.appointment?.service || ehr.service || "General Checkup",
                 clinic_name: ehr.clinic?.name || "Veterinary Clinic",
                 owner: ownerData ? {
                   name: `${ownerData.first_name || ""} ${ownerData.last_name || ""}`.trim() || "Unknown",
@@ -312,8 +313,20 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
 
       {/* Add Health Record Modal */}
       {showAddModal && (
-        <AddHealthRecordModal
-          patient={patient}
+        <AddHealthRecordModalNoAppointment
+          patient={{
+            ...patient,
+            pet_id: patient.pet_id || patient.id,
+            clinic_id: patient.clinic_id,
+            owner: patient.owner ? {
+              id: patient.owner.id,
+              name: patient.owner.name,
+              email: patient.owner.email,
+              phone: patient.owner.phone,
+              address: patient.owner.address,
+            } : null,
+            owner_id: patient.owner?.id || patient.owner_id, // Also include owner_id at root level for easier access
+          }}
           onClose={() => setShowAddModal(false)}
           onSave={handleSaveHealthRecord}
         />

@@ -61,6 +61,10 @@ const EHR = sequelize.define("EHR", {
     type: DataTypes.DATEONLY,
     allowNull: false,
   },
+  service: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
   attached_files: {
     type: DataTypes.JSON,
     allowNull: true,

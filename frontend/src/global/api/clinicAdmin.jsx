@@ -10,6 +10,17 @@ export const fetchMyClinic = async () => {
   }
 };
 
+// Get clinic services (works for both vet professional and clinic admin)
+export const fetchMyClinicServices = async () => {
+  try {
+    const res = await api.get("/clinic-patients/my-clinic/services");
+    return res.data;
+  } catch (err) {
+    console.error("Unable to fetch clinic services", err);
+    throw err;
+  }
+};
+
 export const updateClinic = async (clinicId, clinicData, newImages = { clinicImages: [], documentImages: [] }) => {
   try {
     const formData = new FormData();

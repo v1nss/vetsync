@@ -1,11 +1,21 @@
 import { uploadFiles } from "../../global/utils/drive.js";
 import Pet from "../models/petModel.js";
+import User from "../models/users/userModel.js";
 
 export const createPetService = async (owner_id, petData) => {
 
   const { body, file } = petData;
   const petInfo = JSON.parse(body.pet);
   
+  // Get owner's email from User model
+  const owner = await User.findByPk(owner_id, {
+    attributes: ["email"],
+  });
+
+  if (!owner) {
+    throw new Error("Owner not found");
+  }
+
   let petProfile = null;
   if (file) {
     const { id: fileId, name: fileName } = await uploadFiles(
@@ -20,9 +30,13 @@ export const createPetService = async (owner_id, petData) => {
     }
   }
 
+  // Remove owner_email from petInfo if present (we'll use the actual owner's email)
+  const { owner_email, ...petDataWithoutEmail } = petInfo;
+
   return await Pet.create({
     owner_id,
-    ...petInfo,
+    owner_email: owner.email, // Automatically set owner email from database
+    ...petDataWithoutEmail,
     profileURL: petProfile,
   });
 };
@@ -55,4 +69,19 @@ export const updatePetService = async (pet_id, owner_id, updateData) => {
 
   await pet.update(updateData);
   return pet; // return the updated pet object
+};
+
+// Search pets by owner email
+export const searchPetsByOwnerEmail = async (ownerEmail) => {
+  return await Pet.findAll({
+    where: { owner_email: ownerEmail },
+    include: [
+      {
+        model: User,
+        as: "owner",
+        attributes: ["id", "first_name", "last_name", "email", "phone_number"],
+      },
+    ],
+    order: [["pet_id", "DESC"]],
+  });
 };

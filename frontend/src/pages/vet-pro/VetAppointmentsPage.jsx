@@ -65,6 +65,7 @@ export default function VetAppointmentsPage() {
         pet_id: selectedAppointment.pet_id,
         clinic_id: selectedAppointment.clinic_id,
         appointment_id: selectedAppointment.id,
+        service: healthRecord.reason,
         visit_date: healthRecord.appointmentDate,
         prescriptions: healthRecord.documents?.prescriptions?.map(p => ({
           name: p.name,

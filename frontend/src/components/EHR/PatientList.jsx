@@ -1,8 +1,10 @@
-import React from "react";
-import { FiSearch, FiChevronRight } from "react-icons/fi";
+import React, { useState } from "react";
+import { FiSearch, FiChevronRight, FiPlus } from "react-icons/fi";
+import AddPatientModal from "./AddPatientModal";
 
-export default function PatientList({ patients, onSelect, searchTerm, setSearchTerm }) {
-  const [localSearchTerm, setLocalSearchTerm] = React.useState(searchTerm || "");
+export default function PatientList({ patients, onSelect, searchTerm, setSearchTerm, onRefresh }) {
+  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm || "");
+  const [showAddModal, setShowAddModal] = useState(false);
 
   // Use local search if parent doesn't provide it
   const search = searchTerm !== undefined ? searchTerm : localSearchTerm;
@@ -63,9 +65,18 @@ export default function PatientList({ patients, onSelect, searchTerm, setSearchT
 
       <div className="bg-white rounded-2xl border border-gray-200 p-6">
         <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            Select a Patient to View Records
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Select a Patient to View Records
+            </h2>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition"
+            >
+              <FiPlus className="w-4 h-4" />
+              <span>Add Patient</span>
+            </button>
+          </div>
           
           {/* Search */}
           <div className="relative">
@@ -135,6 +146,13 @@ export default function PatientList({ patients, onSelect, searchTerm, setSearchT
           </div>
         )}
       </div>
+
+      {/* Add Patient Modal */}
+      <AddPatientModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onPatientAdded={onRefresh}
+      />
     </div>
   );
 }

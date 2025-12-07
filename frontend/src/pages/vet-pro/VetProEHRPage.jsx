@@ -11,8 +11,7 @@ export default function VetProEHRPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    const fetchPatients = async () => {
+  const fetchPatients = async () => {
       try {
         setLoading(true);
         const res = await getVetClinicPatients();
@@ -35,11 +34,13 @@ export default function VetProEHRPage() {
               dateOfBirth: pet?.birthdate || null,
               profileURL: pet?.profileURL || null,
               owner: {
+                id: owner?.id, // Add owner ID
                 name: owner ? `${owner.first_name} ${owner.last_name}` : "Unknown",
                 email: owner?.email || "",
                 phone: owner?.phone_number || "",
                 address: petOwner?.address || "",
               },
+              clinic_id: cp.clinic_id, // Add clinic_id
               // Calculate age
               age: pet?.birthdate ? calculateAge(pet.birthdate) : "Unknown",
               weight: "N/A", // Not available in current data
@@ -62,9 +63,14 @@ export default function VetProEHRPage() {
         setLoading(false);
       }
     };
-
+    
+  useEffect(() => {
     fetchPatients();
   }, []);
+
+  const handleRefresh = () => {
+    fetchPatients();
+  };
 
   const calculateAge = (birthdate) => {
     if (!birthdate) return "Age unknown";
@@ -110,6 +116,7 @@ export default function VetProEHRPage() {
             onSelect={setSelectedPatient}
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
+            onRefresh={handleRefresh}
           />
         ) : (
           <PatientProfile 

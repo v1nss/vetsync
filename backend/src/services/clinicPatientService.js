@@ -183,3 +183,79 @@ export const getClinicPatientsEHRs = async (clinicId) => {
   return ehrs;
 };
 
+// Add a patient to clinic (create EHR and clinic_patient entry)
+export const addPatientToClinic = async (clinicId, petId, vetProfessionalId, ehrData = {}) => {
+  // Check if clinic_patient already exists
+  const existingClinicPatient = await ClinicPatient.findOne({
+    where: {
+      clinic_id: clinicId,
+      pet_id: petId,
+    },
+  });
+
+  // Get pet and owner information
+  const pet = await Pet.findByPk(petId, {
+    include: [
+      {
+        model: User,
+        as: "owner",
+        attributes: ["id"],
+      },
+    ],
+  });
+
+  if (!pet) {
+    throw new Error("Pet not found");
+  }
+
+  const petOwnerId = pet.owner_id;
+
+  // Create clinic_patient entry if it doesn't exist
+  let clinicPatient;
+  if (!existingClinicPatient) {
+    clinicPatient = await ClinicPatient.create({
+      clinic_id: clinicId,
+      pet_id: petId,
+    });
+  } else {
+    clinicPatient = existingClinicPatient;
+  }
+
+  // Create a basic EHR record if ehrData is provided
+  let ehr = null;
+  if (ehrData && Object.keys(ehrData).length > 0) {
+    const { createEHR } = await import("./ehrService.js");
+    ehr = await createEHR(vetProfessionalId, {
+      pet_owner_id: petOwnerId,
+      pet_id: petId,
+      clinic_id: clinicId,
+      visit_date: ehrData.visit_date || new Date().toISOString().split('T')[0],
+      appointment_id: ehrData.appointment_id || null,
+      prescriptions: ehrData.prescriptions || [],
+      vaccinations: ehrData.vaccinations || [],
+      dewormings: ehrData.dewormings || [],
+      labResults: ehrData.labResults || [],
+    }, ehrData.files || []);
+  } else {
+    // Always create a basic EHR entry with today's date
+    const { createEHR } = await import("./ehrService.js");
+    ehr = await createEHR(vetProfessionalId, {
+      pet_owner_id: petOwnerId,
+      pet_id: petId,
+      clinic_id: clinicId,
+      visit_date: new Date().toISOString().split('T')[0],
+      appointment_id: null,
+      prescriptions: [],
+      vaccinations: [],
+      dewormings: [],
+      labResults: [],
+    }, []);
+  }
+
+  return {
+    clinicPatient,
+    ehr,
+    pet,
+  };
+};
+
