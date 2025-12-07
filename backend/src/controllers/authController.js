@@ -1,5 +1,6 @@
 import { loginUser, refreshAccessToken } from "../services/authService.js";
 import User from "../models/users/userModel.js";
+import { lstat } from "fs";
 
 export const login = async (req, res) => {
   try {
@@ -104,7 +105,8 @@ export const getMe = async (req, res) => {
       id: user.id,
       email: user.email,
       user_type: user.user_type,
-      full_name: user.full_name,
+      first_name: user.first_name,
+      last_name: user.last_name,
       phone_number: user.phone_number,
       profile_image_url: user.profile_image_url,
       createdAt: user.createdAt,

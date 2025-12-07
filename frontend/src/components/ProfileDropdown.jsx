@@ -12,7 +12,9 @@ export default function ProfileDropdown() {
   const userType = user?.user_type;
 
   // Get full name with fallback
-  const fullName = user?.full_name || user?.email || 'User';
+  const fullName = [user?.first_name, user?.last_name]
+  .filter(name => name && name.trim())
+  .join(' ') || user?.email || 'User';
 
   // Get initials from name
   const getInitials = (name) => {
@@ -88,7 +90,7 @@ export default function ProfileDropdown() {
           onClick={() => setIsOpen(!isOpen)}
           className="flex items-center space-x-3 px-4 py-2 transition-all duration-200"
         >
-          <div className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center font-semibold overflow-hidden text-sm bg-primary text-white">
+          <div className="w-8 h-8 shrink-0 border border-gray-300 rounded-full flex items-center justify-center font-semibold overflow-hidden text-sm bg-primary text-white">
             {user?.profile_image_url ? (
               <DriveImage
                 image={user.profile_image_url}
@@ -109,8 +111,8 @@ export default function ProfileDropdown() {
           <div className="absolute right-0 mt-2 w-68 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-50">
             {/* User Info Section */}
             <div className="px-4 py-3 border-b border-gray-100">
-              <div className="flex items-center space-x-2">
-                <div className="w-10 h-10 border border-gray-300 rounded-full flex items-center justify-center overflow-hidden bg-primary text-white font-semibold">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 shrink-0 border border-gray-300 rounded-full flex items-center justify-center overflow-hidden bg-primary text-white font-semibold">
                   {user?.profile_image_url ? (
                     <DriveImage
                       image={user.profile_image_url}
@@ -121,11 +123,11 @@ export default function ProfileDropdown() {
                   ) : null}
                   {!user?.profile_image_url && getInitials(fullName)}
                 </div>
-                <div>
-                  <p className="font-semibold text-gray-800">{fullName}</p>
-                  <p className="text-sm text-gray-500">{user?.email}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-gray-800 truncate">{fullName}</p>
+                  <p className="text-sm text-gray-500 truncate">{user?.email}</p>
                   {user?.clinic_name && (
-                    <p className="text-xs text-gray-400 mt-0.5">{user.clinic_name}</p>
+                    <p className="text-xs text-gray-400 mt-0.5 truncate">{user.clinic_name}</p>
                   )}
                 </div>
               </div>
@@ -142,7 +144,7 @@ export default function ProfileDropdown() {
                     onClick={() => setIsOpen(false)}
                     className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-50 transition-colors duration-150"
                   >
-                    <Icon className="text-gray-600 text-lg" />
+                    <Icon className="text-gray-600 text-lg shrink-0" />
                     <span className="text-gray-700 font-medium">{item.label}</span>
                   </Link>
                 );
@@ -156,7 +158,7 @@ export default function ProfileDropdown() {
                   }}
                   className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-red-50 transition-colors duration-150 text-red-600"
                 >
-                  <FaSignOutAlt className="text-lg" />
+                  <FaSignOutAlt className="text-lg shrink-0" />
                   <span className="font-medium">Logout</span>
                 </button>
               </div>

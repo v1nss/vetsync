@@ -8,6 +8,7 @@ import { fetchAllPetsById } from "../../global/api/pet";
 import { useAuth } from "../../context/AuthContext";
 import { createAppointment } from "../../global/api/appointment.jsx";
 import ConfirmationModal from "../../components/ConfirmationModal";
+import NotificationModal from "../../components/NotificationModal";
 
 export default function BookAppointmentPage() {
   const navigate = useNavigate();
@@ -24,9 +25,19 @@ export default function BookAppointmentPage() {
   const [step, setStep] = useState(1);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notification, setNotification] = useState({ isOpen: false, type: 'info', title: '', message: '' });
 
   const defaultServices = ["General Checkup", "Vaccinations", "Emergency Services", "Grooming", "Diagnostics"];
   const services = clinic?.service || clinic?.services || defaultServices;
+
+  // Notification helper function
+  const showNotification = (type, title, message) => {
+    setNotification({ isOpen: true, type, title, message });
+  };
+
+  const closeNotification = () => {
+    setNotification({ ...notification, isOpen: false });
+  };
   
   // Helper function to get day of week from date string
   const getDayOfWeek = (dateString) => {
@@ -37,13 +48,13 @@ export default function BookAppointmentPage() {
 
   // Helper function to check if a date is available (not closed)
   const isDateAvailable = (dateString) => {
-    if (!clinic?.schedules || !Array.isArray(clinic.schedules)) return true; // Default to available if no schedule
+    if (!clinic?.schedules || !Array.isArray(clinic.schedules)) return true;
     
     const dayOfWeek = getDayOfWeek(dateString);
     const schedule = clinic.schedules.find(s => s.day_of_week === dayOfWeek);
     
-    if (!schedule) return true; // If no schedule for this day, allow it
-    return !schedule.is_closed; // Return true if not closed
+    if (!schedule) return true;
+    return !schedule.is_closed;
   };
 
   // Helper function to generate time slots in 30-minute intervals
@@ -61,7 +72,6 @@ export default function BookAppointmentPage() {
       const timeString = `${String(currentHour).padStart(2, '0')}:${String(currentMin).padStart(2, '0')}`;
       slots.push(timeString);
       
-      // Add 30 minutes
       currentMin += 30;
       if (currentMin >= 60) {
         currentMin = 0;
@@ -75,7 +85,6 @@ export default function BookAppointmentPage() {
   // Get time slots for selected date
   const getTimeSlotsForDate = (dateString) => {
     if (!dateString || !clinic?.schedules || !Array.isArray(clinic.schedules)) {
-      // Fallback to default time slots if no schedule
       return ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"];
     }
     
@@ -83,13 +92,14 @@ export default function BookAppointmentPage() {
     const schedule = clinic.schedules.find(s => s.day_of_week === dayOfWeek);
     
     if (!schedule || schedule.is_closed || !schedule.open_time || !schedule.close_time) {
-      return []; // No available time slots if closed or no schedule
+      return [];
     }
     
     return generateTimeSlots(schedule.open_time, schedule.close_time);
   };
 
   const timeSlots = appointmentDate ? getTimeSlotsForDate(appointmentDate) : [];
+
   useEffect(() => {
     fetchAllPetsById()
       .then(res => setPets(res || []))
@@ -144,7 +154,7 @@ export default function BookAppointmentPage() {
     } catch (err) {
       console.error("Error booking appointment:", err);
       setShowConfirmation(false);
-      alert("Failed to book appointment. Please try again.");
+      showNotification('error', 'Booking Failed', 'Failed to book appointment. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -296,22 +306,14 @@ export default function BookAppointmentPage() {
                       const selectedDate = e.target.value;
                       if (isDateAvailable(selectedDate)) {
                         setAppointmentDate(selectedDate);
-                        setAppointmentTime(""); // Reset time when date changes
+                        setAppointmentTime("");
                       } else {
-                        alert("This clinic is closed on this day. Please select another date.");
+                        showNotification('warning', 'Clinic Closed', 'This clinic is closed on this day. Please select another date.');
                       }
                     }}
                     min={getMinDate()}
                     max={getMaxDate()}
                     className="w-full border border-gray-200 p-4 rounded-xl text-lg focus:border-primary focus:outline-none"
-                    onInvalid={(e) => {
-                      const selectedDate = e.target.value;
-                      if (selectedDate && !isDateAvailable(selectedDate)) {
-                        e.target.setCustomValidity("This clinic is closed on this day. Please select another date.");
-                      } else {
-                        e.target.setCustomValidity("");
-                      }
-                    }}
                   />
                   <p className="text-sm text-gray-500 mt-2">Select a date within the next 3 months</p>
                   {appointmentDate && !isDateAvailable(appointmentDate) && (
@@ -473,6 +475,15 @@ export default function BookAppointmentPage() {
         confirmText={isSubmitting ? "Booking..." : "Confirm"}
         cancelText="Cancel"
         isLoading={isSubmitting}
+      />
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={closeNotification}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
       />
     </main>
   );
