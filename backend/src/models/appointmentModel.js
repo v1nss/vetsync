@@ -53,6 +53,10 @@ const Appointment = sequelize.define("Appointment", {
     type: DataTypes.TIME,
     allowNull: false,
   },
+  service: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
   status: {
     type: DataTypes.ENUM("pending", "approved", "completed", "canceled"),
     defaultValue: "pending",

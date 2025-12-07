@@ -1,7 +1,18 @@
 import express from 'express';
-import { register, createVetProfessional, updateUserDetails, fetchUserDataById, checkEmailExists, fetchVetProfessionalsByClinic, updateVetProfessionalController } from '../controllers/userController.js';
-import { authenticate, verifyClinicAdmin } from '../../global/middleware/authMiddleware.js';
-import upload from '../../global/config/multer.js';
+import {
+  register,
+  createVetProfessional,
+  updateUserDetails,
+  fetchUserDataById,
+  checkEmailExists,
+  fetchVetProfessionalsByClinic,
+  updateVetProfessionalController,
+} from "../controllers/userController.js";
+import {
+  authenticate,
+  verifyClinicAdmin,
+} from "../../global/middleware/authMiddleware.js";
+import upload from "../../global/config/multer.js";
 
 const router = express.Router();
 

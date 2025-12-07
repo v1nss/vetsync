@@ -10,6 +10,7 @@ import {
   Clinic,
   Appointment,
 } from "../models/index.js";
+import User from "../models/users/userModel.js";
 import { uploadFiles, deleteMultipleFiles } from "../../global/utils/drive.js";
 
 // Create new EHR record
@@ -191,11 +192,22 @@ export const getEHRsByPet = async (petId, petOwnerId) => {
         model: VetProfessional,
         as: "vetProfessional",
         attributes: ["user_id"],
+        include: [
+          {
+            model: User,
+            attributes: ["first_name", "last_name", "email"],
+          },
+        ],
       },
       {
         model: Clinic,
         as: "clinic",
         attributes: ["clinic_id", "name"],
+      },
+      {
+        model: Appointment,
+        as: "appointment",
+        attributes: ["appointment_id", "service", "date", "time"],
       },
       {
         model: Prescription,

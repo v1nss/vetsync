@@ -123,11 +123,11 @@ const mockHealthRecords = [
   }
 ];
 
-export default function PetRecordsView({ pet, onBack, healthRecords }) {
+export default function PetRecordsView({ pet, onBack, healthRecords, loading = false }) {
   const [selectedRecord, setSelectedRecord] = useState(null);
 
-  // Use mock data if no data provided
-  const displayHealthRecords = healthRecords || mockHealthRecords;
+  // Use actual data if provided, otherwise use mock data as fallback
+  const displayHealthRecords = healthRecords !== null ? healthRecords : mockHealthRecords;
 
   const calculateAge = (birthdate) => {
     if (!birthdate) return "Age unknown";
@@ -206,10 +206,18 @@ export default function PetRecordsView({ pet, onBack, healthRecords }) {
         </div>
 
         {/* Health Records Table */}
-        <HealthRecordsTable 
-          healthRecords={displayHealthRecords} 
-          onRecordClick={setSelectedRecord}
-        />
+        {loading ? (
+          <div className="border border-gray-200 rounded-xl overflow-hidden">
+            <div className="text-center py-12">
+              <p className="text-gray-600">Loading health records...</p>
+            </div>
+          </div>
+        ) : (
+          <HealthRecordsTable 
+            healthRecords={displayHealthRecords} 
+            onRecordClick={setSelectedRecord}
+          />
+        )}
       </div>
 
       {/* Detail Modal */}

@@ -1,4 +1,36 @@
+import { useState, useEffect } from "react";
+import { getEHRsByPet } from "../global/api/ehr";
+
 export default function PetDetail({ pet }) {
+  const [recentEHRs, setRecentEHRs] = useState([]);
+  const [loadingEHRs, setLoadingEHRs] = useState(false);
+
+  useEffect(() => {
+    const fetchRecentEHRs = async () => {
+      if (pet && pet.pet_id) {
+        setLoadingEHRs(true);
+        try {
+          const res = await getEHRsByPet(pet.pet_id);
+          if (res && res.ehrs && res.ehrs.length > 0) {
+            // Get the 2 most recent EHR records
+            const recent = res.ehrs.slice(0, 2).map(ehr => ({
+              id: ehr.id,
+              date: ehr.visit_date,
+              reason: ehr.appointment?.service || "General Checkup",
+              clinic: ehr.clinic?.name || "Veterinary Clinic"
+            }));
+            setRecentEHRs(recent);
+          }
+        } catch (err) {
+          console.error("Error fetching recent EHRs:", err);
+        } finally {
+          setLoadingEHRs(false);
+        }
+      }
+    };
+
+    fetchRecentEHRs();
+  }, [pet]);
   const InfoCard = ({ label, value }) => (
     <div className="text-center md:p-4 md:bg-gray-50 md:rounded-2xl">
       <p className="font-medium mb-1 text-xl md:text-2xl">
@@ -71,10 +103,36 @@ export default function PetDetail({ pet }) {
       )}
 
       {/* Recent Appointments */}
-      <InfoSection title="Recent Appointments">
+      <InfoSection title="Recent Health Records">
         <div className="space-y-3">
-          <div className="bg-gray-200 rounded-2xl h-16 md:h-20"></div>
-          <div className="bg-gray-200 rounded-2xl h-16 md:h-20"></div>
+          {loadingEHRs ? (
+            <>
+              <div className="bg-gray-200 rounded-2xl h-16 md:h-20 animate-pulse"></div>
+              <div className="bg-gray-200 rounded-2xl h-16 md:h-20 animate-pulse"></div>
+            </>
+          ) : recentEHRs.length > 0 ? (
+            recentEHRs.map((ehr) => (
+              <div key={ehr.id} className="bg-white border border-gray-200 rounded-2xl p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-medium text-gray-900 mb-1">{ehr.reason}</p>
+                    <p className="text-sm text-gray-600">{ehr.clinic}</p>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    {new Date(ehr.date).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 text-center">
+              <p className="text-sm text-gray-500">No health records available</p>
+            </div>
+          )}
         </div>
       </InfoSection>
     </div>

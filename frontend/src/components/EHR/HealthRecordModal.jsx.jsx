@@ -1,6 +1,6 @@
 import React from "react";
 import { FiX, FiDownload } from "react-icons/fi";
-import { RiMicroscopeLine, RiSyringeLine } from "react-icons/ri";
+import { RiMicroscopeLine, RiSyringeLine, RiBugLine } from "react-icons/ri";
 import { FaPrescription } from "react-icons/fa";
 
 const getDocumentIcon = (type) => {
@@ -11,6 +11,8 @@ const getDocumentIcon = (type) => {
       return <RiSyringeLine className="w-4 h-4" />;
     case "prescriptions":
       return <FaPrescription className="w-4 h-4" />;
+    case "deworming":
+      return <RiBugLine className="w-4 h-4" />;
     default:
       return null;
   }
@@ -24,6 +26,8 @@ const getDocumentColor = (type) => {
       return "bg-green-100 text-green-700";
     case "prescriptions":
       return "bg-purple-100 text-purple-700";
+    case "deworming":
+      return "bg-orange-100 text-orange-700";
     default:
       return "bg-gray-100 text-gray-700";
   }
@@ -37,6 +41,8 @@ const getDocumentLabel = (type) => {
       return "Vaccine Records";
     case "prescriptions":
       return "Prescriptions";
+    case "deworming":
+      return "Deworming";
     default:
       return "";
   }
@@ -49,7 +55,7 @@ export default function HealthRecordModal({ healthRecord, pet, onClose }) {
     alert(`Downloading: ${doc.documentName}`);
   };
 
-  const documentTypes = ['labResults', 'vaccineRecords', 'prescriptions'];
+  const documentTypes = ['labResults', 'vaccineRecords', 'prescriptions', 'deworming'];
   const availableDocs = documentTypes.filter(type => 
     healthRecord.documents[type] && healthRecord.documents[type].length > 0
   );
@@ -128,7 +134,7 @@ export default function HealthRecordModal({ healthRecord, pet, onClose }) {
                         </span>
                         <h4 className="font-semibold text-gray-900">{doc.documentName}</h4>
                       </div>
-                      {docType === 'prescriptions' && (
+                      {(docType === 'prescriptions' || doc.fileUrl) && (
                         <button
                           onClick={() => handleDownload(doc)}
                           className="flex items-center gap-1 px-3 py-1.5 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition"
@@ -144,6 +150,32 @@ export default function HealthRecordModal({ healthRecord, pet, onClose }) {
               </div>
             </div>
           ))}
+
+          {/* Attached Files */}
+          {healthRecord.attachedFiles && healthRecord.attachedFiles.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-3">
+                Attached Files
+              </h3>
+              <div className="space-y-2">
+                {healthRecord.attachedFiles.map((file, index) => (
+                  <a
+                    key={file.id || index}
+                    href={file.link || file.directLink || file.viewLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition"
+                  >
+                    <FiDownload className="w-5 h-5 text-gray-600" />
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">{file.name}</p>
+                      <p className="text-xs text-gray-500">Click to view/download</p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}

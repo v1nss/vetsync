@@ -4,6 +4,7 @@ import PetsList from "../../components/EHR/PetsList";
 import PetRecordsView from "../../components/EHR/PetRecordsView";
 import { useAuth } from "../../context/AuthContext";
 import { fetchAllPetsById } from "../../global/api/pet";
+import { getEHRsByPet } from "../../global/api/ehr";
 import { FiChevronRight } from "react-icons/fi";
 
 export default function PetOwnerEHR() {
@@ -13,6 +14,7 @@ export default function PetOwnerEHR() {
   const [loading, setLoading] = useState(true);
   const [pets, setPets] = useState([]);
   const [healthRecords, setHealthRecords] = useState(null);
+  const [loadingRecords, setLoadingRecords] = useState(false);
 
   useEffect(() => {
     const fetchAllPets = async () => {
@@ -38,13 +40,76 @@ export default function PetOwnerEHR() {
 
   // Fetch health records when a pet is selected
   useEffect(() => {
-    if (selectedPet) {
-      // TODO: Replace with your actual API call
-      // Example: fetchHealthRecords(selectedPet.pet_id).then(setHealthRecords);
-      
-      // For now, it will use mock data from PetRecordsView
-      setHealthRecords(null);
-    }
+    const fetchHealthRecords = async () => {
+      if (selectedPet && selectedPet.pet_id) {
+        setLoadingRecords(true);
+        try {
+          const res = await getEHRsByPet(selectedPet.pet_id);
+          console.log("EHR records fetched:", res);
+          
+          if (res && res.ehrs) {
+            // Transform backend data to frontend format
+            const transformedRecords = res.ehrs.map(ehr => ({
+              id: ehr.id,
+              appointmentDate: ehr.visit_date,
+              veterinarian: ehr.vetProfessional?.User 
+                ? `Dr. ${ehr.vetProfessional.User.first_name} ${ehr.vetProfessional.User.last_name}`
+                : ehr.appointment?.assigned_vet || "Veterinarian",
+              reason: ehr.appointment?.service || "General Checkup",
+              clinic_name: ehr.clinic?.name || "Veterinary Clinic",
+              documents: {
+                labResults: ehr.labResults && ehr.labResults.length > 0
+                  ? ehr.labResults.map(lab => ({
+                      id: lab.id,
+                      documentName: lab.name,
+                      details: lab.description,
+                      fileUrl: null
+                    }))
+                  : null,
+                vaccineRecords: ehr.vaccinations && ehr.vaccinations.length > 0
+                  ? ehr.vaccinations.map(vax => ({
+                      id: vax.id,
+                      documentName: vax.name,
+                      details: vax.description + (vax.duration ? ` (Duration: ${vax.duration})` : ''),
+                      fileUrl: null
+                    }))
+                  : null,
+                prescriptions: ehr.prescriptions && ehr.prescriptions.length > 0
+                  ? ehr.prescriptions.map(pres => ({
+                      id: pres.id,
+                      documentName: pres.name,
+                      details: pres.description,
+                      fileUrl: null
+                    }))
+                  : null,
+                deworming: ehr.dewormings && ehr.dewormings.length > 0
+                  ? ehr.dewormings.map(deworm => ({
+                      id: deworm.id,
+                      documentName: deworm.name,
+                      details: deworm.description,
+                      fileUrl: null
+                    }))
+                  : null
+              },
+              attachedFiles: ehr.attached_files || null
+            }));
+            
+            setHealthRecords(transformedRecords);
+          } else {
+            setHealthRecords([]);
+          }
+        } catch (err) {
+          console.error("Error fetching health records:", err);
+          setHealthRecords([]);
+        } finally {
+          setLoadingRecords(false);
+        }
+      } else {
+        setHealthRecords(null);
+      }
+    };
+
+    fetchHealthRecords();
   }, [selectedPet]);
 
   const filteredPets = pets.filter((pet) => {
@@ -105,6 +170,7 @@ export default function PetOwnerEHR() {
                 pet={selectedPet} 
                 onBack={() => setSelectedPet(null)}
                 healthRecords={healthRecords}
+                loading={loadingRecords}
               />
             )}
           </div>

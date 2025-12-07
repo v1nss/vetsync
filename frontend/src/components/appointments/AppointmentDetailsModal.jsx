@@ -3,7 +3,7 @@ import { FaTimes, FaPaw, FaUser, FaClock, FaPhone, FaEnvelope, FaMapMarkerAlt, F
 
 export default function AppointmentDetailsModal({ isOpen, onClose, appointment }) {
   if (!isOpen || !appointment) return null;
-  
+  console.log("Appointment Details:", appointment);
   const getStatusBadge = (status) => {
     const styles = {
       pending: "bg-yellow-100 text-yellow-700",
