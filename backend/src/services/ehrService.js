@@ -181,12 +181,15 @@ export const getEHRsByPetOwner = async (petOwnerId) => {
 };
 
 // Get all EHRs for a specific pet
-export const getEHRsByPet = async (petId, petOwnerId) => {
+// If petOwnerId is provided, filter by it. Otherwise, get all EHRs for the pet.
+export const getEHRsByPet = async (petId, petOwnerId = null) => {
+  const whereClause = { pet_id: petId };
+  if (petOwnerId) {
+    whereClause.pet_owner_id = petOwnerId;
+  }
+  
   return await EHR.findAll({
-    where: { 
-      pet_id: petId,
-      pet_owner_id: petOwnerId 
-    },
+    where: whereClause,
     include: [
       {
         model: VetProfessional,

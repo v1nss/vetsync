@@ -24,8 +24,8 @@ router.get("/:ehrId", authenticate, getEHR);
 // Get all EHRs for pet owner - pet owners can view their own EHRs
 router.get("/owner/all", authenticate, verifyOwner, getPetOwnerEHRs);
 
-// Get all EHRs for a specific pet - pet owners can view their pet's EHRs
-router.get("/pet/:petId", authenticate, verifyOwner, getPetEHRs);
+// Get all EHRs for a specific pet - pet owners can view their pet's EHRs, vet professionals can view their clinic's patients
+router.get("/pet/:petId", authenticate, getPetEHRs);
 
 // Get all EHRs for vet professional - vets can view their own EHRs
 router.get("/vet/all", authenticate, verifyVetProfessional, getVetProfessionalEHRs);

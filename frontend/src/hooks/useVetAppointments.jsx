@@ -21,7 +21,6 @@ export function useVetAppointments() {
     // const response = await fetch(`/api/vet/appointments?vet_id=${user.id}`);
     try {
       const res = await getAppointmentsByVet();
-      console.log("Raw vet appointments data:", res.appointments);
       const transformedAppointments = (res.appointments || []).map(apt => ({
         id: apt.appointment_id,
         pet_name: apt.pet?.name || 'N/A',

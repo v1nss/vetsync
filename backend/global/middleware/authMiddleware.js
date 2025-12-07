@@ -90,3 +90,11 @@ export const verifySystemAdmin = (req, res, next) => {
   }
   next();
 };
+
+// Verify if user is either VetProfessional or ClinicAdmin
+export const verifyVetOrClinicAdmin = (req, res, next) => {
+  if (req.user.user_type !== 'vet_professional' && req.user.user_type !== 'clinic_admin') {
+    return res.status(403).json({ message: 'Access denied - VetProfessional or ClinicAdmin only' });
+  }
+  next();
+};

@@ -10,6 +10,7 @@ import appointmentRoutes from "./routes/appointmentRoutes.js";
 import systemAdminRoutes from "./routes/systemAdminRoutes.js";
 import ApprovalLogRoutes from "./routes/approvalLogsRoutes.js";
 import ehrRoutes from "./routes/ehrRoutes.js";
+import clinicPatientRoutes from "./routes/clinicPatientRoutes.js";
 import testRoute from './routes/testRoute.js'
 
 const app = express();
@@ -44,6 +45,7 @@ app.use("/api/approval-logs", ApprovalLogRoutes);
 
 // EHR Routes
 app.use("/api/ehr", ehrRoutes);
+app.use("/api/clinic-patients", clinicPatientRoutes);
 
 // app.use('/api', testRoute);
 

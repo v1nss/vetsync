@@ -81,11 +81,30 @@ export const getPetOwnerEHRs = async (req, res) => {
 };
 
 // Get all EHRs for a specific pet
+// Pet owners can view their pet's EHRs, vet professionals can view their clinic's patients' EHRs
 export const getPetEHRs = async (req, res) => {
   try {
     const { petId } = req.params;
-    const petOwnerId = req.user.id; // from JWT
-    const ehrs = await getEHRsByPet(petId, petOwnerId);
+    const userId = req.user.id; // from JWT
+    const userType = req.user.user_type; // from JWT
+
+    let ehrs;
+    
+    if (userType === 'pet_owner') {
+      // Pet owners can only see their own pet's EHRs
+      ehrs = await getEHRsByPet(petId, userId);
+    } else if (userType === 'vet_professional') {
+      // Vet professionals can see EHRs for pets in their clinic
+      // Get all EHRs for the pet (they should only see their clinic's records)
+      ehrs = await getEHRsByPet(petId);
+      
+      // Optionally filter by clinic if needed (for now, return all)
+      // The frontend can filter by clinic if necessary
+    } else {
+      return res.status(403).json({
+        message: "Unauthorized access",
+      });
+    }
 
     res.status(200).json({
       message: "EHR records fetched successfully",

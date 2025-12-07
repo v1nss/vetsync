@@ -1,127 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiChevronLeft, FiPlus } from "react-icons/fi";
 import HealthRecordsTable from "./HealthRecordsTable";
 import HealthRecordModal from "./HealthRecordModal.jsx";
 import AddHealthRecordModal from "./AddHealthRecordModal.jsx";
 import NotificationModal from "../NotificationModal";
-
-// Mock health records data
-const mockHealthRecords = [
-  {
-    id: "hr_1",
-    appointmentDate: "2024-11-15",
-    veterinarian: "Dr. Sarah Johnson",
-    reason: "Annual Wellness Check",
-    documents: {
-      labResults: [
-        {
-          id: "lab_1",
-          documentName: "Complete Blood Count (CBC)",
-          details: "Complete blood count shows all values within normal range. Red blood cells: 6.5 M/µL, White blood cells: 8.2 K/µL, Platelets: 250 K/µL.",
-          fileUrl: null
-        },
-        {
-          id: "lab_2",
-          documentName: "Kidney Function Panel",
-          details: "Kidney function tests are excellent. BUN: 18 mg/dL (normal: 7-27), Creatinine: 1.2 mg/dL (normal: 0.5-1.8).",
-          fileUrl: null
-        }
-      ],
-      prescriptions: [
-        {
-          id: "rx_1",
-          documentName: "Multivitamin Supplement",
-          details: "Daily multivitamin for senior dogs. One tablet daily with food.",
-          fileUrl: null
-        }
-      ],
-      vaccineRecords: null
-    }
-  },
-  {
-    id: "hr_2",
-    appointmentDate: "2024-11-10",
-    veterinarian: "Dr. Sarah Johnson",
-    reason: "Skin Infection Treatment",
-    documents: {
-      labResults: null,
-      prescriptions: [
-        {
-          id: "rx_2",
-          documentName: "Antibiotics - Amoxicillin",
-          details: "Amoxicillin 250mg capsules. Dosage: 1 capsule twice daily for 10 days. Take with food.",
-          fileUrl: null
-        }
-      ],
-      vaccineRecords: null
-    }
-  },
-  {
-    id: "hr_3",
-    appointmentDate: "2024-11-01",
-    veterinarian: "Dr. Sarah Johnson",
-    reason: "Vaccination Appointment",
-    documents: {
-      labResults: null,
-      prescriptions: null,
-      vaccineRecords: [
-        {
-          id: "vax_1",
-          documentName: "Rabies Vaccination",
-          details: "Rabies vaccine (Imrab 3) administered subcutaneously. Lot #: RV-2024-1156. Next dose due: November 2027.",
-          fileUrl: null
-        }
-      ]
-    }
-  },
-  {
-    id: "hr_4",
-    appointmentDate: "2024-10-20",
-    veterinarian: "Dr. Michael Chen",
-    reason: "Follow-up Examination",
-    documents: {
-      labResults: [
-        {
-          id: "lab_3",
-          documentName: "Urinalysis",
-          details: "Urinalysis results normal. No signs of infection or crystals. Specific gravity: 1.025 (normal), pH: 6.5.",
-          fileUrl: null
-        }
-      ],
-      prescriptions: null,
-      vaccineRecords: null
-    }
-  },
-  {
-    id: "hr_5",
-    appointmentDate: "2024-08-15",
-    veterinarian: "Dr. Emily Rodriguez",
-    reason: "Vaccination & Health Check",
-    documents: {
-      labResults: null,
-      prescriptions: null,
-      vaccineRecords: [
-        {
-          id: "vax_2",
-          documentName: "DHPP Vaccination",
-          details: "Distemper, Hepatitis, Parvovirus, Parainfluenza vaccine. Lot #: DHPP-2024-0892. Booster due in August 2025.",
-          fileUrl: null
-        },
-        {
-          id: "vax_3",
-          documentName: "Bordetella Vaccination",
-          details: "Bordetella bronchiseptica (kennel cough) vaccine administered intranasally. Provides protection for 12 months.",
-          fileUrl: null
-        }
-      ]
-    }
-  }
-];
+import { getVetClinicEHRs } from "../../global/api/clinicPatient";
+import { useAuth } from "../../context/AuthContext";
 
 export default function PatientProfile({ patient, onBack, healthRecords }) {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [displayHealthRecords, setDisplayHealthRecords] = useState(healthRecords || mockHealthRecords);
+  const [displayHealthRecords, setDisplayHealthRecords] = useState([]);
+  const [loadingRecords, setLoadingRecords] = useState(true);
   const [notification, setNotification] = useState({
     isOpen: false,
     type: 'success',
@@ -129,6 +19,96 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
     message: ''
   });
 
+  // Fetch EHR records for this pet from the clinic (using clinic_patients as reference)
+  useEffect(() => {
+    const fetchEHRRecords = async () => {
+      if (patient && patient.pet_id) {
+        setLoadingRecords(true);
+        try {
+          // Fetch all EHRs for the clinic
+          const res = await getVetClinicEHRs();
+          
+          if (res && res.ehrs) {
+            // Filter EHRs for this specific pet
+            const petEHRs = res.ehrs.filter(ehr => ehr.pet_id === patient.pet_id);
+            
+            // Transform backend data to frontend format
+            const transformedRecords = petEHRs.map(ehr => {
+              // Get owner data from petOwner or pet.owner
+              const ownerData = ehr.petOwner?.User || ehr.pet?.owner;
+              const ownerAddress = ehr.petOwner?.address || "";
+              console.log("ownerData:", ownerData.first_name);
+              return {
+                id: ehr.id,
+                appointmentDate: ehr.visit_date,
+                veterinarian: ehr.vetProfessional?.User 
+                  ? `Dr. ${ehr.vetProfessional.User.first_name} ${ehr.vetProfessional.User.last_name}`
+                  : "Veterinarian",
+                reason: ehr.appointment?.service || "General Checkup",
+                clinic_name: ehr.clinic?.name || "Veterinary Clinic",
+                owner: ownerData ? {
+                  name: `${ownerData.first_name || ""} ${ownerData.last_name || ""}`.trim() || "Unknown",
+                  email: ownerData.email || "",
+                  phone: ownerData.phone_number || "",
+                  address: ownerAddress || "",
+                } : null,
+                documents: {
+                labResults: ehr.labResults && ehr.labResults.length > 0
+                  ? ehr.labResults.map(lab => ({
+                      id: lab.id,
+                      documentName: lab.name,
+                      details: lab.description,
+                      fileUrl: null
+                    }))
+                  : null,
+                vaccineRecords: ehr.vaccinations && ehr.vaccinations.length > 0
+                  ? ehr.vaccinations.map(vax => ({
+                      id: vax.id,
+                      documentName: vax.name,
+                      details: vax.description + (vax.duration ? ` (Duration: ${vax.duration})` : ''),
+                      fileUrl: null
+                    }))
+                  : null,
+                prescriptions: ehr.prescriptions && ehr.prescriptions.length > 0
+                  ? ehr.prescriptions.map(pres => ({
+                      id: pres.id,
+                      documentName: pres.name,
+                      details: pres.description,
+                      fileUrl: null
+                    }))
+                  : null,
+                deworming: ehr.dewormings && ehr.dewormings.length > 0
+                  ? ehr.dewormings.map(deworm => ({
+                      id: deworm.id,
+                      documentName: deworm.name,
+                      details: deworm.description,
+                      fileUrl: null
+                    }))
+                  : null
+              },
+              attachedFiles: ehr.attached_files || null
+              };
+            });
+            
+            setDisplayHealthRecords(transformedRecords);
+          } else {
+            setDisplayHealthRecords([]);
+          }
+        } catch (err) {
+          console.error("Error fetching EHR records:", err);
+          setDisplayHealthRecords([]);
+        } finally {
+          setLoadingRecords(false);
+        }
+      } else {
+        // Fallback to mock data if no pet_id
+        setDisplayHealthRecords(healthRecords);
+        setLoadingRecords(false);
+      }
+    };
+
+    fetchEHRRecords();
+  }, [patient, healthRecords]);
   // Handle saving new health record
   const handleSaveHealthRecord = async (newRecord) => {
     try {
@@ -302,15 +282,23 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
                 Health Records
               </h3>
               <p className="text-sm text-gray-600 mt-1">
-                {displayHealthRecords.length} appointment{displayHealthRecords.length !== 1 ? 's' : ''} on record
+                {loadingRecords 
+                  ? "Loading records..." 
+                  : `${displayHealthRecords.length} appointment${displayHealthRecords.length !== 1 ? 's' : ''} on record`}
               </p>
             </div>
           </div>
 
-          <HealthRecordsTable 
-            healthRecords={displayHealthRecords} 
-            onRecordClick={setSelectedRecord}
-          />
+          {loadingRecords ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">Loading health records...</p>
+            </div>
+          ) : (
+            <HealthRecordsTable 
+              healthRecords={displayHealthRecords} 
+              onRecordClick={setSelectedRecord}
+            />
+          )}
         </div>
       </div>
 
