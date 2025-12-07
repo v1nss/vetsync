@@ -25,16 +25,23 @@ export default function HomePage() {
             setError(null);
             const data = await fetchApprovedClinics();
             
-            // Transform API data to include all images
+            // Transform API data to include ALL clinic fields
             const transformedClinics = data.map(clinic => ({
-                id: clinic.clinic_id,
-                name: clinic.name,
-                address: clinic.address,
-                clinic_images: clinic.clinic_images || [],
+                // Keep all original fields
+                ...clinic,
+                // Ensure id is mapped correctly
+                id: clinic.clinic_id || clinic.id,
+                // Add liked property
                 liked: false,
-                description: clinic.description || "No description available",
-                contact_number: clinic.contact_number,
-                email: clinic.email,
+                // Ensure clinic_images is an array
+                clinic_images: clinic.clinic_images || [],
+                // Make sure services and schedules are included
+                service: clinic.service,
+                services: clinic.services,
+                schedules: clinic.schedules,
+                // Format address if needed
+                address: clinic.address,
+                address_string: clinic.address_string,
             }));
             
             setClinics(transformedClinics);
@@ -59,16 +66,21 @@ export default function HomePage() {
 
         let filtered = clinics.filter((clinic) => {
             if (!query) return true;
-            return (
-                clinic.name.toLowerCase().includes(query) ||
-                clinic.address.toLowerCase().includes(query) ||
-                clinic.description.toLowerCase().includes(query)
-            );
+            
+            // Search in name, address, and description
+            const searchableText = [
+                clinic.name,
+                typeof clinic.address === 'string' ? clinic.address : '',
+                clinic.address_string || '',
+                clinic.description || ''
+            ].join(' ').toLowerCase();
+            
+            return searchableText.includes(query);
         });
 
         if (activeFilter === "Popular") {
-            // Sort by number of likes
-            filtered = filtered.sort((a, b) => b.liked - a.liked);
+            // Sort by number of likes (you might want to use actual popularity metrics later)
+            filtered = filtered.sort((a, b) => (b.liked ? 1 : 0) - (a.liked ? 1 : 0));
         }
 
         if (filtered.length === 0) {
@@ -80,7 +92,7 @@ export default function HomePage() {
                             setSearchQuery("");
                             setActiveFilter("All");
                         }}
-                        className="mt-4 text-primary hover:underline"
+                        className="mt-4 text-primary hover:underline font-semibold"
                     >
                         Clear filters
                     </button>
@@ -168,7 +180,7 @@ export default function HomePage() {
                                         <button
                                             type="button"
                                             onClick={handleDetectLocation}
-                                            className="inline-flex items-center px-4 py-3 rounded-xl bg-white text-primary hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="inline-flex items-center px-4 py-3 rounded-xl bg-white text-primary hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
                                             disabled={isDetectingLocation}
                                             title="Location features coming soon"
                                         >
@@ -210,7 +222,7 @@ export default function HomePage() {
                     </div>
                 </div>
 
-                {/* Filter Tab buttons - Only show available filters */}
+                {/* Filter Tab buttons */}
                 <div className="mt-8 mb-2">
                     <div className="flex gap-3 overflow-x-auto pb-2" role="tablist" aria-label="Clinic filters">
                         {[

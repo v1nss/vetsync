@@ -1,6 +1,6 @@
 import { RiPinDistanceFill } from "react-icons/ri";
 import { FaLocationDot, FaClock, FaChevronLeft, FaChevronRight } from "react-icons/fa6";
-import { FaRegHeart, FaHeart } from "react-icons/fa";
+import { FaRegHeart, FaHeart, FaPhoneAlt } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import { BsGrid3X3Gap } from "react-icons/bs";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -22,7 +22,6 @@ export default function ClinicViewPage({ onLike }) {
   const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
   const descRef = React.useRef(null);
 
-  // Get clinic images array
   const clinicImages = clinic?.clinic_images || [];
   const hasMultipleImages = clinicImages.length > 1;
 
@@ -53,42 +52,31 @@ export default function ClinicViewPage({ onLike }) {
     };
   }, [showAllPhotos]);
 
-  // Fetch full clinic details if schedules or service are missing
   useEffect(() => {
     const loadClinicData = async () => {
-      // Get initial clinic from location state or localStorage
       let currentClinic = location.state?.clinic;
-
-      // Get clinic_id (could be clinic_id or id)
       const clinicId = currentClinic.clinic_id || currentClinic.id;
       
-      // Check if schedules and service are present
       const hasSchedules = currentClinic?.schedules && Array.isArray(currentClinic.schedules) && currentClinic.schedules.length > 0;
       const hasService = (currentClinic?.service && (Array.isArray(currentClinic.service) ? currentClinic.service.length > 0 : true)) ||
                          (currentClinic?.services && (Array.isArray(currentClinic.services) ? currentClinic.services.length > 0 : true));
       
-      // If clinic exists but missing schedules or service, fetch full details
       if (clinicId && (!hasSchedules || !hasService)) {
         try {
           setLoading(true);
           const fullClinicData = await fetchClinicById(clinicId);
-          
           if (fullClinicData) {
-            // Use the fetched data directly
             setClinic(fullClinicData);
           } else {
-            // Fallback to current clinic if fetch returns nothing
             setClinic(currentClinic);
           }
         } catch (error) {
           console.error("Failed to fetch full clinic details:", error);
-          // Keep the existing clinic data if fetch fails
           setClinic(currentClinic);
         } finally {
           setLoading(false);
         }
       } else {
-        // Clinic already has schedules and service, use it as is
         setClinic(currentClinic);
       }
     };
@@ -96,12 +84,12 @@ export default function ClinicViewPage({ onLike }) {
     loadClinicData();
   }, [slug]);
 
-  // Update liked state when clinic changes
   useEffect(() => {
     if (clinic) {
       setLiked(clinic.liked || false);
     }
   }, [clinic]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
@@ -115,10 +103,7 @@ export default function ClinicViewPage({ onLike }) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
         <p className="text-gray-500 mb-4">Clinic details not available.</p>
-        <button
-          onClick={() => navigate(-1)}
-          className="px-4 py-3 rounded-xl bg-primary text-white font-medium"
-        >
+        <button onClick={() => navigate(-1)} className="px-4 py-3 rounded-xl bg-primary text-white font-medium">
           Go Back
         </button>
       </div>
@@ -135,10 +120,8 @@ export default function ClinicViewPage({ onLike }) {
     return imageObj?.link || imageObj?.directLink || imageObj?.viewLink || '/placeholder-clinic.jpg';
   };
 
-  // Helper function to format time from 24-hour to 12-hour format
   const formatTime = (time) => {
     if (!time) return '';
-    // If time is in HH:MM format, convert to 12-hour format
     const [hours, minutes] = time.split(':');
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -146,28 +129,19 @@ export default function ClinicViewPage({ onLike }) {
     return `${hour12}:${minutes} ${ampm}`;
   };
 
-  // Helper function to format address
   const formatAddress = (address, addressString) => {
     if (typeof address === 'string') return address;
     if (address && typeof address === 'object') {
-      const parts = [
-        address.street,
-        address.barangay,
-        address.city,
-        address.province,
-        address.zipcode
-      ].filter(Boolean);
+      const parts = [address.street, address.barangay, address.city, address.province, address.zipcode].filter(Boolean);
       let formattedAddress = parts.join(', ');
-      if (address.landmark) {
-        formattedAddress += ` (${address.landmark})`;
-      }
+      if (address.landmark) formattedAddress += ` (${address.landmark})`;
       return formattedAddress || addressString || 'Address not available';
     }
     return addressString || 'Address not available';
   };
 
-  // Get formatted address for display and map
   const displayAddress = clinic ? formatAddress(clinic.address, clinic.address_string) : 'Address not available';
+  const displayNumber = clinic?.contact_number || 'Contact number not available';
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % clinicImages.length);
@@ -183,14 +157,10 @@ export default function ClinicViewPage({ onLike }) {
         <Navbar />
       </div>
 
-      {/* Photo Gallery Modal */}
       {showAllPhotos && (
         <div className="fixed inset-0 bg-white z-9999 overflow-y-auto">
           <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-4 flex items-center sm:justify-between">
-            <button
-              onClick={() => setShowAllPhotos(false)}
-              className="flex items-center gap-2 hover:bg-gray-100 px-3 py-2 rounded-lg transition"
-            >
+            <button onClick={() => setShowAllPhotos(false)} className="flex items-center gap-2 hover:bg-gray-100 px-3 py-2 rounded-lg transition">
               <IoClose className="text-2xl" />
               <span className="hidden sm:inline">Close</span>
             </button>
@@ -200,25 +170,16 @@ export default function ClinicViewPage({ onLike }) {
           
           <div className="max-w-5xl mx-auto px-4 py-4 sm:py-8 grid grid-cols-1 gap-4">
             {clinicImages.map((image, index) => (
-              <img
-                key={index}
-                src={getImageUrl(image)}
-                alt={`${clinic.name} - Photo ${index + 1}`}
-                className="w-full rounded-lg object-cover"
-                style={{ maxHeight: '80vh' }}
-              />
+              <img key={index} src={getImageUrl(image)} alt={`${clinic.name} - Photo ${index + 1}`}
+                className="w-full rounded-lg object-cover max-h-[80vh]" />
             ))}
           </div>
         </div>
       )}
 
       <div className="max-w-[1120px] mx-auto px-4 md:px-10">
-        {/* Mobile Header */}
         <div className="z-100 py-4 bg-white sticky top-0 md:hidden flex items-center justify-between">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-gray-100 rounded-full transition"
-          >
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition">
             <FaChevronLeft className="text-gray-700" />
           </button>
           <div className="flex items-center gap-3">
@@ -228,12 +189,8 @@ export default function ClinicViewPage({ onLike }) {
           </div>
         </div>
 
-        {/* Desktop Header with Actions */}
         <div className="hidden md:flex items-start justify-between mb-6 pt-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 p-2 hover:gap-4 rounded-full transition"
-          >
+          <button onClick={() => navigate(-1)} className="flex items-center gap-2 p-2 hover:gap-4 rounded-full transition">
             <FaChevronLeft className="text-gray-700" />
             <span className="text-2xl font-semibold text-gray-900">{clinic.name}</span>
           </button>
@@ -245,29 +202,18 @@ export default function ClinicViewPage({ onLike }) {
           </div>
         </div>
 
-        {/* Image Gallery Grid - Desktop */}
         {clinicImages.length > 0 && (
           <div className="hidden md:block mb-8">
             <div className="grid grid-cols-4 grid-rows-2 gap-2 h-[480px] rounded-xl overflow-hidden">
-              {/* Main large image */}
               <div className="col-span-2 row-span-2 relative group cursor-pointer">
-                <img
-                  src={getImageUrl(clinicImages[0])}
-                  alt={`${clinic.name} - Main`}
-                  className="w-full h-full object-cover"
-                  onClick={() => setShowAllPhotos(true)}
-                />
+                <img src={getImageUrl(clinicImages[0])} alt={`${clinic.name} - Main`}
+                  className="w-full h-full object-cover" onClick={() => setShowAllPhotos(true)} />
               </div>
               
-              {/* Grid of smaller images */}
               {clinicImages.slice(1, 5).map((image, index) => (
                 <div key={index} className="relative group cursor-pointer">
-                  <img
-                    src={getImageUrl(image)}
-                    alt={`${clinic.name} - Photo ${index + 2}`}
-                    className="w-full h-full object-cover"
-                    onClick={() => setShowAllPhotos(true)}
-                  />
+                  <img src={getImageUrl(image)} alt={`${clinic.name} - Photo ${index + 2}`}
+                    className="w-full h-full object-cover" onClick={() => setShowAllPhotos(true)} />
                   {index === 3 && clinicImages.length > 5 && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                       <span className="text-white font-semibold">+{clinicImages.length - 5} more</span>
@@ -278,10 +224,8 @@ export default function ClinicViewPage({ onLike }) {
             </div>
             
             {clinicImages.length > 1 && (
-              <button
-                onClick={() => setShowAllPhotos(true)}
-                className="mt-4 flex items-center gap-2 px-4 py-2 border text-gray-500 border-gray-200 hover:border-primary hover:text-primary rounded-lg hover:bg-gray-50 transition font-semibold"
-              >
+              <button onClick={() => setShowAllPhotos(true)}
+                className="mt-4 flex items-center gap-2 px-4 py-2 border text-gray-500 border-gray-200 hover:border-primary hover:text-primary rounded-lg hover:bg-gray-50 transition font-semibold">
                 <BsGrid3X3Gap />
                 <span>Show all photos</span>
               </button>
@@ -289,28 +233,18 @@ export default function ClinicViewPage({ onLike }) {
           </div>
         )}
 
-        {/* Image Gallery Carousel - Mobile */}
         {clinicImages.length > 0 && (
           <div className="md:hidden relative mb-6">
             <div className="relative w-full h-72 rounded-xl overflow-hidden">
-              <img
-                src={getImageUrl(clinicImages[currentImageIndex])}
-                alt={`${clinic.name} - Photo ${currentImageIndex + 1}`}
-                className="w-full h-full object-cover"
-              />
+              <img src={getImageUrl(clinicImages[currentImageIndex])} alt={`${clinic.name} - Photo ${currentImageIndex + 1}`}
+                className="w-full h-full object-cover" />
               
               {hasMultipleImages && (
                 <>
-                  <button
-                    onClick={prevImage}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-full hover:bg-white transition"
-                  >
+                  <button onClick={prevImage} className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-full hover:bg-white transition">
                     <FaChevronLeft className="text-gray-800" />
                   </button>
-                  <button
-                    onClick={nextImage}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-full hover:bg-white transition"
-                  >
+                  <button onClick={nextImage} className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-full hover:bg-white transition">
                     <FaChevronRight className="text-gray-800" />
                   </button>
                   
@@ -322,10 +256,8 @@ export default function ClinicViewPage({ onLike }) {
             </div>
             
             {hasMultipleImages && (
-              <button
-                onClick={() => setShowAllPhotos(true)}
-                className="mt-4 flex items-center gap-2 px-4 py-2 border text-gray-500 border-gray-200 hover:border-primary hover:text-primary rounded-lg hover:bg-gray-50 transition font-semibold w-full justify-center"
-              >
+              <button onClick={() => setShowAllPhotos(true)}
+                className="mt-4 flex items-center gap-2 px-4 py-2 border text-gray-500 border-gray-200 hover:border-primary hover:text-primary rounded-lg hover:bg-gray-50 transition font-semibold w-full justify-center">
                 <BsGrid3X3Gap />
                 <span>Show all {clinicImages.length} photos</span>
               </button>
@@ -333,14 +265,10 @@ export default function ClinicViewPage({ onLike }) {
           </div>
         )}
 
-        {/* Mobile Title */}
         <h1 className="md:hidden text-2xl font-semibold text-gray-900 mb-4">{clinic.name}</h1>
 
-        {/* Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-          {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Quick Info */}
             <div className="pb-8 border-b border-gray-200">
               <div className="space-y-4">
                 {clinic.distance && (
@@ -354,64 +282,51 @@ export default function ClinicViewPage({ onLike }) {
                   <FaLocationDot className="text-gray-700 text-xl mt-1 shrink-0" />
                   <span className="text-gray-700">{displayAddress}</span>
                 </div>
-                
-                {/* Operating Hours */}
-                {clinic.schedules && Array.isArray(clinic.schedules) && clinic.schedules.length > 0 && (
-                  <div className="flex items-start gap-3">
-                    <FaClock className="text-gray-700 text-xl mt-1 shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      {clinic.schedules.map((schedule, idx) => {
-                        const dayName = schedule.day_of_week.charAt(0).toUpperCase() + schedule.day_of_week.slice(1);
-                        const isClosed = schedule.is_closed || false;
-                        const openTime = schedule.open_time ? formatTime(schedule.open_time) : '';
-                        const closeTime = schedule.close_time ? formatTime(schedule.close_time) : '';
-                        
-                        return (
-                          <div key={idx} className="flex items-center justify-between text-gray-700">
-                            <span className="font-medium">{dayName}</span>
-                            {isClosed ? (
-                              <span className="text-gray-500">Closed</span>
-                            ) : openTime && closeTime ? (
-                              <span>{openTime} - {closeTime}</span>
-                            ) : (
-                              <span className="text-gray-400 italic">Not set</span>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                {/* Fallback to old hours format if schedules not available */}
-                {(!clinic.schedules || !Array.isArray(clinic.schedules) || clinic.schedules.length === 0) && clinic.hours && (
-                  <div className="flex items-center gap-3">
-                    <FaClock className="text-gray-700 text-xl" />
-                    <span className="text-gray-700 font-medium">{clinic.hours}</span>
-                  </div>
-                )}
+                <div className="flex items-start gap-3">
+                  <FaPhoneAlt className="text-gray-700 text-xl mt-1 shrink-0" />
+                  <span className="text-gray-700">{displayNumber}</span>
+                </div>
               </div>
             </div>
 
-            {/* Services */}
+            {/* Mobile Operating Hours - Only shown on mobile */}
+            {clinic.schedules && Array.isArray(clinic.schedules) && clinic.schedules.length > 0 && (
+              <div className="lg:hidden pb-8 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Operating Hours</h2>
+                <div className="space-y-2">
+                  {clinic.schedules.map((schedule, idx) => {
+                    const dayName = schedule.day_of_week.charAt(0).toUpperCase() + schedule.day_of_week.slice(1);
+                    const isClosed = schedule.is_closed || false;
+                    const openTime = schedule.open_time ? formatTime(schedule.open_time) : '';
+                    const closeTime = schedule.close_time ? formatTime(schedule.close_time) : '';
+                    
+                    return (
+                      <div key={idx} className="flex items-center justify-between text-gray-700 py-2">
+                        <span className="font-medium">{dayName}</span>
+                        {isClosed ? (
+                          <span className="text-gray-500">Closed</span>
+                        ) : openTime && closeTime ? (
+                          <span>{openTime} - {closeTime}</span>
+                        ) : (
+                          <span className="text-gray-400 italic">Not set</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {(() => {
-              // Handle both service (array) and services (legacy) fields
               let services = [];
               if (clinic.service && Array.isArray(clinic.service)) {
                 services = clinic.service;
               } else if (clinic.services && Array.isArray(clinic.services)) {
                 services = clinic.services;
               } else if (clinic.service && typeof clinic.service === 'string') {
-                try {
-                  services = JSON.parse(clinic.service);
-                } catch {
-                  services = [];
-                }
+                try { services = JSON.parse(clinic.service); } catch { services = []; }
               } else if (clinic.services && typeof clinic.services === 'string') {
-                try {
-                  services = JSON.parse(clinic.services);
-                } catch {
-                  services = [];
-                }
+                try { services = JSON.parse(clinic.services); } catch { services = []; }
               }
               
               return services.length > 0 ? (
@@ -419,10 +334,7 @@ export default function ClinicViewPage({ onLike }) {
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">Services Offered</h2>
                   <div className="flex flex-wrap gap-2">
                     {services.map((service, index) => (
-                      <span
-                        key={index}
-                        className="px-4 py-2 bg-gray-100 text-gray-800 rounded-full text-sm font-medium border border-gray-200"
-                      >
+                      <span key={index} className="px-4 py-2 bg-gray-100 text-gray-800 rounded-full text-sm font-medium border border-gray-200">
                         {service}
                       </span>
                     ))}
@@ -431,57 +343,73 @@ export default function ClinicViewPage({ onLike }) {
               ) : null;
             })()}
 
-            {/* Description */}
             <div className="pb-8 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">About this clinic</h2>
-              <p
-                ref={descRef}
-                className={`text-gray-700 leading-relaxed ${!isExpanded && "line-clamp-4"}`}
-              >
+              <p ref={descRef} className={`text-gray-700 leading-relaxed ${!isExpanded && "line-clamp-4"}`}>
                 {clinic.description || "No description available for this clinic."}
               </p>
               {isOverflowing && (
-                <button
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className="mt-3 font-semibold underline hover:text-gray-900 transition"
-                >
+                <button onClick={() => setIsExpanded(!isExpanded)} className="mt-3 font-semibold underline hover:text-gray-900 transition">
                   {isExpanded ? "Show less" : "Show more"}
                 </button>
               )}
             </div>
 
-            {/* Map */}
             <div className="pb-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Where you'll find us</h2>
               <div className="rounded-xl overflow-hidden h-[400px] border border-gray-200">
-                <iframe
-                  title="clinic-map"
-                  width="100%"
-                  height="100%"
-                  loading="lazy"
-                  src={`https://www.google.com/maps?q=${encodeURIComponent(displayAddress)}&output=embed`}
-                ></iframe>
+                <iframe title="clinic-map" width="100%" height="100%" loading="lazy"
+                  src={`https://www.google.com/maps?q=${encodeURIComponent(displayAddress)}&output=embed`}></iframe>
               </div>
               <p className="text-gray-700 mt-4">{displayAddress}</p>
             </div>
           </div>
 
-          {/* Booking Card - Desktop Sticky */}
+          {/* Booking Card - Desktop with Schedule */}
           <div className="hidden lg:block">
-            <div className="sticky top-24 border border-gray-200 rounded-xl p-6">
-              <div className="mb-6">
+            <div className="sticky top-24 border border-gray-200 rounded-xl p-6 space-y-6">
+              <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Book an appointment</h3>
                 <p className="text-gray-600 text-sm">Schedule a visit for your pet</p>
               </div>
+
+              {/* Operating Hours in Booking Card */}
+              {clinic.schedules && Array.isArray(clinic.schedules) && clinic.schedules.length > 0 && (
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <FaClock className="text-gray-700 text-lg" />
+                    <h4 className="font-semibold text-gray-900">Operating Hours</h4>
+                  </div>
+                  <div className="space-y-2">
+                    {clinic.schedules.map((schedule, idx) => {
+                      const dayName = schedule.day_of_week.charAt(0).toUpperCase() + schedule.day_of_week.slice(1);
+                      const isClosed = schedule.is_closed || false;
+                      const openTime = schedule.open_time ? formatTime(schedule.open_time) : '';
+                      const closeTime = schedule.close_time ? formatTime(schedule.close_time) : '';
+                      
+                      return (
+                        <div key={idx} className="flex items-center justify-between text-sm">
+                          <span className="font-medium text-gray-700">{dayName}</span>
+                          {isClosed ? (
+                            <span className="text-gray-500">Closed</span>
+                          ) : openTime && closeTime ? (
+                            <span className="text-gray-600">{openTime} - {closeTime}</span>
+                          ) : (
+                            <span className="text-gray-400 italic">Not set</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               
-              <button
-                onClick={() => navigate(`/pet-owner/clinics/${slugify(clinic.name)}/book`, { state: { clinic } })}
-                className="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-[#FEA08E] transition"
-              >
+              <button onClick={() => navigate(`/pet-owner/clinics/${slugify(clinic.name)}/book`, { state: { clinic } })}
+                className="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-[#FEA08E] transition">
                 Book appointment
               </button>
               
-              <div className="mt-4 text-center text-sm text-gray-500">
+              <div className="text-center text-sm text-gray-500">
                 You won't be charged yet
               </div>
             </div>
@@ -489,17 +417,13 @@ export default function ClinicViewPage({ onLike }) {
         </div>
       </div>
 
-      {/* Mobile Booking Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 z-50">
-        <button
-          onClick={() => navigate(`/pet-owner/clinics/${slugify(clinic.name)}/book`, { state: { clinic } })}
-          className="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-[#FEA08E] transition"
-        >
+        <button onClick={() => navigate(`/pet-owner/clinics/${slugify(clinic.name)}/book`, { state: { clinic } })}
+          className="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-[#FEA08E] transition">
           Book appointment
         </button>
       </div>
 
-      {/* Mobile spacing for fixed button */}
       <div className="lg:hidden h-20"></div>
     </main>
   );
