@@ -37,7 +37,6 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
               // Get owner data from petOwner or pet.owner
               const ownerData = ehr.petOwner?.User || ehr.pet?.owner;
               const ownerAddress = ehr.petOwner?.address || "";
-              console.log("ownerData:", ownerData.first_name);
               return {
                 id: ehr.id,
                 appointmentDate: ehr.visit_date,

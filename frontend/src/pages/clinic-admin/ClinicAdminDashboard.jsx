@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { FaUsers, FaCalendarAlt, FaUserMd, FaBell, FaNotesMedical, FaArrowUp, FaPaw, FaClock } from "react-icons/fa";
 import { Link } from "react-router";
+import { fetchMyClinic } from "../../global/api/clinicAdmin";
+import { getVetClinicPatients, getVetClinicEHRs } from "../../global/api/clinicPatient";
+import { fetchClinicVets } from "../../global/api/clinicAdmin";
+import { fetchAppointmentsByClinic } from "../../global/api/appointment";
 
 export default function ClinicAdminDashboard() {
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalPatients: 0,
     totalAppointments: 0,
@@ -16,38 +21,171 @@ export default function ClinicAdminDashboard() {
   const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
-    // Mock data (replace with API integration)
-    setStats({
-      totalPatients: 120,
-      totalAppointments: 35,
-      totalVets: 5,
-      activePatients: 89,
-    });
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch clinic to get clinic_id
+        const clinic = await fetchMyClinic();
+        if (!clinic || !clinic.clinic_id) {
+          console.error("No clinic found");
+          setLoading(false);
+          return;
+        }
 
-    setTodayStats({
-      appointments: 8,
-      checkIns: 5,
-    });
+        const clinicId = clinic.clinic_id;
 
-    const appointments = [
-      { id: 1, petName: "Buddy", owner: "Maria Santos", time: "10:00 AM", date: "2025-11-15", vet: "Dr. Ana Reyes", type: "Checkup", status: "confirmed" },
-      { id: 2, petName: "Milo", owner: "John Cruz", time: "11:30 AM", date: "2025-11-15", vet: "Dr. Roberto Garcia", type: "Vaccination", status: "pending" },
-      { id: 3, petName: "Luna", owner: "Sarah Lee", time: "2:00 PM", date: "2025-11-15", vet: "Dr. Ana Reyes", type: "Surgery", status: "confirmed" },
-      { id: 4, petName: "Max", owner: "Carlos Diaz", time: "3:30 PM", date: "2025-11-16", vet: "Dr. Maria Santos", type: "Follow-up", status: "confirmed" },
-    ];
+        // Fetch all data in parallel
+        const [patientsRes, vetsRes, appointmentsRes, ehrsRes] = await Promise.all([
+          getVetClinicPatients(),
+          fetchClinicVets(),
+          fetchAppointmentsByClinic(clinicId),
+          getVetClinicEHRs(),
+        ]);
 
-    setUpcomingAppointments(appointments);
+        // Process patients
+        const patients = patientsRes?.patients || [];
+        const totalPatients = patients.length;
+        const activePatients = totalPatients; // All clinic patients are considered active
 
-    // Count pending appointments
-    const pending = appointments.filter(appt => appt.status === 'pending').length;
-    setPendingCount(pending);
+        // Process vets
+        const vets = vetsRes || [];
+        const totalVets = vets.length;
 
-    setRecentRecords([
-      { id: 1, petName: "Bella", owner: "Emma Wilson", updatedBy: "Dr. Maria Santos", date: "2025-11-12", time: "2:30 PM", type: "Lab Results" },
-      { id: 2, petName: "Charlie", owner: "Mike Johnson", updatedBy: "Dr. Ana Reyes", date: "2025-11-12", time: "1:15 PM", type: "Prescription" },
-      { id: 3, petName: "Daisy", owner: "Lisa Brown", updatedBy: "Dr. Roberto Garcia", date: "2025-11-11", time: "4:45 PM", type: "Diagnosis" },
-    ]);
+        // Process appointments
+        const appointments = appointmentsRes?.appointments || [];
+        
+        // Get current date for filtering
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayEnd = new Date(today);
+        todayEnd.setHours(23, 59, 59, 999);
+
+        // Filter today's appointments
+        const todayAppointments = appointments.filter(apt => {
+          const aptDate = new Date(apt.date);
+          return aptDate >= today && aptDate <= todayEnd;
+        });
+
+        // Count appointments by status for today
+        const todayConfirmed = todayAppointments.filter(apt => apt.status === 'approved' || apt.status === 'confirmed').length;
+        const todayPending = todayAppointments.filter(apt => apt.status === 'pending').length;
+
+        // Get upcoming appointments (next 5, sorted by date and time)
+        const upcoming = appointments
+          .filter(apt => {
+            const aptDate = new Date(`${apt.date}T${apt.time}`);
+            return aptDate >= new Date() && (apt.status === 'pending' || apt.status === 'approved' || apt.status === 'confirmed');
+          })
+          .sort((a, b) => {
+            const dateA = new Date(`${a.date}T${a.time}`);
+            const dateB = new Date(`${b.date}T${b.time}`);
+            return dateA - dateB;
+          })
+          .slice(0, 5)
+          .map(apt => ({
+            id: apt.appointment_id,
+            petName: apt.pet?.name || "Unknown",
+            owner: apt.owner?.User ? `${apt.owner.User.first_name} ${apt.owner.User.last_name}` : "Unknown",
+            time: formatTime(apt.time),
+            date: apt.date,
+            vet: apt.vet?.User ? `Dr. ${apt.vet.User.first_name} ${apt.vet.User.last_name}` : "Not assigned",
+            type: apt.service || "General Checkup",
+            status: apt.status === 'approved' ? 'confirmed' : apt.status,
+          }));
+
+        // Count pending appointments
+        const pending = appointments.filter(apt => apt.status === 'pending').length;
+
+        // Get this month's appointments
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        const thisMonthAppointments = appointments.filter(apt => {
+          const aptDate = new Date(apt.date);
+          return aptDate.getMonth() === currentMonth && aptDate.getFullYear() === currentYear;
+        });
+
+        // Process EHR records
+        const ehrs = ehrsRes?.ehrs || [];
+        const recentEHRs = ehrs
+          .sort((a, b) => {
+            const dateA = new Date(`${a.visit_date}T${a.createdAt || ''}`);
+            const dateB = new Date(`${b.visit_date}T${b.createdAt || ''}`);
+            return dateB - dateA;
+          })
+          .slice(0, 5)
+          .map(ehr => {
+            // Determine record type based on available data
+            let recordType = "General";
+            if (ehr.labResults && ehr.labResults.length > 0) {
+              recordType = "Lab Results";
+            } else if (ehr.prescriptions && ehr.prescriptions.length > 0) {
+              recordType = "Prescription";
+            } else if (ehr.vaccinations && ehr.vaccinations.length > 0) {
+              recordType = "Vaccination";
+            } else if (ehr.dewormings && ehr.dewormings.length > 0) {
+              recordType = "Deworming";
+            }
+
+            const vetName = ehr.vetProfessional?.User 
+              ? `Dr. ${ehr.vetProfessional.User.first_name} ${ehr.vetProfessional.User.last_name}`
+              : "Veterinarian";
+
+            const visitDate = new Date(ehr.visit_date);
+            const createdAt = ehr.createdAt ? new Date(ehr.createdAt) : visitDate;
+
+            return {
+              id: ehr.id,
+              petName: ehr.pet?.name || "Unknown",
+              owner: ehr.pet?.owner 
+                ? `${ehr.pet.owner.first_name} ${ehr.pet.owner.last_name}`
+                : "Unknown",
+              updatedBy: vetName,
+              date: visitDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+              time: createdAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+              type: recordType,
+            };
+          });
+
+        // Update state
+        setStats({
+          totalPatients,
+          totalAppointments: thisMonthAppointments.length,
+          totalVets,
+          activePatients,
+        });
+
+        setTodayStats({
+          appointments: todayAppointments.length,
+          checkIns: todayConfirmed,
+        });
+
+        setUpcomingAppointments(upcoming);
+        setPendingCount(pending);
+        setRecentRecords(recentEHRs);
+
+      } catch (err) {
+        console.error("Error fetching dashboard data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
+
+  const formatTime = (timeString) => {
+    if (!timeString) return "N/A";
+    try {
+      const [hours, minutes] = timeString.split(':');
+      const hour = parseInt(hours);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const displayHour = hour % 12 || 12;
+      return `${displayHour}:${minutes} ${ampm}`;
+    } catch (err) {
+      return timeString;
+    }
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -57,6 +195,17 @@ export default function ClinicAdminDashboard() {
       default: return 'bg-gray-100 text-gray-700';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
