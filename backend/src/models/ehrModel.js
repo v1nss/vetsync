@@ -14,7 +14,7 @@ const EHR = sequelize.define("EHR", {
   },
   pet_owner_id: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
     references: {
       model: PetOwner,
       key: "user_id",

@@ -8,6 +8,7 @@ import Pet from "./petModel.js";
 import Clinic from "./clinicModel.js";
 import ClinicAddress from "./clinicAddressModel.js";
 import ClinicSchedule from "./clinicScheduleModel.js";
+import ClinicPatient from "./clinicPatientModel.js";
 import Appointment from "./appointmentModel.js";
 import ApprovalLog from "./approvalLogsModel.js";
 
@@ -38,6 +39,7 @@ export {
   Clinic,
   ClinicAddress,
   ClinicSchedule,
+  ClinicPatient,
   Appointment,
   EHR,
   Prescription,

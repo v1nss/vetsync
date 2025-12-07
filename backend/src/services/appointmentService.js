@@ -1,6 +1,7 @@
 import Appointment from "../models/appointmentModel.js";
 import ClinicAdmin from "../models/users/clinicAdminModel.js";
 import VetProfessional from "../models/users/vetProfessionalModel.js";
+import ClinicPatient from "../models/clinicPatientModel.js";
 
 export const createAppointment = async (id, appointmentData) => {
  const { body } = appointmentData;
@@ -36,8 +37,41 @@ export const approveAppointment = async (clinicAdminId, appointmentId, vetProId)
 };
 
 export const completeAppointment = async (appointmentId) => {
-  await Appointment.update(
-    { status: "completed" },
-    { where: { appointment_id: appointmentId } }
-  );
+  // Get the appointment with clinic_id and pet_id
+  const appointment = await Appointment.findByPk(appointmentId);
+  
+  if (!appointment) {
+    throw new Error("Appointment not found");
+  }
+
+  const { clinic_id, pet_id } = appointment;
+
+  if (!clinic_id || !pet_id) {
+    throw new Error("Appointment missing clinic_id or pet_id");
+  }
+
+  // Check if the pet already exists as a patient for this clinic
+  const existingClinicPatient = await ClinicPatient.findOne({
+    where: {
+      clinic_id: clinic_id,
+      pet_id: pet_id,
+    },
+  });
+
+  // If not exists, create a new clinic_patient record
+  if (!existingClinicPatient) {
+    await ClinicPatient.create({
+      clinic_id: clinic_id,
+      pet_id: pet_id,
+    });
+    console.log(`Added pet ${pet_id} as patient to clinic ${clinic_id}`);
+  }
+
+  // Complete the appointment
+  await appointment.update({ status: "completed" });
+  
+  // Reload to get the latest data
+  await appointment.reload();
+
+  return appointment;
 }
