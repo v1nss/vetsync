@@ -207,7 +207,6 @@ export const getAllApprovedClinics = async () => {
     ],
     order: [["name", "ASC"]], // Sort by name
   });
-
   return clinics;
 };
 

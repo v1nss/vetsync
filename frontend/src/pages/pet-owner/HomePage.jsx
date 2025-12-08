@@ -24,7 +24,6 @@ export default function HomePage() {
             setLoading(true);
             setError(null);
             const data = await fetchApprovedClinics();
-            
             // Transform API data to include ALL clinic fields
             const transformedClinics = data.map(clinic => ({
                 // Keep all original fields

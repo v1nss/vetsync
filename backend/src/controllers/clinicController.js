@@ -30,6 +30,43 @@ const formatClinicForResponse = (clinic) => {
   return clinicData;
 };
 
+// Helper function to format clinic data for public view (excludes sensitive documents, preserves address object with lat/lng)
+const formatClinicForPublicView = (clinic) => {
+  if (!clinic) return clinic;
+  
+  const clinicData = clinic.toJSON ? clinic.toJSON() : clinic;
+  
+  // Remove sensitive document fields
+  delete clinicData.bir_url;
+  delete clinicData.mayor_permit_url;
+  delete clinicData.secdti_url;
+  
+  // Preserve address object with latitude and longitude for map display
+  if (clinicData.address && typeof clinicData.address === 'object') {
+    // Create formatted address string for backward compatibility (without lat/lng)
+    const addressParts = [
+      clinicData.address.street,
+      clinicData.address.barangay,
+      clinicData.address.city,
+      clinicData.address.province,
+      clinicData.address.zipcode
+    ].filter(Boolean);
+    
+    let formattedAddress = addressParts.join(', ');
+    if (clinicData.address.landmark) {
+      formattedAddress += ` (${clinicData.address.landmark})`;
+    }
+    
+    // Add formatted string for backward compatibility
+    clinicData.address_string = formattedAddress || '';
+    
+    // Keep address as object with all fields including latitude and longitude
+    // The address object is preserved as-is with all properties
+  }
+  
+  return clinicData;
+};
+
 // Helper function to upload multiple files to Google Drive
 const uploadMultipleFiles = async (files, folderId) => {
   if (!files || files.length === 0) return [];
@@ -281,7 +318,7 @@ export const fetchApprovedClinics = async (req, res) => {
 
     res.status(200).json({
       message: "Approved clinics fetched successfully",
-      clinics: clinics.map(formatClinicForResponse),
+      clinics: clinics.map(formatClinicForPublicView),
       count: clinics.length,
     });
   } catch (err) {
@@ -300,7 +337,7 @@ export const fetchClinicById = async (req, res) => {
 
     res.status(200).json({
       message: "Clinic fetched successfully",
-      clinic: formatClinicForResponse(clinic),
+      clinic: formatClinicForPublicView(clinic),
     });
   } catch (err) {
     console.error("Error fetching clinic by ID:", err.message);
@@ -332,7 +369,7 @@ export const searchClinics = async (req, res) => {
 
     res.status(200).json({
       message: "Search results fetched successfully",
-      clinics: clinics.map(formatClinicForResponse),
+      clinics: clinics.map(formatClinicForPublicView),
       count: clinics.length,
       searchTerm: searchTerm,
     });

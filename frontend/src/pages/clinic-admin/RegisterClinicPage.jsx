@@ -5,6 +5,7 @@ import { loginUser } from "../../global/api/auth";
 import { useAuth } from "../../context/AuthContext";
 import { registerClinic } from "../../global/api/clinic";
 import { FaChevronLeft, FaChevronRight, FaCamera, FaTimes, FaMapMarkerAlt } from "react-icons/fa";
+import LocationPickerModal from "../../components/LocationPickerModal";
 
 const Input = ({ label, name, type = "text", placeholder, required, value, onChange, error }) => (
   <div>
@@ -79,6 +80,7 @@ export default function RegisterClinicPage() {
   const [previews, setPreviews] = useState({ clinicImages: [], secdti: null, mayorsPermit: null, bir: null });
   const [errors, setErrors] = useState({});
   const [submitStatus, setSubmitStatus] = useState(null);
+  const [showLocationModal, setShowLocationModal] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -240,6 +242,9 @@ export default function RegisterClinicPage() {
       if (!formData.city.trim()) newErrors.city = "City is required";
       if (!formData.province.trim()) newErrors.province = "Province is required";
       if (!formData.zipcode.trim()) newErrors.zipcode = "ZIP code is required";
+      if (!formData.latitude || !formData.longitude) {
+        newErrors.latitude = "Please pin your location on the map";
+      }
       if (services.length === 0) newErrors.services = "At least one service is required";
     }
     if (step === 4) {
@@ -261,9 +266,23 @@ export default function RegisterClinicPage() {
   };
 
   const handleMapClick = () => {
-    // Placeholder for map modal - implement your map integration here
-    alert("Map integration: Click to pin location");
-    // After user pins location, update formData.latitude and formData.longitude
+    setShowLocationModal(true);
+  };
+
+  const handleLocationConfirm = (latitude, longitude) => {
+    setFormData((prev) => ({
+      ...prev,
+      latitude: latitude.toString(),
+      longitude: longitude.toString(),
+    }));
+    if (errors.latitude || errors.longitude) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.latitude;
+        delete newErrors.longitude;
+        return newErrors;
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -401,14 +420,25 @@ export default function RegisterClinicPage() {
                 value={formData.landmark} onChange={handleChange} />
 
               <div>
-                <label className="block text-sm text-gray-700 mb-2">Location Pin</label>
+                <label className={`block text-sm text-gray-700 mb-2 ${errors.latitude ? 'label-required' : ''}`}>
+                  Location Pin <span className="text-red-500">*</span>
+                </label>
                 <button type="button" onClick={handleMapClick}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-2xl hover:border-primary transition-all">
-                  <FaMapMarkerAlt className="text-primary" />
-                  <span className="text-sm text-gray-600">
-                    {formData.latitude && formData.longitude ? `Location: ${formData.latitude}, ${formData.longitude}` : "Click to pin location on map"}
+                  className={`w-full flex items-center justify-center gap-2 px-4 py-3 border-2 rounded-2xl transition-all ${
+                    formData.latitude && formData.longitude
+                      ? 'border-green-300 bg-green-50 hover:border-green-400'
+                      : errors.latitude
+                      ? 'border-red-300 bg-red-50 hover:border-red-400'
+                      : 'border-dashed border-gray-300 hover:border-primary'
+                  }`}>
+                  <FaMapMarkerAlt className={`${formData.latitude && formData.longitude ? 'text-green-600' : 'text-primary'}`} />
+                  <span className={`text-sm ${formData.latitude && formData.longitude ? 'text-green-700 font-medium' : 'text-gray-600'}`}>
+                    {formData.latitude && formData.longitude 
+                      ? `Location Pinned: ${parseFloat(formData.latitude).toFixed(6)}, ${parseFloat(formData.longitude).toFixed(6)}` 
+                      : "Click to pin location on map"}
                   </span>
                 </button>
+                {errors.latitude && <p className="text-red-500 text-xs mt-1">{errors.latitude}</p>}
               </div>
 
               <div>
@@ -630,6 +660,15 @@ export default function RegisterClinicPage() {
           </div>
         </form>
       </div>
+
+      {/* Location Picker Modal */}
+      <LocationPickerModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        onConfirm={handleLocationConfirm}
+        initialLat={formData.latitude}
+        initialLng={formData.longitude}
+      />
     </section>
   );
 }

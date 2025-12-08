@@ -6,8 +6,42 @@ import { BsGrid3X3Gap } from "react-icons/bs";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { slugify } from "../../utils/slugify";
 import Navbar from "../../components/Navbar.jsx";
-import React, {useEffect} from "react";
+import React, {useEffect, useState} from "react";
 import { fetchClinicById } from "../../global/api/clinic";
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix for default marker icon in react-leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+// Custom marker icon for clinic
+const createClinicIcon = () => {
+  return L.divIcon({
+    className: 'clinic-marker',
+    html: `<div style="background-color: #FF6B6B; width: 40px; height: 40px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 4px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.3);"></div>`,
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+  });
+};
+
+// Component to handle map initialization
+function MapController({ center }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (center && center[0] && center[1]) {
+      map.setView(center, 15);
+    }
+  }, [map, center]);
+
+  return null;
+}
 
 export default function ClinicViewPage({ onLike }) {
   const location = useLocation();
@@ -142,6 +176,29 @@ export default function ClinicViewPage({ onLike }) {
 
   const displayAddress = clinic ? formatAddress(clinic.address, clinic.address_string) : 'Address not available';
   const displayNumber = clinic?.contact_number || 'Contact number not available';
+
+  // Get clinic coordinates
+  const getClinicCoordinates = () => {
+    if (!clinic) return null;
+    
+    // Check if latitude/longitude are in clinic.address object
+    if (clinic.address && typeof clinic.address === 'object') {
+      if (clinic.address.latitude && clinic.address.longitude) {
+        return [parseFloat(clinic.address.latitude), parseFloat(clinic.address.longitude)];
+      }
+    }
+    
+    // Check if latitude/longitude are directly on clinic object
+    if (clinic.latitude && clinic.longitude) {
+      return [parseFloat(clinic.latitude), parseFloat(clinic.longitude)];
+    }
+    
+    return null;
+  };
+
+  const clinicCoordinates = getClinicCoordinates();
+  const defaultCenter = [14.5995, 120.9842]; // Default to Manila, Philippines
+  const mapCenter = clinicCoordinates || defaultCenter;
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % clinicImages.length);
@@ -358,8 +415,32 @@ export default function ClinicViewPage({ onLike }) {
             <div className="pb-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Where you'll find us</h2>
               <div className="rounded-xl overflow-hidden h-[400px] border border-gray-200">
-                <iframe title="clinic-map" width="100%" height="100%" loading="lazy"
-                  src={`https://www.google.com/maps?q=${encodeURIComponent(displayAddress)}&output=embed`}></iframe>
+                {clinicCoordinates ? (
+                  <MapContainer
+                    center={mapCenter}
+                    zoom={15}
+                    style={{ height: '100%', width: '100%' }}
+                    scrollWheelZoom={true}
+                  >
+                    <TileLayer
+                      url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
+                      attribution="© CartoDB & OSM contributors"
+                    />
+                    <MapController center={mapCenter} />
+                    <Marker
+                      position={clinicCoordinates}
+                      icon={createClinicIcon()}
+                    />
+                  </MapContainer>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                    <div className="text-center p-6">
+                      <FaLocationDot className="text-gray-400 text-4xl mx-auto mb-2" />
+                      <p className="text-gray-600">Map location not available</p>
+                      <p className="text-sm text-gray-500 mt-2">{displayAddress}</p>
+                    </div>
+                  </div>
+                )}
               </div>
               <p className="text-gray-700 mt-4">{displayAddress}</p>
             </div>
