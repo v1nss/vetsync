@@ -56,30 +56,6 @@ app.use("/api/approval-logs", ApprovalLogRoutes);
 app.use("/api/ehr", ehrRoutes);
 app.use("/api/clinic-patients", clinicPatientRoutes);
 
-// Health check endpoint
-app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
-});
-
-// Error handling middleware (must be after all routes)
-app.use((err, req, res, next) => {
-  console.error("Error:", err);
-  
-  // Ensure CORS headers are set even on errors
-  const origin = req.headers.origin;
-  const allowedOrigins = ["http://localhost:5173", "https://vetsync-business.vercel.app"];
-  
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-  }
-  
-  res.status(err.status || 500).json({
-    error: err.message || "Internal server error",
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
-  });
-});
-
 // app.use('/api', testRoute);
 
 // // app.use("/api")
