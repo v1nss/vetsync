@@ -11,13 +11,15 @@ import systemAdminRoutes from "./routes/systemAdminRoutes.js";
 import ApprovalLogRoutes from "./routes/approvalLogsRoutes.js";
 import ehrRoutes from "./routes/ehrRoutes.js";
 import clinicPatientRoutes from "./routes/clinicPatientRoutes.js";
-import testRoute from './routes/testRoute.js'
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 4000;
 
 app.use(cors({
-  origin: "http://localhost:5173", // Change this when deployed to prod
+  origin: process.env.FRONTEND_URL || "http://localhost:5173", // Change this when deployed to prod
   credentials: true,
 }));
 app.use(express.json());
