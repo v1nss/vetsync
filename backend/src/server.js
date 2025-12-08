@@ -19,7 +19,11 @@ const app = express();
 const port = process.env.PORT || 4000;
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:5173", // Change this when deployed to prod
+  origin: [
+      "http://localhost:5173",
+      "https://vetsync-business.vercel.app",
+    ], // Change this when deployed to prod
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
   credentials: true,
 }));
 app.use(express.json());

@@ -24,13 +24,17 @@ dotenv.config();
 
 // prod sequelize pg db config
 const sequelize = new Sequelize(
-  process.env.PGDATABASE,
-  process.env.PGUSER,
-  process.env.PGPASSWORD,
+  process.env.PGURL,
   {
     host: process.env.PGHOST,
     port: process.env.PGPORT,
     dialect: "postgres",
+    dialectOptions: {
+    ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    },
     logging: false,
     pool: {
       max: 10,        // maximum number of connections
