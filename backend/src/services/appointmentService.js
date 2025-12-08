@@ -58,6 +58,9 @@ export const approveAppointment = async (clinicAdminId, appointmentId, vetProId)
 
   if (!appointment) throw new Error("Appointment not found");
   
+  // Store original status before updating to check if email should be sent
+  const originalStatus = appointment.status;
+  
   const vetProExists = await VetProfessional.findOne({
     where: {
       user_id: vetProId,
@@ -117,33 +120,42 @@ export const approveAppointment = async (clinicAdminId, appointmentId, vetProId)
     ]
   });
 
-  // Send approval email
-  try {
-    const ownerName = appointment.owner?.User?.first_name && appointment.owner?.User?.last_name
-      ? `${appointment.owner.User.first_name} ${appointment.owner.User.last_name}`
-      : 'Pet Owner';
-    const ownerEmail = appointment.owner?.User?.email;
-    const petName = appointment.pet?.name || 'Your pet';
-    const clinicName = appointment.clinic?.name || 'the clinic';
-    const vetName = vetProExists?.User?.first_name && vetProExists?.User?.last_name
-      ? `${vetProExists.User.first_name} ${vetProExists.User.last_name}`
-      : null;
+  // Send approval email only if appointment was previously pending
+  // Check original status before update to avoid duplicate emails
+  const wasPending = originalStatus === 'pending' || originalStatus === 'Pending';
+  
+  if (wasPending) {
+    try {
+      const ownerName = appointment.owner?.User?.first_name && appointment.owner?.User?.last_name
+        ? `${appointment.owner.User.first_name} ${appointment.owner.User.last_name}`
+        : 'Pet Owner';
+      const ownerEmail = appointment.owner?.User?.email;
+      const petName = appointment.pet?.name || 'Your pet';
+      const clinicName = appointment.clinic?.name || 'the clinic';
+      const vetName = vetProExists?.User?.first_name && vetProExists?.User?.last_name
+        ? `${vetProExists.User.first_name} ${vetProExists.User.last_name}`
+        : null;
 
-    if (ownerEmail) {
-      await sendAppointmentApprovalEmail({
-        ownerName,
-        ownerEmail,
-        petName,
-        clinicName,
-        appointmentDate: appointment.date,
-        appointmentTime: appointment.time,
-        service: appointment.service,
-        vetName
-      });
+      if (ownerEmail) {
+        console.log('Sending approval email for appointment:', appointmentId);
+        await sendAppointmentApprovalEmail({
+          ownerName,
+          ownerEmail,
+          petName,
+          clinicName,
+          appointmentDate: appointment.date,
+          appointmentTime: appointment.time,
+          service: appointment.service,
+          vetName
+        });
+        console.log('Approval email sent successfully');
+      }
+    } catch (emailError) {
+      console.error("Error sending approval email:", emailError);
+      // Don't throw - email failure shouldn't break the approval process
     }
-  } catch (emailError) {
-    console.error("Error sending approval email:", emailError);
-    // Don't throw - email failure shouldn't break the approval process
+  } else {
+    console.log('Appointment already approved, skipping email to avoid duplicates');
   }
 
   return appointment;
@@ -177,6 +189,9 @@ export const rejectAppointment = async (appointmentId, rejectionReason) => {
 
   if (!appointment) throw new Error("Appointment not found");
 
+  // Store original status before updating to check if email should be sent
+  const originalStatus = appointment.status;
+
   // Update status to canceled (since rejected is not in enum, using canceled)
   // Store rejection reason in notes field
   const updatedNotes = rejectionReason 
@@ -188,30 +203,39 @@ export const rejectAppointment = async (appointmentId, rejectionReason) => {
     notes: updatedNotes,
   });
 
-  // Send rejection email
-  try {
-    const ownerName = appointment.owner?.User?.first_name && appointment.owner?.User?.last_name
-      ? `${appointment.owner.User.first_name} ${appointment.owner.User.last_name}`
-      : 'Pet Owner';
-    const ownerEmail = appointment.owner?.User?.email;
-    const petName = appointment.pet?.name || 'Your pet';
-    const clinicName = appointment.clinic?.name || 'the clinic';
+  // Send rejection email only if appointment was previously pending
+  // Check original status before update to avoid duplicate emails
+  const wasPending = originalStatus === 'pending' || originalStatus === 'Pending';
+  
+  if (wasPending) {
+    try {
+      const ownerName = appointment.owner?.User?.first_name && appointment.owner?.User?.last_name
+        ? `${appointment.owner.User.first_name} ${appointment.owner.User.last_name}`
+        : 'Pet Owner';
+      const ownerEmail = appointment.owner?.User?.email;
+      const petName = appointment.pet?.name || 'Your pet';
+      const clinicName = appointment.clinic?.name || 'the clinic';
 
-    if (ownerEmail) {
-      await sendAppointmentRejectionEmail({
-        ownerName,
-        ownerEmail,
-        petName,
-        clinicName,
-        appointmentDate: appointment.date,
-        appointmentTime: appointment.time,
-        service: appointment.service,
-        rejectionReason: rejectionReason || 'No reason provided'
-      });
+      if (ownerEmail) {
+        console.log('Sending rejection email for appointment:', appointmentId);
+        await sendAppointmentRejectionEmail({
+          ownerName,
+          ownerEmail,
+          petName,
+          clinicName,
+          appointmentDate: appointment.date,
+          appointmentTime: appointment.time,
+          service: appointment.service,
+          rejectionReason: rejectionReason || 'No reason provided'
+        });
+        console.log('Rejection email sent successfully');
+      }
+    } catch (emailError) {
+      console.error("Error sending rejection email:", emailError);
+      // Don't throw - email failure shouldn't break the rejection process
     }
-  } catch (emailError) {
-    console.error("Error sending rejection email:", emailError);
-    // Don't throw - email failure shouldn't break the rejection process
+  } else {
+    console.log('Appointment already rejected/canceled, skipping email to avoid duplicates');
   }
 
   return appointment;
