@@ -22,6 +22,7 @@ dotenv.config();
 
 // export default sequelize;
 
+// prod sequelize pg db config
 const sequelize = new Sequelize(
   process.env.PGDATABASE,
   process.env.PGUSER,
