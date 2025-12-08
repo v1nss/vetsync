@@ -43,6 +43,19 @@ function MapClickHandler({ onLocationSelect }) {
   return null;
 }
 
+// Component to handle map centering when location changes
+function MapCenter({ center, zoom }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (center && center[0] && center[1]) {
+      map.setView(center, zoom || 15);
+    }
+  }, [map, center, zoom]);
+
+  return null;
+}
+
 export default function LocationPickerModal({ isOpen, onClose, onConfirm, initialLat, initialLng }) {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
@@ -81,9 +94,13 @@ export default function LocationPickerModal({ isOpen, onClose, onConfirm, initia
         (position) => {
           const { latitude, longitude } = position.coords;
           const location = [latitude, longitude];
+          // Set both locations and force map update
           setUserLocation(location);
           setSelectedLocation(location);
           setIsLoadingLocation(false);
+          
+          // Force map to update by incrementing mapKey
+          setMapKey(prev => prev + 1);
         },
         (error) => {
           console.error('Error getting location:', error);
@@ -116,7 +133,7 @@ export default function LocationPickerModal({ isOpen, onClose, onConfirm, initia
   const mapZoom = selectedLocation || userLocation ? 15 : defaultZoom;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -146,6 +163,7 @@ export default function LocationPickerModal({ isOpen, onClose, onConfirm, initia
               attribution="© CartoDB & OSM contributors"
             />
             <MapClickHandler onLocationSelect={handleLocationSelect} />
+            <MapCenter center={mapCenter} zoom={mapZoom} />
             {selectedLocation && (
               <Marker
                 position={selectedLocation}
