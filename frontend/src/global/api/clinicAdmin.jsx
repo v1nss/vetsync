@@ -38,28 +38,38 @@ export const updateClinic = async (clinicId, clinicData, newImages = { clinicIma
     
     // Append new clinic image files from newImages parameter
     if (newImages.clinicImages && newImages.clinicImages.length > 0) {
-      newImages.clinicImages.forEach(file => {
+      console.log(`Preparing to upload ${newImages.clinicImages.length} clinic images`);
+      newImages.clinicImages.forEach((file, index) => {
+        console.log(`Appending clinic image ${index + 1}:`, file.name, file.type, file.size);
         formData.append('clinicImages', file);
       });
+    } else {
+      console.log('No new clinic images to upload');
     }
     
     // Append new document image files from newImages parameter (in order: secdti, mayor_permit, bir)
     if (newImages.documentImages && newImages.documentImages.length > 0) {
-      newImages.documentImages.forEach(file => {
+      console.log(`Preparing to upload ${newImages.documentImages.length} document images`);
+      newImages.documentImages.forEach((file, index) => {
+        console.log(`Appending document image ${index + 1}:`, file.name, file.type, file.size);
         formData.append('documentImages', file);
       });
+    } else {
+      console.log('No new document images to upload');
     }
     
+    console.log('Sending update request with FormData');
     const res = await api.patch(`/clinics/update/${clinicId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     });
-    console.log(res.data.clinic);
+    console.log('Update successful:', res.data.clinic);
     return res.data.clinic;
     
   } catch (err) {
     console.error("Unable to update clinic", err);
+    console.error("Error details:", err.response?.data || err.message);
     throw err;
   }
 };

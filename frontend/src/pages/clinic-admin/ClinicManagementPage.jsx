@@ -44,7 +44,38 @@ export default function ClinicManagementPage() {
   const handleSave = async () => {
     try {
       setLoading(true);
-      const updatedClinicData = await updateClinic(clinic.clinic_id, editedClinic);
+      
+      // Separate new images (with file property) from existing images
+      const existingClinicImages = (editedClinic.clinic_images || []).filter(img => !img.isNew);
+      const newClinicImageFiles = (editedClinic.clinic_images || [])
+        .filter(img => img.isNew && img.file)
+        .map(img => img.file);
+      
+      console.log(`Saving clinic: ${existingClinicImages.length} existing images, ${newClinicImageFiles.length} new images to upload`);
+      
+      // Prepare clinic data with only existing images (new ones will be uploaded separately)
+      // Filter out temporary images (those with temp IDs) and ensure valid image objects
+      const finalExistingImages = existingClinicImages.filter(img => {
+        // Ensure we only send valid image objects with real IDs (not temp IDs)
+        return img && 
+               typeof img === 'object' && 
+               img.id && 
+               !img.id.toString().startsWith('temp_');
+      });
+      
+      console.log(`After filtering: ${finalExistingImages.length} valid existing images`);
+      
+      const clinicDataToUpdate = {
+        ...editedClinic,
+        clinic_images: finalExistingImages,
+      };
+      
+      // Call updateClinic with new image files
+      const updatedClinicData = await updateClinic(clinic.clinic_id, clinicDataToUpdate, {
+        clinicImages: newClinicImageFiles,
+        documentImages: [] // No document images in this page
+      });
+      
       setClinic(updatedClinicData);
       setEditedClinic(updatedClinicData);
       setIsEditing(false);
@@ -64,7 +95,7 @@ export default function ClinicManagementPage() {
         isOpen: true,
         type: 'error',
         title: 'Update Failed',
-        message: 'Failed to update clinic. Please try again.'
+        message: err.response?.data?.message || err.message || 'Failed to update clinic. Please try again.'
       });
     } finally {
       setLoading(false);

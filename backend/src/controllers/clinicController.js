@@ -152,87 +152,136 @@ export const updateClinicDetails = async (req, res) => {
     const CLINIC_IMAGES_FOLDER_ID = process.env.CLINIC_IMAGES_FOLDER_ID;
     const DOCUMENT_IMAGES_FOLDER_ID = process.env.DOCUMENT_IMAGES_FOLDER_ID;
     
-    // Find deleted clinic images
-    const deletedClinicImageIds = (currentClinic.clinic_images || [])
-      .filter(oldImg => !(updateData.clinic_images || []).some(newImg => newImg.id === oldImg.id))
-      .map(img => img.id)
-      .filter(Boolean);
+    // Find deleted clinic images by comparing old vs new arrays
+    // An image is considered deleted if it exists in currentClinic but not in updateData
+    const currentClinicImageIds = (currentClinic.clinic_images || []).map(img => {
+      // Handle both object format {id, name, link} and string format
+      return typeof img === 'object' && img !== null ? img.id : null;
+    }).filter(Boolean);
     
-    // Find deleted document images
-    const deletedDocImageIds = (currentClinic.document_images || [])
-      .filter(oldImg => !(updateData.document_images || []).some(newImg => newImg.id === oldImg.id))
-      .map(img => img.id)
-      .filter(Boolean);
+    const updatedClinicImageIds = (updateData.clinic_images || []).map(img => {
+      // Handle both object format {id, name, link} and string format
+      return typeof img === 'object' && img !== null ? img.id : null;
+    }).filter(Boolean);
     
-    // Delete removed images from Google Drive
+    const deletedClinicImageIds = currentClinicImageIds.filter(
+      oldId => !updatedClinicImageIds.includes(oldId)
+    );
+    
+    // Find deleted document images (if document_images field exists)
+    const currentDocImageIds = (currentClinic.document_images || []).map(img => {
+      return typeof img === 'object' && img !== null ? img.id : null;
+    }).filter(Boolean);
+    
+    const updatedDocImageIds = (updateData.document_images || []).map(img => {
+      return typeof img === 'object' && img !== null ? img.id : null;
+    }).filter(Boolean);
+    
+    const deletedDocImageIds = currentDocImageIds.filter(
+      oldId => !updatedDocImageIds.includes(oldId)
+    );
+    
+    // Delete removed clinic images from Google Drive
     if (deletedClinicImageIds.length > 0) {
-      console.log(`Deleting ${deletedClinicImageIds.length} clinic images from Drive`);
-      await deleteMultipleFiles(deletedClinicImageIds);
+      console.log(`Deleting ${deletedClinicImageIds.length} clinic images from Drive:`, deletedClinicImageIds);
+      try {
+        await deleteMultipleFiles(deletedClinicImageIds);
+        console.log(`Successfully deleted ${deletedClinicImageIds.length} clinic images from Drive`);
+      } catch (deleteError) {
+        console.error('Error deleting clinic images from Drive:', deleteError);
+        // Continue with update even if deletion fails (non-critical)
+      }
     }
     
+    // Delete removed document images from Google Drive
     if (deletedDocImageIds.length > 0) {
-      console.log(`Deleting ${deletedDocImageIds.length} document images from Drive`);
-      await deleteMultipleFiles(deletedDocImageIds);
+      console.log(`Deleting ${deletedDocImageIds.length} document images from Drive:`, deletedDocImageIds);
+      try {
+        await deleteMultipleFiles(deletedDocImageIds);
+        console.log(`Successfully deleted ${deletedDocImageIds.length} document images from Drive`);
+      } catch (deleteError) {
+        console.error('Error deleting document images from Drive:', deleteError);
+        // Continue with update even if deletion fails (non-critical)
+      }
     }
     
     // Upload new clinic images if provided
+    // Multer returns an array for multiple files, but we need to ensure it's always an array
     if (req.files?.clinicImages) {
-      const newClinicImages = await uploadMultipleFiles(req.files.clinicImages, CLINIC_IMAGES_FOLDER_ID);
-      // Merge with existing images
-      updateData.clinic_images = [...(updateData.clinic_images || []), ...newClinicImages];
+      // Handle both single file and array of files
+      const clinicImageFiles = Array.isArray(req.files.clinicImages) 
+        ? req.files.clinicImages 
+        : [req.files.clinicImages];
+      
+      if (clinicImageFiles.length > 0) {
+        console.log(`Uploading ${clinicImageFiles.length} new clinic images`);
+        const newClinicImages = await uploadMultipleFiles(clinicImageFiles, CLINIC_IMAGES_FOLDER_ID);
+        // Merge with existing images
+        updateData.clinic_images = [...(updateData.clinic_images || []), ...newClinicImages];
+        console.log(`Successfully uploaded ${newClinicImages.length} clinic images`);
+      }
     }
     
     // Upload new document images if provided
-    if (req.files?.documentImages && req.files.documentImages.length > 0) {
-      const newDocumentImages = await uploadMultipleFiles(req.files.documentImages, DOCUMENT_IMAGES_FOLDER_ID);
+    // Multer returns an array for multiple files, but we need to ensure it's always an array
+    if (req.files?.documentImages) {
+      // Handle both single file and array of files
+      const documentImageFiles = Array.isArray(req.files.documentImages) 
+        ? req.files.documentImages 
+        : [req.files.documentImages];
       
-      // Delete old documents if new ones are being uploaded
-      const documentsToDelete = updateData.documentsToDelete || {};
-      const oldDocIdsToDelete = [];
-      
-      // Helper function to extract document ID from various formats
-      const getDocumentId = (doc) => {
-        if (!doc) return null;
-        if (typeof doc === 'object' && doc.id) return doc.id;
-        if (typeof doc === 'string') {
-          // Try to extract ID from Google Drive link (format: /d/FILE_ID)
-          const match = doc.match(/\/d\/([a-zA-Z0-9_-]+)/);
-          return match ? match[1] : null;
+      if (documentImageFiles.length > 0) {
+        console.log(`Uploading ${documentImageFiles.length} new document images`);
+        const newDocumentImages = await uploadMultipleFiles(documentImageFiles, DOCUMENT_IMAGES_FOLDER_ID);
+        
+        // Delete old documents if new ones are being uploaded
+        const documentsToDelete = updateData.documentsToDelete || {};
+        const oldDocIdsToDelete = [];
+        
+        // Helper function to extract document ID from various formats
+        const getDocumentId = (doc) => {
+          if (!doc) return null;
+          if (typeof doc === 'object' && doc.id) return doc.id;
+          if (typeof doc === 'string') {
+            // Try to extract ID from Google Drive link (format: /d/FILE_ID)
+            const match = doc.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            return match ? match[1] : null;
+          }
+          return null;
+        };
+        
+        // Handle SEC/DTI Certificate (first document)
+        if (newDocumentImages.length > 0) {
+          const oldSecdtiId = documentsToDelete.secdti || getDocumentId(currentClinic.secdti_url);
+          if (oldSecdtiId) {
+            oldDocIdsToDelete.push(oldSecdtiId);
+          }
+          updateData.secdti_url = newDocumentImages[0];
         }
-        return null;
-      };
-      
-      // Handle SEC/DTI Certificate (first document)
-      if (newDocumentImages.length > 0) {
-        const oldSecdtiId = documentsToDelete.secdti || getDocumentId(currentClinic.secdti_url);
-        if (oldSecdtiId) {
-          oldDocIdsToDelete.push(oldSecdtiId);
+        
+        // Handle Mayor's Permit (second document)
+        if (newDocumentImages.length > 1) {
+          const oldMayorPermitId = documentsToDelete.mayorsPermit || getDocumentId(currentClinic.mayor_permit_url);
+          if (oldMayorPermitId) {
+            oldDocIdsToDelete.push(oldMayorPermitId);
+          }
+          updateData.mayor_permit_url = newDocumentImages[1];
         }
-        updateData.secdti_url = newDocumentImages[0];
-      }
-      
-      // Handle Mayor's Permit (second document)
-      if (newDocumentImages.length > 1) {
-        const oldMayorPermitId = documentsToDelete.mayorsPermit || getDocumentId(currentClinic.mayor_permit_url);
-        if (oldMayorPermitId) {
-          oldDocIdsToDelete.push(oldMayorPermitId);
+        
+        // Handle BIR Certificate (third document)
+        if (newDocumentImages.length > 2) {
+          const oldBirId = documentsToDelete.bir || getDocumentId(currentClinic.bir_url);
+          if (oldBirId) {
+            oldDocIdsToDelete.push(oldBirId);
+          }
+          updateData.bir_url = newDocumentImages[2];
         }
-        updateData.mayor_permit_url = newDocumentImages[1];
-      }
-      
-      // Handle BIR Certificate (third document)
-      if (newDocumentImages.length > 2) {
-        const oldBirId = documentsToDelete.bir || getDocumentId(currentClinic.bir_url);
-        if (oldBirId) {
-          oldDocIdsToDelete.push(oldBirId);
+        
+        // Delete old document images from Google Drive
+        if (oldDocIdsToDelete.length > 0) {
+          console.log(`Deleting ${oldDocIdsToDelete.length} old document images from Drive:`, oldDocIdsToDelete);
+          await deleteMultipleFiles(oldDocIdsToDelete);
         }
-        updateData.bir_url = newDocumentImages[2];
-      }
-      
-      // Delete old document images from Google Drive
-      if (oldDocIdsToDelete.length > 0) {
-        console.log(`Deleting ${oldDocIdsToDelete.length} old document images from Drive:`, oldDocIdsToDelete);
-        await deleteMultipleFiles(oldDocIdsToDelete);
       }
     }
     

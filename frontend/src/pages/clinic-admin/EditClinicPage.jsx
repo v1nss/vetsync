@@ -6,6 +6,7 @@ import { FaChevronLeft, FaChevronRight, FaCamera, FaTimes, FaMapMarkerAlt } from
 import { fetchMyClinic } from "../../global/api/clinicAdmin";
 import ClinicAdminNavbar from "../../components/ClinicAdminNavbar";
 import DriveImage from "../../components/DriveImage";
+import LocationPickerModal from "../../components/LocationPickerModal";
 
 const Input = ({ label, name, type = "text", placeholder, required, value, onChange, error }) => (
   <div>
@@ -82,6 +83,7 @@ console.log("Existing Clinic Data:", existingClinic);
   const [errors, setErrors] = useState({});
   const [submitStatus, setSubmitStatus] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showLocationModal, setShowLocationModal] = useState(false);
 
   useEffect(() => {
     const loadClinicData = async () => {
@@ -376,7 +378,23 @@ console.log("Existing Clinic Data:", existingClinic);
   };
 
   const handleMapClick = () => {
-    alert("Map integration: Click to pin location");
+    setShowLocationModal(true);
+  };
+
+    const handleLocationConfirm = (latitude, longitude) => {
+    setFormData((prev) => ({
+      ...prev,
+      latitude: latitude.toString(),
+      longitude: longitude.toString(),
+    }));
+    if (errors.latitude || errors.longitude) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.latitude;
+        delete newErrors.longitude;
+        return newErrors;
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -414,10 +432,15 @@ console.log("Existing Clinic Data:", existingClinic);
         schedules: schedulesArray,
       };
 
-      // Prepare clinic data with existing images
+      // Prepare clinic data with existing images (only images that weren't removed)
+      // Images removed by the user are excluded from this array, which will trigger deletion in the backend
       const clinicDataToUpdate = {
         ...clinicData,
-        clinic_images: editedClinic.clinic_images || [],
+        // Only include clinic_images that still exist (removed ones are filtered out)
+        clinic_images: (editedClinic.clinic_images || []).filter(img => {
+          // Ensure we only send valid image objects with IDs
+          return img && typeof img === 'object' && img.id;
+        }),
         // Include old document IDs that need to be deleted when new ones are uploaded
         documentsToDelete: {
           secdti: files.secdti && oldDocumentIds.secdti ? oldDocumentIds.secdti : null,
@@ -524,17 +547,27 @@ console.log("Existing Clinic Data:", existingClinic);
                 </div>
                 <Input label="Landmark (Optional)" name="landmark" placeholder="e.g., Near SM Mall" 
                   value={formData.landmark} onChange={handleChange} />
-
-                <div>
-                  <label className="block text-sm text-gray-700 mb-2">Location Pin</label>
-                  <button type="button" onClick={handleMapClick}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-2xl hover:border-primary transition-all">
-                    <FaMapMarkerAlt className="text-primary" />
-                    <span className="text-sm text-gray-600">
-                      {formData.latitude && formData.longitude ? `Location: ${formData.latitude}, ${formData.longitude}` : "Click to pin location on map"}
-                    </span>
-                  </button>
-                </div>
+              <div>
+                <label className={`block text-sm text-gray-700 mb-2 ${errors.latitude ? 'label-required' : ''}`}>
+                  Location Pin <span className="text-red-500">*</span>
+                </label>
+                <button type="button" onClick={handleMapClick}
+                  className={`w-full flex items-center justify-center gap-2 px-4 py-3 border-2 rounded-2xl transition-all ${
+                    formData.latitude && formData.longitude
+                      ? 'border-green-300 bg-green-50 hover:border-green-400'
+                      : errors.latitude
+                      ? 'border-red-300 bg-red-50 hover:border-red-400'
+                      : 'border-dashed border-gray-300 hover:border-primary'
+                  }`}>
+                  <FaMapMarkerAlt className={`${formData.latitude && formData.longitude ? 'text-green-600' : 'text-primary'}`} />
+                  <span className={`text-sm ${formData.latitude && formData.longitude ? 'text-green-700 font-medium' : 'text-gray-600'}`}>
+                    {formData.latitude && formData.longitude 
+                      ? `Location Pinned: ${parseFloat(formData.latitude).toFixed(6)}, ${parseFloat(formData.longitude).toFixed(6)}` 
+                      : "Click to pin location on map"}
+                  </span>
+                </button>
+                {errors.latitude && <p className="text-red-500 text-xs mt-1">{errors.latitude}</p>}
+              </div>
 
                 <div>
                   <label className="block text-sm text-gray-700 mb-2">
@@ -679,12 +712,15 @@ console.log("Existing Clinic Data:", existingClinic);
                           <button 
                             type="button" 
                             onClick={() => {
+                              // Remove the image from the clinic_images array
+                              // This will mark it for deletion in the backend
                               setEditedClinic(prev => ({
                                 ...prev,
                                 clinic_images: (prev.clinic_images || []).filter((_, i) => i !== idx)
                               }));
                             }}
                             className="absolute top-1 right-1 z-30 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-all shadow-md"
+                            title="Remove this image"
                           >
                             <FaTimes className="text-xs" />
                           </button>
@@ -786,6 +822,14 @@ console.log("Existing Clinic Data:", existingClinic);
           </form>
         </div>
       </main>
+            {/* Location Picker Modal */}
+      <LocationPickerModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        onConfirm={handleLocationConfirm}
+        initialLat={formData.latitude}
+        initialLng={formData.longitude}
+      />
     </div>
   );
 }

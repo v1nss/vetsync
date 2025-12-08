@@ -6,6 +6,14 @@ import oauth2Client from '../config/oauth.js';
 // Upload files
 export const uploadFiles = async (file, folder_id) => {
   try {
+    // Verify OAuth2 credentials are set
+    if (!process.env.REFRESH_TOKEN) {
+      throw new Error("REFRESH_TOKEN is not set in environment variables. Google Drive upload requires OAuth2 authentication.");
+    }
+    if (!process.env.CLIENT_ID || !process.env.CLIENT_SECRET) {
+      throw new Error("CLIENT_ID and CLIENT_SECRET must be set in environment variables for Google Drive upload.");
+    }
+
     const drive = google.drive({ version: "v3", auth: oauth2Client });
 
     const { data } = await drive.files.create({
@@ -36,6 +44,16 @@ export const uploadFiles = async (file, folder_id) => {
     return data;
   } catch (err) {
     console.error("Upload Service Error:", err.message);
+    console.error("Full error:", err);
+    
+    // Provide helpful error messages
+    if (err.message?.includes("invalid_grant") || err.message?.includes("invalid_token")) {
+      throw new Error("Google Drive authentication failed. Your REFRESH_TOKEN may be expired. Please regenerate it.");
+    }
+    if (err.message?.includes("REFRESH_TOKEN")) {
+      throw err; // Already has helpful message
+    }
+    
     throw err; // propagate error to controller
   }
 };
