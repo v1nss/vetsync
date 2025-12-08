@@ -25,7 +25,7 @@ export default function AppointmentPage() {
     try {
       setLoading(true);
       const appointments = await getAppointmentsByOwner();
-      console.log("APPOINTMENTS DATA:", appointments);
+      // console.log("APPOINTMENTS DATA:", appointments);
       
       // Ensure we always set an array
       if (Array.isArray(appointments)) {
@@ -376,12 +376,12 @@ export default function AppointmentPage() {
                       >
                           View Details
                         </button>
-                        <button 
+                        {/* <button 
                         onClick={() => handleRescheduleClick(appointment)}
                         className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium"
                       >
                           Reschedule
-                        </button>
+                        </button> */}
                         <button 
                           onClick={() => handleCancel(appointment)}
                           className="px-4 py-2 bg-white text-red-600 border border-red-300 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium"
@@ -399,11 +399,11 @@ export default function AppointmentPage() {
                       >
                           View Details
                         </button>
-                        <button 
+                        {/* <button 
                         onClick={() => setRebookModal({ isOpen: true, appointment })}
                         className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium">
                           Book Again
-                        </button>
+                        </button> */}
                       </div>
                     )}
                   </div>
