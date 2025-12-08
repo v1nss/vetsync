@@ -29,7 +29,7 @@ export const fetchUserData = async (id, token) => {
 
 export const registerUser = async (userData) => {
     try {
-        const res = await axios.post(`${BASE_URL}/users/register`, userData, {
+        const res = await api.post(`/users/register`, userData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -44,7 +44,7 @@ export const registerUser = async (userData) => {
 
 export const checkEmailExists = async (email) => {
     try {
-        const res = await axios.put(`${BASE_URL}/users/email-check`, {email} );
+        const res = await api.put(`/users/email-check`, {email} );
         console.log('Email check response data:', res.data);
         return res.data.exists;
     } catch (err) {
