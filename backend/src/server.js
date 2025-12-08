@@ -18,17 +18,24 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 4000;
 
+// CORS config
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://vetsync-business.vercel.app",
-  ],
+  origin: function(origin, callback) {
+    const allowedOrigins = [
+      "http://localhost:5173",
+      "https://vetsync-business.vercel.app",
+    ];
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   credentials: true,
-  preflightContinue: false,
-  optionsSuccessStatus: 204,
 }));
+
 app.use(express.json());
 app.use(cookieParser());
 
