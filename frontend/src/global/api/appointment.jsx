@@ -63,7 +63,7 @@ export const approveAppointment = async (appointmentId, vetProfessionalId = null
     }
 }
 
-export const updateAppointmentStatus = async (appointmentId, status, vetProfessionalId = null) => {
+export const updateAppointmentStatus = async (appointmentId, status, vetProfessionalId = null, rejectionReason = null) => {
     try {
         // Use accept endpoint for 'confirmed' status, complete for 'completed'
         if (status === 'approved') {
@@ -71,6 +71,11 @@ export const updateAppointmentStatus = async (appointmentId, status, vetProfessi
         } else if (status === 'completed') {
             const res = await api.patch(`/appointments/complete/${appointmentId}`);
             // console.log("Appointment completed successfully:", res.data);
+            return res.data;
+        } else if (status === 'rejected') {
+            const res = await api.patch(`/appointments/reject/${appointmentId}`, {
+                rejection_reason: rejectionReason
+            });
             return res.data;
         } else {
             // For other statuses, we might need a generic update endpoint

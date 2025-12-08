@@ -6,7 +6,8 @@ import ClinicAddress from "../models/clinicAddressModel.js";
 import {
   createAppointment,
   approveAppointment,
-  completeAppointment
+  completeAppointment,
+  rejectAppointment
 } from "../services/appointmentService.js";
 import { PetOwner, VetProfessional } from "../models/index.js";
 
@@ -48,19 +49,37 @@ export const approveAppointmentRequest = async (req, res) => {
   }
 };
 
+export const rejectAppointmentRequest = async (req, res) => {
+  try {
+    const appointmentId = req.params.appointmentId;
+    const { rejection_reason } = req.body;
+
+    const appointment = await rejectAppointment(appointmentId, rejection_reason);
+
+    res
+      .status(200)
+      .json({message: "Appointment rejected successfully", appointment });
+  } catch (err) {
+    console.error("Error rejecting appointment", err.message);
+    res
+      .status(500)
+      .json({message: "Error rejecting appointment", error: err.message });
+  }
+};
+
 export const completeAppointmentRequest = async (req, res) => {
   try {
     const appointmentId = req.params.appointmentId;
     // const { vet_professional_id } = req.body // not sure for now if clinicAdmin is the only one that can accept appointment
     const appointment = await completeAppointment(appointmentId);
     res
-    .status(200)
-    .json({message: "Appointment completed successfully", appointment });
+      .status(200)
+      .json({message: "Appointment completed successfully", appointment });
   } catch (err) {
     console.error("Error completing appointment", err.message);
     res
-    .status(500)
-    .json({message: "Error completing appointment", error: err.message });
+      .status(500)
+      .json({message: "Error completing appointment", error: err.message });
   }
 };
 

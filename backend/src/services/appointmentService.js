@@ -2,6 +2,11 @@ import Appointment from "../models/appointmentModel.js";
 import ClinicAdmin from "../models/users/clinicAdminModel.js";
 import VetProfessional from "../models/users/vetProfessionalModel.js";
 import ClinicPatient from "../models/clinicPatientModel.js";
+import PetOwner from "../models/users/petOwnerModel.js";
+import Pet from "../models/petModel.js";
+import Clinic from "../models/clinicModel.js";
+import User from "../models/users/userModel.js";
+import { sendAppointmentApprovalEmail, sendAppointmentRejectionEmail } from "../../global/utils/emailService.js";
 
 export const createAppointment = async (id, appointmentData) => {
  const { body } = appointmentData;
@@ -15,13 +20,55 @@ export const createAppointment = async (id, appointmentData) => {
 };
 
 export const approveAppointment = async (clinicAdminId, appointmentId, vetProId) => {
-  const appointment = await Appointment.findByPk(appointmentId);
+  const appointment = await Appointment.findByPk(appointmentId, {
+    include: [
+      {
+        model: PetOwner,
+        as: "owner",
+        include: [
+          {
+            model: User,
+            attributes: ["first_name", "last_name", "email"]
+          }
+        ]
+      },
+      {
+        model: Pet,
+        as: "pet",
+        attributes: ["name", "species"]
+      },
+      {
+        model: Clinic,
+        as: "clinic",
+        attributes: ["name"]
+      },
+      {
+        model: VetProfessional,
+        as: "vet",
+        include: [
+          {
+            model: User,
+            attributes: ["first_name", "last_name"]
+          }
+        ],
+        required: false
+      }
+    ]
+  });
+
   if (!appointment) throw new Error("Appointment not found");
+  
   const vetProExists = await VetProfessional.findOne({
     where: {
       user_id: vetProId,
       clinic_admin_id: clinicAdminId,
     },
+    include: [
+      {
+        model: User,
+        attributes: ["first_name", "last_name"]
+      }
+    ]
   });
 
   if (!vetProExists) {
@@ -32,6 +79,140 @@ export const approveAppointment = async (clinicAdminId, appointmentId, vetProId)
     status: "approved",
     vet_professional_id: vetProId,
   });
+
+  // Reload appointment to get updated vet info
+  await appointment.reload({
+    include: [
+      {
+        model: PetOwner,
+        as: "owner",
+        include: [
+          {
+            model: User,
+            attributes: ["first_name", "last_name", "email"]
+          }
+        ]
+      },
+      {
+        model: Pet,
+        as: "pet",
+        attributes: ["name", "species"]
+      },
+      {
+        model: Clinic,
+        as: "clinic",
+        attributes: ["name"]
+      },
+      {
+        model: VetProfessional,
+        as: "vet",
+        include: [
+          {
+            model: User,
+            attributes: ["first_name", "last_name"]
+          }
+        ],
+        required: false
+      }
+    ]
+  });
+
+  // Send approval email
+  try {
+    const ownerName = appointment.owner?.User?.first_name && appointment.owner?.User?.last_name
+      ? `${appointment.owner.User.first_name} ${appointment.owner.User.last_name}`
+      : 'Pet Owner';
+    const ownerEmail = appointment.owner?.User?.email;
+    const petName = appointment.pet?.name || 'Your pet';
+    const clinicName = appointment.clinic?.name || 'the clinic';
+    const vetName = vetProExists?.User?.first_name && vetProExists?.User?.last_name
+      ? `${vetProExists.User.first_name} ${vetProExists.User.last_name}`
+      : null;
+
+    if (ownerEmail) {
+      await sendAppointmentApprovalEmail({
+        ownerName,
+        ownerEmail,
+        petName,
+        clinicName,
+        appointmentDate: appointment.date,
+        appointmentTime: appointment.time,
+        service: appointment.service,
+        vetName
+      });
+    }
+  } catch (emailError) {
+    console.error("Error sending approval email:", emailError);
+    // Don't throw - email failure shouldn't break the approval process
+  }
+
+  return appointment;
+};
+
+export const rejectAppointment = async (appointmentId, rejectionReason) => {
+  const appointment = await Appointment.findByPk(appointmentId, {
+    include: [
+      {
+        model: PetOwner,
+        as: "owner",
+        include: [
+          {
+            model: User,
+            attributes: ["first_name", "last_name", "email"]
+          }
+        ]
+      },
+      {
+        model: Pet,
+        as: "pet",
+        attributes: ["name", "species"]
+      },
+      {
+        model: Clinic,
+        as: "clinic",
+        attributes: ["name"]
+      }
+    ]
+  });
+
+  if (!appointment) throw new Error("Appointment not found");
+
+  // Update status to canceled (since rejected is not in enum, using canceled)
+  // Store rejection reason in notes field
+  const updatedNotes = rejectionReason 
+    ? (appointment.notes ? `${appointment.notes}\n\nRejection Reason: ${rejectionReason}` : `Rejection Reason: ${rejectionReason}`)
+    : appointment.notes;
+
+  await appointment.update({
+    status: "canceled",
+    notes: updatedNotes,
+  });
+
+  // Send rejection email
+  try {
+    const ownerName = appointment.owner?.User?.first_name && appointment.owner?.User?.last_name
+      ? `${appointment.owner.User.first_name} ${appointment.owner.User.last_name}`
+      : 'Pet Owner';
+    const ownerEmail = appointment.owner?.User?.email;
+    const petName = appointment.pet?.name || 'Your pet';
+    const clinicName = appointment.clinic?.name || 'the clinic';
+
+    if (ownerEmail) {
+      await sendAppointmentRejectionEmail({
+        ownerName,
+        ownerEmail,
+        petName,
+        clinicName,
+        appointmentDate: appointment.date,
+        appointmentTime: appointment.time,
+        service: appointment.service,
+        rejectionReason: rejectionReason || 'No reason provided'
+      });
+    }
+  } catch (emailError) {
+    console.error("Error sending rejection email:", emailError);
+    // Don't throw - email failure shouldn't break the rejection process
+  }
 
   return appointment;
 };

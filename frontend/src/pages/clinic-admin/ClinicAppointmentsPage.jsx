@@ -8,6 +8,7 @@ import AppointmentDetailsModal from "../../components/appointments/AppointmentDe
 import AppointmentCard from "../../components/appointments/AppointmentCard";
 import AppointmentsFilters from "../../components/appointments/AppointmentsFilters";
 import AddHealthRecordModal from "../../components/EHR/AddHealthRecordModal";
+import RejectionReasonModal from "../../components/appointments/RejectionReasonModal";
 import { fetchAppointmentsByClinic, updateAppointmentStatus, assignVetToAppointment } from "../../global/api/appointment";
 import { fetchMyClinic } from "../../global/api/clinicAdmin";
 import { fetchClinicVets } from "../../global/api/clinicAdmin";
@@ -49,7 +50,9 @@ export default function ClinicAppointmentsPage() {
   const [showAssignVetModal, setShowAssignVetModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showHealthRecordModal, setShowHealthRecordModal] = useState(false);
+  const [showRejectionReasonModal, setShowRejectionReasonModal] = useState(false);
   const [pendingApproval, setPendingApproval] = useState(false);
+  const [pendingRejection, setPendingRejection] = useState(false);
   const {clinic} = useContext(ClinicStatusContext);
   const [confirmation, setConfirmation] = useState({
     isOpen: false,
@@ -109,7 +112,7 @@ export default function ClinicAppointmentsPage() {
             date: apt.date,
             time: apt.time,
             service: apt.service || 'General Checkup',
-            status: apt.status,
+            status: apt.status === 'canceled' || apt.status === 'cancelled' ? 'canceled' : apt.status,
             notes: apt.notes || '',
             assigned_vet: apt.vet_professional_id ? 
               vetsData.find(v => v.user_id === apt.vet_professional_id)?.User?.first_name: null,
@@ -143,7 +146,12 @@ export default function ClinicAppointmentsPage() {
     let filtered = appointments || [];
 
     if (statusFilter !== "all") {
-      filtered = filtered.filter(apt => apt.status === statusFilter);
+      if (statusFilter === "rejected") {
+        // Filter for canceled/cancelled status (which represents rejections)
+        filtered = filtered.filter(apt => apt.status === 'canceled' || apt.status === 'cancelled');
+      } else {
+        filtered = filtered.filter(apt => apt.status === statusFilter);
+      }
     }
 
     if (searchTerm) {
@@ -165,6 +173,22 @@ export default function ClinicAppointmentsPage() {
       return;
     }
 
+    if (newStatus === 'rejected') {
+      // Show confirmation first
+      const config = STATUS_MESSAGES[newStatus];
+      setConfirmation({
+        isOpen: true,
+        title: config.title,
+        message: config.message(appointmentDetails),
+        type: config.type,
+        action: newStatus,
+        appointmentId,
+        vetId: appointmentDetails?.vet_id || null,
+        appointmentDetails: appointmentDetails
+      });
+      return;
+    }
+
     const config = STATUS_MESSAGES[newStatus];
     setConfirmation({
       isOpen: true,
@@ -178,7 +202,17 @@ export default function ClinicAppointmentsPage() {
   };
 
   const confirmStatusChange = async () => {
-    const { action, appointmentId, vetId: confirmationVetId } = confirmation;
+    const { action, appointmentId, vetId: confirmationVetId, appointmentDetails } = confirmation;
+    
+    // If rejecting, show rejection reason modal instead of directly updating
+    if (action === 'rejected') {
+      setConfirmation({ ...confirmation, isOpen: false });
+      setSelectedAppointment(appointmentDetails);
+      setShowRejectionReasonModal(true);
+      setPendingRejection(true);
+      return;
+    }
+
     try {
       const currentAppointment = appointments.find(apt => apt.id === appointmentId);
       const vetId = confirmationVetId || currentAppointment?.vet_id || null;
@@ -187,26 +221,26 @@ export default function ClinicAppointmentsPage() {
       
       if (clinicId) {
         const appointmentsData = await fetchAppointmentsByClinic(clinicId);
-        const transformedAppointments = (appointmentsData.appointments || []).map(apt => ({
-          id: apt.appointment_id,
-          pet_name: apt.pet?.name || 'N/A',
-          pet_type: apt.pet?.species || 'N/A',
-          pet_breed: apt.pet?.breed || apt.pet?.species || 'N/A',
-          pet_birthdate: apt.pet?.birthdate || null,
-          pet_gender: apt.pet?.gender || null,
-          pet_id: apt.pet_id,
-          owner_name: apt.owner?.User?.first_name + " " + apt.owner?.User?.last_name || 'N/A',
-          owner_email: apt.owner?.User?.email || 'N/A',
-          owner_phone: apt.owner?.User?.phone_number || 'N/A',
-          date: apt.date,
-          time: apt.time,
-          service: apt.service || 'General Checkup',
-          status: apt.status,
-          notes: apt.notes || '',
-          assigned_vet: apt.vet_professional_id ? 
-            vets.find(v => v.user_id === apt.vet_professional_id)?.User?.first_name: null,
-          vet_id: apt.vet_professional_id
-        }));
+          const transformedAppointments = (appointmentsData.appointments || []).map(apt => ({
+            id: apt.appointment_id,
+            pet_name: apt.pet?.name || 'N/A',
+            pet_type: apt.pet?.species || 'N/A',
+            pet_breed: apt.pet?.breed || apt.pet?.species || 'N/A',
+            pet_birthdate: apt.pet?.birthdate || null,
+            pet_gender: apt.pet?.gender || null,
+            pet_id: apt.pet_id,
+            owner_name: apt.owner?.User?.first_name + " " + apt.owner?.User?.last_name || 'N/A',
+            owner_email: apt.owner?.User?.email || 'N/A',
+            owner_phone: apt.owner?.User?.phone_number || 'N/A',
+            date: apt.date,
+            time: apt.time,
+            service: apt.service || 'General Checkup',
+            status: apt.status === 'canceled' || apt.status === 'cancelled' ? 'canceled' : apt.status,
+            notes: apt.notes || '',
+            assigned_vet: apt.vet_professional_id ? 
+              vets.find(v => v.user_id === apt.vet_professional_id)?.User?.first_name: null,
+            vet_id: apt.vet_professional_id
+          }));
         setAppointments(transformedAppointments);
       }
       setNotification({
@@ -226,6 +260,61 @@ export default function ClinicAppointmentsPage() {
         message: 'Failed to update appointment status. Please try again.'
       });
       setConfirmation({ ...confirmation, isOpen: false });
+    }
+  };
+
+  const handleRejectionReasonConfirm = async (reason) => {
+    if (!pendingRejection || !confirmation.appointmentId) return;
+
+    try {
+      const appointmentId = confirmation.appointmentId;
+      
+      // Call API with rejection reason
+      await updateAppointmentStatus(appointmentId, 'rejected', null, reason);
+      
+      // Refresh appointments
+      if (clinicId) {
+        const appointmentsData = await fetchAppointmentsByClinic(clinicId);
+          const transformedAppointments = (appointmentsData.appointments || []).map(apt => ({
+            id: apt.appointment_id,
+            pet_name: apt.pet?.name || 'N/A',
+            pet_type: apt.pet?.species || 'N/A',
+            pet_breed: apt.pet?.breed || apt.pet?.species || 'N/A',
+            pet_birthdate: apt.pet?.birthdate || null,
+            pet_gender: apt.pet?.gender || null,
+            pet_id: apt.pet_id,
+            owner_name: apt.owner?.User?.first_name + " " + apt.owner?.User?.last_name || 'N/A',
+            owner_email: apt.owner?.User?.email || 'N/A',
+            owner_phone: apt.owner?.User?.phone_number || 'N/A',
+            date: apt.date,
+            time: apt.time,
+            service: apt.service || 'General Checkup',
+            status: apt.status === 'canceled' || apt.status === 'cancelled' ? 'canceled' : apt.status,
+            notes: apt.notes || '',
+            assigned_vet: apt.vet_professional_id ? 
+              vets.find(v => v.user_id === apt.vet_professional_id)?.User?.first_name: null,
+            vet_id: apt.vet_professional_id
+          }));
+        setAppointments(transformedAppointments);
+      }
+
+      setShowRejectionReasonModal(false);
+      setPendingRejection(false);
+      
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: 'Appointment Rejected',
+        message: `Appointment for ${selectedAppointment?.pet_name || 'pet'} has been rejected. The pet owner will be notified via email.`
+      });
+    } catch (err) {
+      console.error("Error rejecting appointment:", err);
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to reject appointment. Please try again.'
+      });
     }
   };
 
@@ -262,7 +351,7 @@ export default function ClinicAppointmentsPage() {
           date: apt.date,
           time: apt.time,
           service: apt.service || 'General Checkup',
-          status: apt.status,
+          status: apt.status === 'canceled' || apt.status === 'cancelled' ? 'canceled' : apt.status,
           notes: apt.notes || '',
           assigned_vet: apt.vet_professional_id ? 
             vets.find(v => v.user_id === apt.vet_professional_id)?.User?.first_name || 'Assigned' : null,
@@ -344,7 +433,7 @@ export default function ClinicAppointmentsPage() {
           date: apt.date,
           time: apt.time,
           service: apt.service || 'General Checkup',
-          status: apt.status,
+          status: apt.status === 'canceled' || apt.status === 'cancelled' ? 'canceled' : apt.status,
           notes: apt.notes || '',
           assigned_vet: apt.vet_professional_id ? 
             vets.find(v => v.user_id === apt.vet_professional_id || v.id === apt.vet_professional_id)?.name || 'Assigned' : null,
@@ -504,6 +593,16 @@ export default function ClinicAppointmentsPage() {
         message={confirmation.message}
         confirmText="Confirm"
         cancelText="Cancel"
+      />
+
+      <RejectionReasonModal
+        isOpen={showRejectionReasonModal}
+        onClose={() => {
+          setShowRejectionReasonModal(false);
+          setPendingRejection(false);
+        }}
+        onConfirm={handleRejectionReasonConfirm}
+        appointment={selectedAppointment}
       />
 
       <NotificationModal

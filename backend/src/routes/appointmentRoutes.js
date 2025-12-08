@@ -3,6 +3,7 @@ import { authenticate, verifyClinicAdmin } from '../../global/middleware/authMid
 import { 
     createNewAppointment, 
     approveAppointmentRequest, 
+    rejectAppointmentRequest,
     completeAppointmentRequest, 
     getAppointmentsByOwner, 
     deleteAppointmentById,
@@ -25,6 +26,8 @@ router.get('/clinic/:clinicId', authenticate, verifyClinicAdmin, fetchAppointmen
 router.delete('/delete/:appointmentId', authenticate, deleteAppointmentById)
 
 router.patch('/approve/:appointmentId', authenticate, verifyClinicAdmin, approveAppointmentRequest);
+
+router.patch('/reject/:appointmentId', authenticate, verifyClinicAdmin, rejectAppointmentRequest);
 
 router.patch('/complete/:appointmentId', authenticate, completeAppointmentRequest);
 

@@ -6,13 +6,17 @@ export default function AppointmentCard({ appointment, onStatusChange, onComplet
       pending: "bg-yellow-100 text-yellow-700",
       approved: "bg-green-100 text-green-700",
       rejected: "bg-red-100 text-red-700",
-      cancelled: "bg-gray-100 text-gray-700",
+      canceled: "bg-red-100 text-red-700",
+      cancelled: "bg-red-100 text-red-700",
       completed: "bg-blue-100 text-blue-700"
     };
 
+    // Display "rejected" for canceled status (when it's a rejection)
+    const displayStatus = status === 'canceled' || status === 'cancelled' ? 'rejected' : status;
+
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${styles[status]}`}>
-        {status}
+      <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${styles[status] || styles.canceled}`}>
+        {displayStatus}
       </span>
     );
   };
@@ -127,14 +131,14 @@ export default function AppointmentCard({ appointment, onStatusChange, onComplet
             </button>
           )}
 
-          {(appointment.status === 'approved' || appointment.status === 'pending') && (
+          {/* {(appointment.status === 'approved' || appointment.status === 'pending') && (
             <button
               onClick={() => onStatusChange(appointment.id, 'cancelled', appointment)}
               className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-medium"
             >
               <FaBan /> Cancel
             </button>
-          )}
+          )} */}
 
           {appointment.status === 'completed' && (
             <div className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-green-600 font-medium bg-green-50 rounded-lg">
