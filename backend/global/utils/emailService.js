@@ -1,47 +1,19 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Create reusable transporter object using SMTP transport
-const createTransporter = () => {
-  // For development, you can use Gmail or other SMTP services
-  // For production, use a proper email service like SendGrid, AWS SES, etc.
-  
-  const emailUser = process.env.EMAIL_USER?.trim();
-  const emailPassword = process.env.EMAIL_PASSWORD?.trim();
-  const emailService = process.env.EMAIL_SERVICE?.trim() || 'gmail';
+// Initialize Resend client (will be created lazily if API key is available)
+let resend = null;
 
-  // Validate email configuration
-  if (!emailUser || !emailPassword) {
-    throw new Error('EMAIL_USER and EMAIL_PASSWORD must be set in .env file');
+const getResendClient = () => {
+  if (!resend) {
+    const apiKey = process.env.RESEND_API_KEY?.trim();
+    if (apiKey) {
+      resend = new Resend(apiKey);
+    }
   }
-
-  // Gmail configuration with explicit SMTP settings
-  if (emailService.toLowerCase() === 'gmail') {
-    return nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false, // true for 465, false for other ports
-      auth: {
-        user: emailUser,
-        pass: emailPassword, // Use App Password for Gmail (16 characters, no spaces)
-      },
-      tls: {
-        // Do not fail on invalid certs
-        rejectUnauthorized: false
-      }
-    });
-  }
-
-  // Generic SMTP configuration for other services
-  return nodemailer.createTransport({
-    service: emailService,
-    auth: {
-      user: emailUser,
-      pass: emailPassword,
-    },
-  });
+  return resend;
 };
 
 // Email template for appointment approval
@@ -174,77 +146,47 @@ const getRejectionEmailTemplate = (ownerName, petName, clinicName, appointmentDa
 // Send email function
 export const sendEmail = async (to, subject, html, text = null) => {
   try {
-    // Check if email is configured
-    const emailUser = process.env.EMAIL_USER?.trim();
-    const emailPassword = process.env.EMAIL_PASSWORD?.trim();
+    // Check if Resend API key is configured
+    const resendApiKey = process.env.RESEND_API_KEY?.trim();
+    const fromEmail = process.env.RESEND_FROM_EMAIL?.trim() || 'onboarding@resend.dev';
     
-    if (!emailUser || !emailPassword) {
-      console.warn('Email service not configured. Skipping email send.');
-      console.warn('To enable emails, set EMAIL_USER and EMAIL_PASSWORD in your .env file');
+    if (!resendApiKey) {
+      console.warn('Resend API key not configured. Skipping email send.');
+      console.warn('To enable emails, set RESEND_API_KEY in your .env file');
       return { success: false, message: 'Email service not configured' };
     }
 
-    // Validate email format
+    // Validate email format for recipient
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(emailUser)) {
-      console.error('Invalid EMAIL_USER format:', emailUser);
-      return { success: false, error: 'Invalid email format in EMAIL_USER' };
+    if (!emailRegex.test(to)) {
+      console.error('Invalid recipient email format:', to);
+      return { success: false, error: 'Invalid recipient email format' };
     }
 
-    // Verify transporter can be created
-    let transporter;
-    try {
-      transporter = createTransporter();
-    } catch (transporterError) {
-      console.error('Error creating email transporter:', transporterError.message);
-      return { success: false, error: `Transporter error: ${transporterError.message}` };
+    // Get Resend client
+    const resendClient = getResendClient();
+    if (!resendClient) {
+      return { success: false, error: 'Resend client not initialized' };
     }
 
-    // Verify connection before sending
-    try {
-      await transporter.verify();
-      console.log('Email server connection verified successfully');
-    } catch (verifyError) {
-      console.error('Email server verification failed:', verifyError.message);
-      
-      // Provide helpful error messages
-      if (verifyError.code === 'EAUTH') {
-        console.error('\n⚠️  Authentication Error - Common fixes:');
-        console.error('1. Make sure you\'re using an App Password (not your regular Gmail password)');
-        console.error('2. Generate a new App Password: https://myaccount.google.com/apppasswords');
-        console.error('3. Ensure EMAIL_USER matches the Gmail account exactly');
-        console.error('4. Remove any spaces or quotes from EMAIL_PASSWORD in .env file');
-        console.error('5. Make sure 2-Step Verification is enabled on your Google account');
-      }
-      
-      return { success: false, error: `Email server verification failed: ${verifyError.message}` };
-    }
-
-    const mailOptions = {
-      from: `"VetSync" <${emailUser}>`, // From address must match authenticated email
+    // Send email using Resend
+    const { data, error } = await resendClient.emails.send({
+      from: fromEmail,
       to: to,
       subject: subject,
       html: html,
-      text: text || html.replace(/<[^>]*>/g, ''), // Plain text fallback
-    };
+      ...(text && { text: text }),
+    });
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Email sent successfully:', info.messageId);
-    return { success: true, messageId: info.messageId };
+    if (error) {
+      console.error('❌ Error sending email via Resend:', error);
+      return { success: false, error: error.message || 'Failed to send email' };
+    }
+
+    console.log('✅ Email sent successfully:', data?.id);
+    return { success: true, messageId: data?.id };
   } catch (error) {
     console.error('❌ Error sending email:', error.message);
-    
-    // Provide specific error guidance
-    if (error.code === 'EAUTH') {
-      console.error('\n🔧 Gmail Authentication Troubleshooting:');
-      console.error('1. Verify EMAIL_USER in .env matches your Gmail address exactly');
-      console.error('2. Generate a NEW App Password: https://myaccount.google.com/apppasswords');
-      console.error('   - Select "Mail" and your device');
-      console.error('   - Copy the 16-character password (no spaces)');
-      console.error('3. Update EMAIL_PASSWORD in .env with the new app password');
-      console.error('4. Restart your server after updating .env');
-      console.error('5. Ensure 2-Step Verification is enabled');
-    }
     
     // Don't throw error - email failure shouldn't break the main flow
     return { success: false, error: error.message, code: error.code };
