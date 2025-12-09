@@ -20,7 +20,7 @@ export default function ManagePetsPage() {
       setSelected(null);
       try {
         const res = await fetchAllPetsById();
-        console.log(res)
+        // console.log(res)
         if (!res) {
           console.log("no pets exist");
           setPets(null);

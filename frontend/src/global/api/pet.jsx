@@ -7,7 +7,7 @@ export const registerPet = async (petData) => {
                 "Content-Type": "multipart/form-data"
             },
         });
-        console.log('Pet Registered: ', res.data);
+        // console.log('Pet Registered: ', res.data);
         return res.data;
     } catch (err) {
         console.error("Unable to register pet: ", err);
@@ -18,7 +18,7 @@ export const registerPet = async (petData) => {
 export const fetchAllPetsById = async () => {
     try {
         const res = await api.get("/pets");
-        console.log("All pets successfully fetched by User ID", res);
+        // console.log("All pets successfully fetched by User ID", res);
         return res.data;
     } catch (err) {
         console.error("Unable to fetch Pets by User ID", err.message);
@@ -33,7 +33,7 @@ export const updatePet = async (petId, petData) => {
                 "Content-Type": "multipart/form-data"
             },
         });
-        console.log('Pet Updated: ', res.data);
+        // console.log('Pet Updated: ', res.data);
         return res.data;
     } catch (err) {
         console.error("Unable to update pet: ", err);

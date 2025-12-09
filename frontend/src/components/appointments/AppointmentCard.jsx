@@ -15,7 +15,7 @@ export default function AppointmentCard({ appointment, onStatusChange, onComplet
     const displayStatus = status === 'canceled' || status === 'cancelled' ? 'rejected' : status;
 
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${styles[status] || styles.canceled}`}>
+      <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${styles[status]}`}>
         {displayStatus}
       </span>
     );
