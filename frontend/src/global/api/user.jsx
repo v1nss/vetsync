@@ -53,9 +53,19 @@ export const checkEmailExists = async (email) => {
     }
 };
 
-export const updateUserProfile = async (userId, profileData) => {
+export const updateUserProfile = async (userId, profileData, profilePicture = null) => {
     try {
-        const res = await api.put(`/users/update/${userId}`, profileData);
+        const formData = new FormData();
+        formData.append('user', JSON.stringify(profileData));
+        if (profilePicture) {
+            formData.append('file', profilePicture);
+        }
+        
+        const res = await api.put(`/users/update/${userId}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
         console.log('Profile update response:', res.data);
         return res.data;
     } catch (err) {

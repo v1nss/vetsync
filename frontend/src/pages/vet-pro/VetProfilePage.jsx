@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { FaCamera, FaUser, FaLock, FaEnvelope, FaPhone, FaBriefcase, FaEdit, FaSave, FaTimes } from "react-icons/fa";
 import Navbar from "../../components/Navbar.jsx";
+import NotificationModal from "../../components/NotificationModal";
 import { useAuth } from "../../context/AuthContext";
 import { updateUserProfile } from "../../global/api/user";
 
 export default function VetProfilePage() {
-  const { user } = useAuth();
+  const { user, setUser, fetchUser } = useAuth();
   
   // Profile state
   const [profile, setProfile] = useState({
@@ -33,11 +34,19 @@ export default function VetProfilePage() {
   // Image upload state
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  
+  // Notification state
+  const [notification, setNotification] = useState({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    message: ''
+  });
 
   // Fetch vet profile data
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [user]);
 
   const fetchProfile = async () => {
     try {
@@ -91,20 +100,50 @@ export default function VetProfilePage() {
         phone_number: profile.phone,
       };
       
-      // Note: Specialization update would require a separate endpoint
-      // For now, we only update basic user fields
+      const response = await updateUserProfile(user.id, profileData, selectedImage);
       
-      await updateUserProfile(user.id, profileData);
+      // Refresh user context with latest data
+      if (fetchUser) {
+        await fetchUser();
+      } else if (setUser && response.user) {
+        // Fallback: update user context directly if fetchUser not available
+        setUser(response.user);
+      }
+      
+      // Update local state with response data immediately
+      if (response.user) {
+        setProfile({
+          firstName: response.user.first_name || "",
+          lastName: response.user.last_name || "",
+          email: response.user.email || "",
+          phone: response.user.phone_number || "",
+          specialization: response.user.VetProfessional?.specialization || "",
+          profilePicture: response.user.profile_image_url?.link || null,
+        });
+        
+        if (response.user.profile_image_url?.link) {
+          setImagePreview(response.user.profile_image_url.link);
+        } else {
+          setImagePreview(null);
+        }
+      }
       
       setIsEditing(false);
       setSelectedImage(null);
-      alert('Profile updated successfully!');
-      
-      // Refresh user data
-      fetchProfile();
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: 'Profile Updated!',
+        message: 'Your profile has been successfully updated.'
+      });
     } catch (error) {
       console.error("Error saving profile:", error);
-      alert(error.response?.data?.error || 'Failed to update profile');
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Update Failed',
+        message: error.response?.data?.error || 'Failed to update profile. Please try again.'
+      });
     } finally {
       setSaving(false);
     }
@@ -137,10 +176,16 @@ export default function VetProfilePage() {
 
     try {
       await updateUserProfile(user.id, {
-        password: passwordData.newPassword,
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
       });
       
-      alert('Password changed successfully!');
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: 'Password Changed!',
+        message: 'Your password has been successfully updated.'
+      });
       setShowPasswordModal(false);
       setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (error) {
@@ -161,8 +206,17 @@ export default function VetProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <>
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ ...notification, isOpen: false })}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+      />
+      
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
       
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-6">
@@ -426,6 +480,7 @@ export default function VetProfilePage() {
           `}</style>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

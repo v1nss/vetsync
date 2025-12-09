@@ -114,12 +114,23 @@ export default function ProfileSettingsPage() {
         bio: formData.bio,
       };
       
-      // If there's a new image, handle it here
-      // const data = new FormData();
-      // data.append('user', JSON.stringify(profileData));
-      // if (profileImage) data.append('file', profileImage);
+      const response = await updateUserProfile(user.id, profileData, profileImage);
       
-      await updateUserProfile(user.id, profileData);
+      // Update local state with response data
+      if (response.user) {
+        setFormData({
+          firstName: response.user.first_name || '',
+          lastName: response.user.last_name || '',
+          email: response.user.email || '',
+          phone: response.user.phone_number || '',
+          address: response.user.address || '',
+          bio: response.user.bio || '',
+        });
+        
+        if (response.user.profile_image_url?.link) {
+          setPreview(response.user.profile_image_url.link);
+        }
+      }
       
       setIsEditing(false);
       setProfileImage(null);
@@ -161,7 +172,8 @@ export default function ProfileSettingsPage() {
 
     try {
       await updateUserProfile(user.id, {
-        password: passwordData.newPassword,
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
       });
       
       showNotification('success', 'Password Changed!', 'Your password has been successfully updated.');
