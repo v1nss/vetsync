@@ -6,6 +6,7 @@ import { useNavigate } from "react-router";
 import { fetchAllPetsById } from "../../global/api/pet";
 import { useAuth } from "../../context/AuthContext";
 import DriveImage from "../../components/DriveImage";
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ export default function SettingsPage() {
 
   const [loading, setLoading] = useState(true);
   const [pets, setPets] = useState([]);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   
   useEffect(() => {
     const fetchAllPets = async () => {
@@ -206,7 +208,7 @@ export default function SettingsPage() {
 
               {/* Logout Button */}
               <button
-                onClick={handleLogout}
+                onClick={() => setShowLogoutModal(true)}
                 className="w-full flex items-center justify-center gap-3 p-4 bg-primary text-white rounded-xl border border-red-200 hover:bg-red-100 transition"
               >
                 <span className="font-medium">Logout</span>
@@ -258,6 +260,17 @@ export default function SettingsPage() {
                     ))}
                   </div>
                 </div>
+
+                
+                {/* Logout Button */}
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
+                  <button
+                    onClick={() => setShowLogoutModal(true)}
+                    className="w-full flex items-center justify-center gap-3 p-4 bg-primary text-white rounded-2xl border border-red-200 hover:bg-red-100 transition"
+                  >
+                    <span className="font-medium">Logout</span>
+                  </button>
+                </div>
               </div>
 
               {/* Right Column - Settings */}
@@ -284,19 +297,21 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Logout Button */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-3 p-4 bg-primary text-white rounded-2xl border border-red-200 hover:bg-red-100 transition"
-            >
-              <span className="font-medium">Logout</span>
-            </button>
-          </div>
-
           <Footer />
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+        title="Logout"
+        message="Are you sure you want to logout? You'll need to sign in again to access your account."
+        confirmText="Yes, Logout"
+        cancelText="Stay"
+        type="danger"
+      />
     </main>
   );
 }
