@@ -1,47 +1,28 @@
-import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import brevo from "@getbrevo/brevo";
 
 dotenv.config();
 
-// Create reusable transporter object using SMTP transport
-const createTransporter = () => {
-  // For development, you can use Gmail or other SMTP services
-  // For production, use a proper email service like SendGrid, AWS SES, etc.
-  
-  const emailUser = process.env.EMAIL_USER?.trim();
-  const emailPassword = process.env.EMAIL_PASSWORD?.trim();
-  const emailService = process.env.EMAIL_SERVICE?.trim() || 'gmail';
+// Brevo (Sendinblue) configuration
+const getBrevoConfig = () => {
+  const apiKey = process.env.BREVO_API_KEY?.trim();
+  const fromEmail = process.env.BREVO_FROM_EMAIL?.trim() || 'noreply@sendinblue.com';
+  const fromName = process.env.BREVO_FROM_NAME?.trim() || 'VetSync';
 
-  // Validate email configuration
-  if (!emailUser || !emailPassword) {
-    throw new Error('EMAIL_USER and EMAIL_PASSWORD must be set in .env file');
+  if (!apiKey) {
+    throw new Error('BREVO_API_KEY must be set in .env file');
   }
 
-  // Gmail configuration with explicit SMTP settings
-  if (emailService.toLowerCase() === 'gmail') {
-    return nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false, // true for 465, false for other ports
-      auth: {
-        user: emailUser,
-        pass: emailPassword, // Use App Password for Gmail (16 characters, no spaces)
-      },
-      tls: {
-        // Do not fail on invalid certs
-        rejectUnauthorized: false
-      }
-    });
+  // Validate API key format (should start with 'xkeysib-')
+  if (!apiKey.startsWith('xkeysib-')) {
+    console.warn('⚠️  Warning: API key format might be incorrect. Brevo API keys usually start with "xkeysib-"');
   }
 
-  // Generic SMTP configuration for other services
-  return nodemailer.createTransport({
-    service: emailService,
-    auth: {
-      user: emailUser,
-      pass: emailPassword,
-    },
-  });
+  return {
+    apiKey,
+    fromEmail,
+    fromName
+  };
 };
 
 // Email template for appointment approval
@@ -171,83 +152,99 @@ const getRejectionEmailTemplate = (ownerName, petName, clinicName, appointmentDa
   `;
 };
 
-// Send email function
+// Send email function using Brevo (Sendinblue) API
 export const sendEmail = async (to, subject, html, text = null) => {
   try {
-    // Check if email is configured
-    const emailUser = process.env.EMAIL_USER?.trim();
-    const emailPassword = process.env.EMAIL_PASSWORD?.trim();
-    
-    if (!emailUser || !emailPassword) {
-      console.warn('Email service not configured. Skipping email send.');
-      console.warn('To enable emails, set EMAIL_USER and EMAIL_PASSWORD in your .env file');
+    // Check if Brevo is configured
+    let brevoConfig;
+    try {
+      brevoConfig = getBrevoConfig();
+    } catch (configError) {
+      console.warn('Brevo not configured. Skipping email send.');
+      console.warn('To enable emails, set BREVO_API_KEY in your .env file');
+      console.warn('For Brevo free tier setup:');
+      console.warn('1. Sign up at https://www.brevo.com/');
+      console.warn('2. Get your API key from Brevo dashboard (Settings → API Keys)');
+      console.warn('3. Add BREVO_API_KEY to .env');
+      console.warn('4. Optionally set BREVO_FROM_EMAIL and BREVO_FROM_NAME');
       return { success: false, message: 'Email service not configured' };
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(emailUser)) {
-      console.error('Invalid EMAIL_USER format:', emailUser);
-      return { success: false, error: 'Invalid email format in EMAIL_USER' };
+    if (!emailRegex.test(to)) {
+      console.error('Invalid recipient email format:', to);
+      return { success: false, error: 'Invalid recipient email format' };
     }
 
-    // Verify transporter can be created
-    let transporter;
-    try {
-      transporter = createTransporter();
-    } catch (transporterError) {
-      console.error('Error creating email transporter:', transporterError.message);
-      return { success: false, error: `Transporter error: ${transporterError.message}` };
+    // Initialize Brevo client with API key
+    const apiInstance = new brevo.TransactionalEmailsApi();
+    
+    // Set API key for authentication
+    // Try multiple methods for compatibility
+    if (apiInstance.setApiKey) {
+      apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, brevoConfig.apiKey);
+    } else if (apiInstance.authentications && apiInstance.authentications['api-key']) {
+      apiInstance.authentications['api-key'].apiKey = brevoConfig.apiKey;
+    } else {
+      // Direct assignment as fallback
+      apiInstance.apiKey = brevoConfig.apiKey;
     }
 
-    // Verify connection before sending
-    try {
-      await transporter.verify();
-      console.log('Email server connection verified successfully');
-    } catch (verifyError) {
-      console.error('Email server verification failed:', verifyError.message);
-      
-      // Provide helpful error messages
-      if (verifyError.code === 'EAUTH') {
-        console.error('\n⚠️  Authentication Error - Common fixes:');
-        console.error('1. Make sure you\'re using an App Password (not your regular Gmail password)');
-        console.error('2. Generate a new App Password: https://myaccount.google.com/apppasswords');
-        console.error('3. Ensure EMAIL_USER matches the Gmail account exactly');
-        console.error('4. Remove any spaces or quotes from EMAIL_PASSWORD in .env file');
-        console.error('5. Make sure 2-Step Verification is enabled on your Google account');
-      }
-      
-      return { success: false, error: `Email server verification failed: ${verifyError.message}` };
-    }
+    // Generate plain text version from HTML if not provided
+    const plainText = text || html.replace(/<[^>]*>/g, '').replace(/\n\s*\n/g, '\n').trim();
 
-    const mailOptions = {
-      from: `"VetSync" <${emailUser}>`, // From address must match authenticated email
-      to: to,
+    // Prepare email data
+    const sendSmtpEmail = {
+      sender: { 
+        email: brevoConfig.fromEmail, 
+        name: brevoConfig.fromName 
+      },
+      to: [{ email: to }],
       subject: subject,
-      html: html,
-      text: text || html.replace(/<[^>]*>/g, ''), // Plain text fallback
+      htmlContent: html,
+      textContent: plainText
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Email sent successfully:', info.messageId);
-    return { success: true, messageId: info.messageId };
+    // Send email via Brevo API
+    const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
+
+    console.log('✅ Email sent successfully via Brevo:', response.messageId);
+    return { 
+      success: true, 
+      messageId: response.messageId,
+      provider: 'brevo'
+    };
   } catch (error) {
     console.error('❌ Error sending email:', error.message);
     
-    // Provide specific error guidance
-    if (error.code === 'EAUTH') {
-      console.error('\n🔧 Gmail Authentication Troubleshooting:');
-      console.error('1. Verify EMAIL_USER in .env matches your Gmail address exactly');
-      console.error('2. Generate a NEW App Password: https://myaccount.google.com/apppasswords');
-      console.error('   - Select "Mail" and your device');
-      console.error('   - Copy the 16-character password (no spaces)');
-      console.error('3. Update EMAIL_PASSWORD in .env with the new app password');
-      console.error('4. Restart your server after updating .env');
-      console.error('5. Ensure 2-Step Verification is enabled');
+    // Provide helpful error guidance
+    if (error.response) {
+      console.error('Brevo API error details:', error.response.body || error.response.text);
     }
     
+    // Log API key preview for debugging (first 10 chars only)
+    const apiKeyPreview = brevoConfig?.apiKey ? `${brevoConfig.apiKey.substring(0, 10)}...` : 'not set';
+    console.error('API Key preview:', apiKeyPreview);
+    
+    console.error('\n🔧 Brevo Setup Troubleshooting:');
+    console.error('1. Verify BREVO_API_KEY in .env is correct (get it from: https://app.brevo.com/settings/keys/api)');
+    console.error('2. Make sure there are NO spaces or quotes around the API key in .env');
+    console.error('3. The API key should look like: xkeysib-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
+    console.error('4. Check your Brevo account has available credits (free tier: 300 emails/day)');
+    console.error('5. Verify BREVO_FROM_EMAIL is set (or uses default)');
+    console.error('6. Make sure your Brevo account is verified');
+    console.error('7. Restart your server after updating .env file');
+    console.error('\n💡 Note: You only need the API KEY, NOT the SMTP credentials for this setup.');
+    console.error('   SMTP credentials are for a different method (nodemailer), not needed here.');
+    
     // Don't throw error - email failure shouldn't break the main flow
-    return { success: false, error: error.message, code: error.code };
+    return { 
+      success: false, 
+      error: error.message || 'Failed to send email',
+      details: error.response?.body || error.response?.text,
+      statusCode: error.response?.statusCode || error.statusCode
+    };
   }
 };
 
