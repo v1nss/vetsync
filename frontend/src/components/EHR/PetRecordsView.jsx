@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { FiChevronLeft } from "react-icons/fi";
 import { RiMicroscopeLine, RiSyringeLine } from "react-icons/ri";
-import { FaPrescription, FaPills } from "react-icons/fa";
+import { FaPills } from "react-icons/fa";
 import HealthRecordsTable from "./HealthRecordsTable";
 import HealthRecordModal from "./HealthRecordModal.jsx";
 
@@ -156,7 +156,6 @@ export default function PetRecordsView({ pet, onBack, healthRecords, loading = f
     const counts = {
       all: displayHealthRecords.length,
       lab: 0,
-      prescriptions: 0,
       vaccinations: 0,
       deworming: 0
     };
@@ -164,13 +163,38 @@ export default function PetRecordsView({ pet, onBack, healthRecords, loading = f
     displayHealthRecords.forEach(record => {
       const docs = record.documents || {};
       if (docs.labResults && docs.labResults.length > 0) counts.lab++;
-      if (docs.prescriptions && docs.prescriptions.length > 0) counts.prescriptions++;
       if (docs.vaccineRecords && docs.vaccineRecords.length > 0) counts.vaccinations++;
       if (docs.deworming && docs.deworming.length > 0) counts.deworming++;
     });
     
     return counts;
   }, [displayHealthRecords]);
+
+  // Get tab colors based on category
+  const getTabColors = (tab) => {
+    switch (tab) {
+      case 'lab':
+        return {
+          active: 'bg-blue-600 text-white',
+          inactive: 'text-blue-700 hover:text-blue-800 hover:bg-blue-50'
+        };
+      case 'vaccinations':
+        return {
+          active: 'bg-green-600 text-white',
+          inactive: 'text-green-700 hover:text-green-800 hover:bg-green-50'
+        };
+      case 'deworming':
+        return {
+          active: 'bg-orange-600 text-white',
+          inactive: 'text-orange-700 hover:text-orange-800 hover:bg-orange-50'
+        };
+      default:
+        return {
+          active: 'bg-primary text-white',
+          inactive: 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+        };
+    }
+  };
 
   const calculateAge = (birthdate) => {
     if (!birthdate) return "Age unknown";
@@ -255,8 +279,8 @@ export default function PetRecordsView({ pet, onBack, healthRecords, loading = f
               onClick={() => setActiveTab('all')}
               className={`px-4 py-2 text-sm font-medium rounded-t-lg whitespace-nowrap transition-colors ${
                 activeTab === 'all'
-                  ? 'bg-primary text-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  ? getTabColors('all').active
+                  : getTabColors('all').inactive
               }`}
             >
               All Records ({categoryCounts.all})
@@ -265,30 +289,19 @@ export default function PetRecordsView({ pet, onBack, healthRecords, loading = f
               onClick={() => setActiveTab('lab')}
               className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg whitespace-nowrap transition-colors ${
                 activeTab === 'lab'
-                  ? 'bg-primary text-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  ? getTabColors('lab').active
+                  : getTabColors('lab').inactive
               }`}
             >
               <RiMicroscopeLine className="text-base" />
               Lab Results ({categoryCounts.lab})
             </button>
-            {/* <button
-              onClick={() => setActiveTab('prescriptions')}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg whitespace-nowrap transition-colors ${
-                activeTab === 'prescriptions'
-                  ? 'bg-primary text-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              <FaPrescription className="text-base" />
-              Prescriptions ({categoryCounts.prescriptions})
-            </button> */}
             <button
               onClick={() => setActiveTab('vaccinations')}
               className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg whitespace-nowrap transition-colors ${
                 activeTab === 'vaccinations'
-                  ? 'bg-primary text-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  ? getTabColors('vaccinations').active
+                  : getTabColors('vaccinations').inactive
               }`}
             >
               <RiSyringeLine className="text-base" />
@@ -298,8 +311,8 @@ export default function PetRecordsView({ pet, onBack, healthRecords, loading = f
               onClick={() => setActiveTab('deworming')}
               className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg whitespace-nowrap transition-colors ${
                 activeTab === 'deworming'
-                  ? 'bg-primary text-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  ? getTabColors('deworming').active
+                  : getTabColors('deworming').inactive
               }`}
             >
               <FaPills className="text-base" />
