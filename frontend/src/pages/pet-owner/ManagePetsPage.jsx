@@ -8,7 +8,6 @@ import { useAuth } from '../../context/AuthContext';
 import { fetchAllPetsById } from '../../global/api/pet';
 
 export default function ManagePetsPage() {
-  const { token } = useAuth();
   const navigate = useNavigate();
   const [selected, setSelected] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,8 +19,7 @@ export default function ManagePetsPage() {
       setLoading(true);
       setSelected(null);
       try {
-        const res = await fetchAllPetsById(token);
-        console.log(res)
+        const res = await fetchAllPetsById();
         if (!res) {
           console.log("no pets exist");
           setPets(null);
@@ -37,7 +35,7 @@ export default function ManagePetsPage() {
     };
 
     fetchAllPets()
-  }, [token])
+  }, [])
 
   const handleAddPet = () => navigate('add');
 

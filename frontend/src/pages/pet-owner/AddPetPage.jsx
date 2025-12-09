@@ -131,7 +131,6 @@ export default function AddPetPage() {
         data.append('file', petProfile); 
       }
       const res = await registerPet(data);
-      console.log("pet created Succesfully: ", res)
       navigate('/pet-owner/pets');
     } catch (err) {
       console.error("Registration error:", err.response?.data || err.message);

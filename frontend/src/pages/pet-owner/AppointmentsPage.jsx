@@ -25,7 +25,6 @@ export default function AppointmentPage() {
     try {
       setLoading(true);
       const appointments = await getAppointmentsByOwner();
-      // console.log("APPOINTMENTS DATA:", appointments);
       
       // Ensure we always set an array
       if (Array.isArray(appointments)) {
@@ -113,7 +112,7 @@ export default function AppointmentPage() {
   const handleConfirmCancel = async (appointmentId) => {
     try {
       const res = await deleteAppointment(appointmentId);
-      console.log("Appointment deleted successfully:", res.data);
+      // console.log("Appointment deleted successfully:", res.data);
       setConfirmation({ isOpen: false, appointmentId: null });
       setNotification({
         isOpen: true,

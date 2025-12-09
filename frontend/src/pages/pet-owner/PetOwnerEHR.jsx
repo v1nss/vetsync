@@ -21,7 +21,7 @@ export default function PetOwnerEHR() {
       setLoading(true);
       try {
         const res = await fetchAllPetsById();
-        console.log(res);
+        // console.log(res);
         if (!res) {
           console.log("no pets exist");
           setPets([]);
@@ -45,7 +45,6 @@ export default function PetOwnerEHR() {
         setLoadingRecords(true);
         try {
           const res = await getEHRsByPet(selectedPet.pet_id);
-          console.log("EHR records fetched:", res);
           
           if (res && res.ehrs) {
             // Transform backend data to frontend format

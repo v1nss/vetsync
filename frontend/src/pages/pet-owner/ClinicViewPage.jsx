@@ -59,8 +59,6 @@ export default function ClinicViewPage({ onLike }) {
   const clinicImages = clinic?.clinic_images || [];
   const hasMultipleImages = clinicImages.length > 1;
 
-  console.log(clinic)
-
   useEffect(() => {
     const checkOverflow = () => {
       const el = descRef.current;

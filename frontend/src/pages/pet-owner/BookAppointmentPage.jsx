@@ -148,7 +148,6 @@ export default function BookAppointmentPage() {
 
     try {
       const res = await createAppointment(payload);
-      console.log("Appointment booked successfully:", res);
       setShowConfirmation(false);
       navigate('/pet-owner/appointments');
     } catch (err) {
