@@ -116,7 +116,7 @@ export default function ManagePetsPage() {
               <FaChevronLeft className="text-gray-500" />
               <h1 className="text-2xl font-medium">Manage Pets</h1>
             </button>
-            <div className="flex gap-3">
+            {/* <div className="flex gap-3">
               <button onClick={handleAddPet} className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-2xl hover:bg-[#FEA08E] transition">
                 <FaPlus />
                 <span>Add Pet</span>
@@ -124,7 +124,7 @@ export default function ManagePetsPage() {
               <button className="p-3 hover:bg-gray-100 rounded-full transition">
                 <FaSearch className="text-xl" />
               </button>
-            </div>
+            </div> */}
           </div>
 
           <div className="grid grid-cols-12 gap-6">
