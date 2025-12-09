@@ -10,7 +10,7 @@ import ConfirmationModal from "../../components/ConfirmationModal";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { user, token, logout } = useAuth();
+  const { user, logout } = useAuth();
   
   // Get full name with fallback
   const fullName = [user?.first_name, user?.last_name]
@@ -36,8 +36,8 @@ export default function SettingsPage() {
     const fetchAllPets = async () => {
       setLoading(true);
       try {
-        const res = await fetchAllPetsById(token);
-        console.log(res);
+        const res = await fetchAllPetsById();
+        // console.log(res);
         if (!res) {
           console.log("no pets exist");
           setPets([]);
@@ -52,7 +52,7 @@ export default function SettingsPage() {
     };
 
     fetchAllPets();
-  }, [token]);
+  }, []);
 
   const settingsOptions = [
     { icon: FaBell, label: "Notifications", section: "other", path: "/pet-owner/settings/notifications" },

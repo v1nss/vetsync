@@ -318,9 +318,9 @@ export default function PetDetail({ pet, onUpdate }) {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6 md:gap-6 md:mb-8">
-        <InfoCard label="Gender" value={pet.gender === 'male' ? 'Male' : 'Female'} />
+        <InfoCard label="Gender" value={isEditing ? (editedPet.gender === 'male' ? 'Male' : editedPet.gender === 'female' ? 'Female' : '-') : (pet.gender === 'male' ? 'Male' : pet.gender === 'female' ? 'Female' : '-')} />
         <InfoCard label="Age" value={petAge} />
-        <InfoCard label="Weight" value={pet.weight} />
+        <InfoCard label="Weight" value={isEditing ? (editedPet.weight || '-') : (pet.weight || '-')} />
       </div>
 
       {/* Basic Information */}
@@ -344,6 +344,19 @@ export default function PetDetail({ pet, onUpdate }) {
                    <option value="other">Other</option>
                  </select>
                  {errors.species && <p className="text-red-500 text-xs mt-1">{errors.species}</p>}
+               </div>
+               <div>
+                 <label className="text-sm text-gray-600 block mb-1">Gender</label>
+                 <select
+                   key={`gender-${pet.pet_id}`}
+                   value={editedPet.gender || ''}
+                   onChange={(e) => handleInputChange('gender', e.target.value)}
+                   className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm"
+                 >
+                   <option value="">Select gender</option>
+                   <option value="male">Male</option>
+                   <option value="female">Female</option>
+                 </select>
                </div>
                <div>
                  <label className="text-sm text-gray-600 block mb-1">Color</label>
@@ -381,6 +394,7 @@ export default function PetDetail({ pet, onUpdate }) {
           ) : (
             <>
               <InfoRow label="Species" value={pet.species ? pet.species.charAt(0).toUpperCase() + pet.species.slice(1) : '-'} />
+              <InfoRow label="Gender" value={pet.gender === 'male' ? 'Male' : pet.gender === 'female' ? 'Female' : '-'} />
               <InfoRow label="Color" value={pet.color} />
               <InfoRow label="Date of Birth" value={pet.dateOfBirth || pet.birthdate || '-'} />
               <InfoRow label="Weight" value={pet.weight} />

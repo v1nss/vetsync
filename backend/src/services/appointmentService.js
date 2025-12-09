@@ -199,7 +199,7 @@ export const rejectAppointment = async (appointmentId, rejectionReason) => {
     : appointment.notes;
 
   await appointment.update({
-    status: "canceled",
+    status: "rejected",
     notes: updatedNotes,
   });
 
