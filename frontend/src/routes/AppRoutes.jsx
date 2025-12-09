@@ -31,6 +31,13 @@ import EditClinicPage from "../pages/clinic-admin/EditClinicPage";
 import ClinicAppointmentsPage from "../pages/clinic-admin/ClinicAppointmentsPage";
 import VetProEHRPage from "../pages/vet-pro/VetProEHRPage";
 import VetProfilePage from "../pages/vet-pro/VetProfilePage";
+import NotificationsSettingsPage from "../pages/pet-owner/settings/NotificationsSettingsPage";
+import SecuritySettingsPage from "../pages/pet-owner/settings/SecuritySettingsPage";
+import AppearanceSettingsPage from "../pages/pet-owner/settings/ApperanceSettingsPage";
+import AboutVetSyncPage from "../pages/pet-owner/settings/AboutVetSyncPage";
+import FAQsPage from "../pages/pet-owner/settings/FAQsPage";
+import ProfileSettingsPage from "../pages/pet-owner/settings/ProfileSettingsPage";
+import ReportProblemPage from "../pages/pet-owner/settings/ReportProblemPage";
 
 // Public routes (no auth required)
 const PublicRoute = () => {
@@ -147,7 +154,14 @@ const AppRoutes = () => (
                 <Route path="pets" element={<ManagePetsPage />} />
                 <Route path="pets/add" element={<AddPetPage />} />
                 <Route path="messages" element={<MessagesPage />} />
-                <Route path="settings" element={<SettingsPage />} />
+                <Route path="settings/*" element={<SettingsPage />} />
+                <Route path="settings/notifications" element={<NotificationsSettingsPage />} />
+                <Route path="settings/security" element={<SecuritySettingsPage />} />
+                <Route path="settings/appearance" element={<AppearanceSettingsPage />} />
+                <Route path="settings/about" element={<AboutVetSyncPage />} />
+                <Route path="settings/faqs" element={<FAQsPage />} />
+                <Route path="settings/profile" element={<ProfileSettingsPage />} />
+                <Route path="settings/report" element={<ReportProblemPage />} />
             </Route>
 
             {/* Clinic Admin Routes */}
