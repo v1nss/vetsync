@@ -88,7 +88,10 @@ export default function PetsList({ pets, searchTerm, setSearchTerm, onSelect }) 
                   <span>•</span>
                   <span>{calculateAge(pet.birthdate)}</span>
                   <span>•</span>
-                  <span>{pet.gender}</span>
+                  <span>{pet?.gender
+                    ? pet.gender.charAt(0).toUpperCase() + pet.gender.slice(1)
+                    : ""}
+                  </span>
                 </div>
               </div>
               <FiChevronRight className="text-gray-400 mt-5" />

@@ -33,7 +33,7 @@ export default function AppointmentCard({ appointment, onStatusChange, onComplet
               <div className="flex items-center gap-3 mb-2">
                 <FaPaw className="text-primary text-xl" />
                 <h3 className="text-xl font-semibold text-gray-900">{appointment.pet_name}</h3>
-                <span className="text-gray-500 capitalize">({appointment.pet_type})</span>
+                <span className="text-gray-500 capitalize">({appointment.pet_type ? appointment.pet_type.charAt(0).toUpperCase() + appointment.pet_type.slice(1) : ""})</span>
                 {getStatusBadge(appointment.status)}
               </div>
               <p className="text-gray-600 font-medium">{appointment.owner_name}</p>

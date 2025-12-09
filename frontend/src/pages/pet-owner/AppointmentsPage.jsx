@@ -206,9 +206,10 @@ export default function AppointmentPage() {
     return appointment.pet?.name || "Pet";
   };
 
-  const getPetType = (appointment) => {
-    return appointment.pet?.species || "Unknown";
-  };
+const getPetType = (appointment) =>
+  appointment.pet?.species
+    ? appointment.pet.species.charAt(0).toUpperCase() + appointment.pet.species.slice(1)
+    : "Unknown";
 
   const getClinicName = (appointment) => {
     return appointment.clinic?.name || "Veterinary Clinic";
