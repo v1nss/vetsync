@@ -1,6 +1,7 @@
 import { FaSearch, FaMapMarkerAlt, FaStar, FaClock } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import Navbar from "../../components/Navbar";
+import Footer from "../../components/Footer";
 import ClinicCard from "../../components/ClinicCard";
 import { fetchApprovedClinics } from "../../global/api/clinic";
 
@@ -394,6 +395,7 @@ export default function HomePage() {
                     </div>
                 )}
             </section>
+            <Footer />
         </div>
     );
 }

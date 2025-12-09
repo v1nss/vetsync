@@ -190,29 +190,6 @@ export default function LoginPage() {
                         {isLoading ? "Logging in..." : "Login"}
                     </button>
                     
-                    <div className="flex items-center my-4">
-                        <hr className="flex-1 border-t border-gray-300" />
-                        <span className="mx-2 text-gray-500">or</span>
-                        <hr className="flex-1 border-t border-gray-300" />
-                    </div>
-                    
-                    <div className="flex justify-center gap-4">
-                        <button 
-                            type="button"
-                            className="flex items-center justify-center border border-gray-300 rounded-full p-4 hover:bg-gray-100 transition disabled:opacity-50"
-                            disabled={isLoading}
-                        >
-                            <FcGoogle className="h-5 w-5" />
-                        </button>
-                        <button 
-                            type="button"
-                            className="flex items-center justify-center border border-gray-300 rounded-full p-4 hover:bg-gray-100 transition disabled:opacity-50"
-                            disabled={isLoading}
-                        >
-                            <FaFacebook className="text-blue-600 h-5 w-5" />
-                        </button>
-                    </div>
-                    
                     <div className="text-center mt-4">
                         <p className="text-gray-600">Don't have an account? <Link to="/register" className="text-primary hover:underline">Sign Up</Link></p>
                     </div>

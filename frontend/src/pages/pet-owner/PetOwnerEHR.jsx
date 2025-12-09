@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "../../components/Navbar";
+import Footer from "../../components/Footer";
 import PetsList from "../../components/EHR/PetsList";
 import PetRecordsView from "../../components/EHR/PetRecordsView";
 import { useAuth } from "../../context/AuthContext";
@@ -124,7 +125,7 @@ export default function PetOwnerEHR() {
   return (
     <main>
       <Navbar />
-      <div className="min-h-screen pb-24 sm:pb-8">
+      <div className="min-h-[79vh] pb-24 sm:pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">
@@ -175,6 +176,7 @@ export default function PetOwnerEHR() {
           </div>
         </div>
       </div>
+      <Footer />
     </main>
   );
 }
