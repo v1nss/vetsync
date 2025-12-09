@@ -2,6 +2,7 @@ import { DataTypes } from "sequelize";
 import sequelize from "../../../global/config/db.js";
 import User from "./userModel.js";
 import ClinicAdmin from "./clinicAdminModel.js";
+import Clinic from "../clinicModel.js";
 
 const VetProfessional = sequelize.define("VetProfessional", {
   user_id: {
@@ -14,6 +15,12 @@ const VetProfessional = sequelize.define("VetProfessional", {
   clinic_admin_id: { 
     type: DataTypes.INTEGER,
     references: { model: ClinicAdmin, key: "user_id" },
+    onDelete: "SET NULL",
+  },
+  clinic_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: Clinic, key: "clinic_id" },
     onDelete: "SET NULL",
   },
 }, {

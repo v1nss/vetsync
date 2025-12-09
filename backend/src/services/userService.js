@@ -3,6 +3,7 @@ import User from "../models/users/userModel.js";
 import PetOwner from "../models/users/petOwnerModel.js";
 import ClinicAdmin from "../models/users/clinicAdminModel.js";
 import VetProfessional from "../models/users/vetProfessionalModel.js";
+import Clinic from "../models/clinicModel.js";
 import { uploadFiles, deleteFiles } from "../../global/utils/drive.js";
 
 export const registerUser = async (userData) => {
@@ -76,6 +77,16 @@ export const registerVetProfessional = async (req, adminUserId) => {
   if (!admin)
     throw new Error("Only clinic admins can register vet professionals");
 
+  // Get clinic_id from the clinic admin
+  const clinic = await Clinic.findOne({
+    where: { owner_id: adminUserId },
+    attributes: ["clinic_id"],
+  });
+
+  if (!clinic) {
+    throw new Error("Clinic admin must have an associated clinic");
+  }
+
   const existing = await User.findOne({ where: { email } });
   if (existing) throw new Error("Email already registered");
 
@@ -114,6 +125,7 @@ export const registerVetProfessional = async (req, adminUserId) => {
   await VetProfessional.create({
     user_id: user.id,
     clinic_admin_id: adminUserId,
+    clinic_id: clinic.clinic_id,
     specialization,
     license_number,
   });
