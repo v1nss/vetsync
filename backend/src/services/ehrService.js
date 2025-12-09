@@ -109,7 +109,7 @@ export const getEHRById = async (ehrId) => {
       {
         model: Pet,
         as: "pet",
-        attributes: ["pet_id", "name", "species", "breed", "birthdate", "gender"],
+        attributes: ["pet_id", "name", "species", "breed", "birthdate", "gender", "weight", "color"],
       },
       {
         model: VetProfessional,

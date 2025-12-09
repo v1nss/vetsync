@@ -134,7 +134,7 @@ export default function HealthRecordModal({ healthRecord, pet, onClose }) {
                         </span>
                         <h4 className="font-semibold text-gray-900">{doc.documentName}</h4>
                       </div>
-                      {(docType === 'prescriptions' || doc.fileUrl) && (
+                      {/* {(docType === 'prescriptions' || doc.fileUrl) && (
                         <button
                           onClick={() => handleDownload(doc)}
                           className="flex items-center gap-1 px-3 py-1.5 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition"
@@ -142,7 +142,7 @@ export default function HealthRecordModal({ healthRecord, pet, onClose }) {
                           <FiDownload className="w-3.5 h-3.5" />
                           Download
                         </button>
-                      )}
+                      )} */}
                     </div>
                     <p className="text-sm text-gray-700 leading-relaxed">{doc.details}</p>
                   </div>
