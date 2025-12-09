@@ -148,7 +148,6 @@ export default function BookAppointmentPage() {
 
     try {
       const res = await createAppointment(payload);
-      console.log("Appointment booked successfully:", res);
       setShowConfirmation(false);
       navigate('/pet-owner/appointments');
     } catch (err) {
@@ -182,7 +181,7 @@ export default function BookAppointmentPage() {
 
   return (
     <main className="bg-gray-50 min-h-screen">
-      <div className="sticky top-0 hidden sm:block"><Navbar /></div>
+      <div className="sticky top-0 hidden sm:block z-9999"><Navbar /></div>
 
       {/* Mobile Header */}
       <div className="sm:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
@@ -254,7 +253,7 @@ export default function BookAppointmentPage() {
                             )}
                           </div>
                           <span className="font-medium text-sm text-gray-900">{pet.name}</span>
-                          <span className="text-xs text-gray-500">{pet.species}</span>
+                          <span className="text-xs capitalize text-gray-500">{pet.species}</span>
                         </button>
                       ))}
                     </div>

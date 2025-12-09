@@ -15,13 +15,16 @@ export default function HealthRecordsTable({ healthRecords, onRecordClick }) {
   const getDocumentBadges = (documents) => {
     const badges = [];
     if (documents.labResults && documents.labResults.length > 0) {
-      badges.push({ type: 'labResults', count: documents.labResults.length });
+      badges.push({ type: 'labResults', count: documents.labResults.length, label: 'Lab', color: 'bg-blue-100 text-blue-700' });
     }
     if (documents.vaccineRecords && documents.vaccineRecords.length > 0) {
-      badges.push({ type: 'vaccineRecords', count: documents.vaccineRecords.length });
+      badges.push({ type: 'vaccineRecords', count: documents.vaccineRecords.length, label: 'Vax', color: 'bg-green-100 text-green-700' });
     }
     if (documents.prescriptions && documents.prescriptions.length > 0) {
-      badges.push({ type: 'prescriptions', count: documents.prescriptions.length });
+      badges.push({ type: 'prescriptions', count: documents.prescriptions.length, label: 'Rx', color: 'bg-purple-100 text-purple-700' });
+    }
+    if (documents.deworming && documents.deworming.length > 0) {
+      badges.push({ type: 'deworming', count: documents.deworming.length, label: 'Deworm', color: 'bg-orange-100 text-orange-700' });
     }
     return badges;
   };
@@ -65,8 +68,23 @@ export default function HealthRecordsTable({ healthRecords, onRecordClick }) {
                       day: 'numeric'
                     })}
                   </td>
-                  <td className="px-6 py-4 text-gray-900">
-                    {record.reason}
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col gap-2">
+                      <span className="text-gray-900">{record.reason}</span>
+                      {badges.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {badges.map((badge, idx) => (
+                            <span
+                              key={idx}
+                              className={`px-2 py-0.5 rounded-full text-xs font-medium ${badge.color}`}
+                              title={`${badge.type}: ${badge.count} ${badge.count === 1 ? 'record' : 'records'}`}
+                            >
+                              {badge.label} ({badge.count})
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-gray-600">
                     {record.veterinarian}

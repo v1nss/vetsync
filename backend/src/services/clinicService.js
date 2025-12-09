@@ -3,6 +3,7 @@ import Clinic from "../models/clinicModel.js";
 import ClinicAddress from "../models/clinicAddressModel.js";
 import ClinicSchedule from "../models/clinicScheduleModel.js";
 import User from "../models/users/userModel.js";
+import  VetProfessional  from "../models/users/vetProfessionalModel.js";
 
 // Helper function to format address as string for backward compatibility
 const formatAddress = (address) => {
@@ -204,9 +205,21 @@ export const getAllApprovedClinics = async () => {
       },
       { model: ClinicAddress, as: "address" },
       { model: ClinicSchedule, as: "schedules" },
+      {
+        model: VetProfessional,
+        as: "vets",
+        include: [
+          {
+            model: User,
+            as: "User",
+            attributes: ["id", "first_name", "last_name", "email", "profile_image_url"],
+          },
+        ],
+      },
     ],
     order: [["name", "ASC"]], // Sort by name
   });
+
   return clinics;
 };
 
@@ -220,10 +233,21 @@ export const getClinicById = async (clinicId) => {
       {
         model: User,
         as: "owner",
-        attributes: ["id", "first_name", "email"],
+        attributes: ["id", "first_name", "email"], // Only include necessary fields
       },
       { model: ClinicAddress, as: "address" },
       { model: ClinicSchedule, as: "schedules" },
+      {
+        model: VetProfessional,
+        as: "vets",
+        include: [
+          {
+            model: User,
+            as: "User",
+            attributes: ["id", "first_name", "last_name", "email", "profile_image_url"],
+          },
+        ],
+      },
     ],
   });
 

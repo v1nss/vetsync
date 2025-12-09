@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { FaCamera, FaUser, FaLock, FaEnvelope, FaPhone, FaBriefcase, FaEdit, FaSave, FaTimes } from "react-icons/fa";
 import Navbar from "../../components/Navbar.jsx";
 import { useAuth } from "../../context/AuthContext";
+import { updateUserProfile } from "../../global/api/user";
 
 export default function VetProfilePage() {
   const { user } = useAuth();
@@ -42,17 +43,20 @@ export default function VetProfilePage() {
     try {
       setLoading(true);
       
-      setProfile({
-        firstName: data.firstName || "",
-        lastName: data.lastName || "",
-        email: data.email || "",
-        phone: data.phone || "",
-        specialization: data.specialization || "",
-        profilePicture: data.profilePicture || null,
-      });
-      
-      if (data.profilePicture) {
-        setImagePreview(data.profilePicture);
+      // Use the user context data
+      if (user) {
+        setProfile({
+          firstName: user.first_name || "",
+          lastName: user.last_name || "",
+          email: user.email || "",
+          phone: user.phone_number || "",
+          specialization: user.VetProfessional?.specialization || "",
+          profilePicture: user.profile_image_url?.link || null,
+        });
+        
+        if (user.profile_image_url?.link) {
+          setImagePreview(user.profile_image_url.link);
+        }
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -81,34 +85,26 @@ export default function VetProfilePage() {
     try {
       setSaving(true);
       
-      const formData = new FormData();
-      formData.append('firstName', profile.firstName);
-      formData.append('lastName', profile.lastName);
-      formData.append('phone', profile.phone);
-      formData.append('specialization', profile.specialization);
+      const profileData = {
+        first_name: profile.firstName,
+        last_name: profile.lastName,
+        phone_number: profile.phone,
+      };
       
-      if (selectedImage) {
-        formData.append('profilePicture', selectedImage);
-      }
-
-      // Replace with your actual API endpoint
-      const response = await fetch('/api/vet/profile', {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      if (response.ok) {
-        setIsEditing(false);
-        setSelectedImage(null);
-        alert('Profile updated successfully!');
-        fetchProfile();
-      }
+      // Note: Specialization update would require a separate endpoint
+      // For now, we only update basic user fields
+      
+      await updateUserProfile(user.id, profileData);
+      
+      setIsEditing(false);
+      setSelectedImage(null);
+      alert('Profile updated successfully!');
+      
+      // Refresh user data
+      fetchProfile();
     } catch (error) {
       console.error("Error saving profile:", error);
-      alert('Failed to update profile');
+      alert(error.response?.data?.error || 'Failed to update profile');
     } finally {
       setSaving(false);
     }
@@ -129,8 +125,8 @@ export default function VetProfilePage() {
       return;
     }
     
-    if (passwordData.newPassword.length < 8) {
-      setPasswordError("New password must be at least 8 characters");
+    if (passwordData.newPassword.length < 6) {
+      setPasswordError("New password must be at least 6 characters");
       return;
     }
     
@@ -140,30 +136,16 @@ export default function VetProfilePage() {
     }
 
     try {
-      // Replace with your actual API endpoint
-      const response = await fetch('/api/vet/change-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword,
-        }),
+      await updateUserProfile(user.id, {
+        password: passwordData.newPassword,
       });
-
-      if (response.ok) {
-        alert('Password changed successfully!');
-        setShowPasswordModal(false);
-        setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
-      } else {
-        const error = await response.json();
-        setPasswordError(error.message || "Failed to change password");
-      }
+      
+      alert('Password changed successfully!');
+      setShowPasswordModal(false);
+      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (error) {
       console.error("Error changing password:", error);
-      setPasswordError("An error occurred while changing password");
+      setPasswordError(error.response?.data?.error || "An error occurred while changing password");
     }
   };
 
@@ -319,11 +301,11 @@ export default function VetProfilePage() {
               <input
                 type="text"
                 value={profile.specialization}
-                onChange={(e) => handleInputChange('specialization', e.target.value)}
-                disabled={!isEditing}
+                disabled
                 placeholder="e.g., Small Animal Surgery, Internal Medicine"
-                className="w-full border border-gray-200 p-3 rounded-xl focus:border-primary focus:outline-none disabled:bg-gray-50 disabled:text-gray-600"
+                className="w-full border border-gray-200 p-3 rounded-xl bg-gray-50 text-gray-600"
               />
+              <p className="text-xs text-gray-500 mt-1">Contact your clinic admin to update specialization</p>
             </div>
           </div>
         </div>
@@ -390,7 +372,7 @@ export default function VetProfilePage() {
                   onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
                   className="w-full border border-gray-200 p-3 rounded-xl focus:border-primary focus:outline-none"
                 />
-                <p className="text-xs text-gray-500 mt-1">Must be at least 8 characters</p>
+                <p className="text-xs text-gray-500 mt-1">Must be at least 6 characters</p>
               </div>
 
               <div>

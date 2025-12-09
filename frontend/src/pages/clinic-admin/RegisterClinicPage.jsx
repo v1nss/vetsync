@@ -300,7 +300,7 @@ export default function RegisterClinicPage() {
       }
       return;
     }
-    setSubmitStatus("pending");
+    setSubmitStatus("loading");
 
     const updatedUserData = { ...receivedUserData.user, clinic_name: formData.name };
 
@@ -473,8 +473,10 @@ export default function RegisterClinicPage() {
               <div>
                 <label className="block text-sm text-gray-700 mb-2">Description (Optional)</label>
                 <textarea name="description" value={formData.description} onChange={handleChange} rows="4"
+                  maxLength={255}
                   className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl resize-none"
                   placeholder="Brief description of your clinic..." />
+                <p className="text-xs text-gray-500 mt-1">{formData.description.length}/255 characters</p>
               </div>
             </div>
           )}
@@ -630,8 +632,20 @@ export default function RegisterClinicPage() {
                 required={true}
               />
 
-              {submitStatus === "pending" && (
-                <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-2xl text-sm">
+              {submitStatus === "loading" && (
+                <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-2xl text-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
+                    <div>
+                      <p className="font-semibold">Registering your clinic...</p>
+                      <p className="text-xs">Please wait while we process your registration.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {submitStatus === "submitted" && (
+                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-2xl text-sm">
                   <p className="font-semibold mb-1">✓ Registration Submitted!</p>
                   <p>Your clinic registration is pending approval.</p>
                 </div>
@@ -652,9 +666,18 @@ export default function RegisterClinicPage() {
                 Next<FaChevronRight className="text-sm" />
               </button>
             ) : (
-              <button type="submit" disabled={submitStatus === "pending"}
-                className="flex-1 bg-primary text-white py-3 rounded-2xl hover:bg-[#FEA08E] disabled:opacity-50">
-                {submitStatus === "pending" ? "Registration Submitted" : "Register Clinic"}
+              <button type="submit" disabled={submitStatus === "loading" || submitStatus === "submitted"}
+                className="flex-1 bg-primary text-white py-3 rounded-2xl hover:bg-[#FEA08E] disabled:opacity-50 disabled:cursor-not-allowed">
+                {submitStatus === "loading" ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    Registering...
+                  </span>
+                ) : submitStatus === "submitted" ? (
+                  "Registration Submitted"
+                ) : (
+                  "Register Clinic"
+                )}
               </button>
             )}
           </div>

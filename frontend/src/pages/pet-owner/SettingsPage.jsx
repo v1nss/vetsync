@@ -45,7 +45,6 @@ export default function SettingsPage() {
         // setSelected(null);
         try {
           const res = await fetchAllPetsById(token);
-          console.log(res)
           if (!res) {
             console.log("no pets exist");
             setPets(null);

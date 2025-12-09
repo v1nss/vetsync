@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaChevronLeft } from 'react-icons/fa';
+import { FaChevronLeft, FaCheckCircle, FaTimes, FaExclamationCircle } from 'react-icons/fa';
 import Navbar from '../../components/Navbar';
 import { registerPet } from '../../global/api/pet';
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
+import NotificationModal from '../../components/NotificationModal';
 
 const InputField = ({ label, name, value, onChange, error, required, ...props }) => (
   <div>
@@ -65,12 +66,29 @@ export default function AddPetPage() {
   const {token} = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: '', breed: '', gender: '', age: '', weight: '', color: '', species: '',
+    name: '', breed: '', gender: '', weight: '', color: '', species: '',
     birthdate: '', allergies: '', medications: '', notes: '', image: null
   });
   const [petProfile, setPetProfile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [errors, setErrors] = useState({});
+  const [notification, setNotification] = useState({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    message: ''
+  });
+
+  const showNotification = (type, title, message) => {
+    setNotification({ isOpen: true, type, title, message });
+  };
+
+  const closeNotification = () => {
+    setNotification({ ...notification, isOpen: false });
+    if (notification.type === 'success') {
+      navigate('/pet-owner/pets');
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -80,16 +98,15 @@ export default function AddPetPage() {
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    const allowedTypes = ["image/png", "image/jpeg", "image/jpg"]
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
 
     if (!file) {
-      // setErrorMessage
       return;
     }
 
     if (!allowedTypes.includes(file.type)) {
-      // setErrorMessage("Invalid file type. Only PNG, JPG, and JPEG are allowed.");
-      e.target.value = ""; // Reset the input field
+      showNotification('error', 'Invalid File Type', 'Only PNG, JPG, and JPEG images are allowed.');
+      e.target.value = "";
       return;
     }
 
@@ -109,7 +126,6 @@ export default function AddPetPage() {
     if (!formData.species) newErrors.species = 'Species is required';
     if (!formData.breed.trim()) newErrors.breed = 'Breed is required';
     if (!formData.gender) newErrors.gender = 'Gender is required';
-    if (!formData.age.trim()) newErrors.age = 'Age is required';
     if (!formData.weight.trim()) newErrors.weight = 'Weight is required';
     if (!petProfile) newErrors.image = 'Pet photo is required';
     return newErrors;
@@ -120,37 +136,45 @@ export default function AddPetPage() {
     const newErrors = validate();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      showNotification('error', 'Validation Error', 'Please fill in all required fields.');
       return;
     }
 
     try {
-      var data = new FormData()
+      var data = new FormData();
       data.append('pet', JSON.stringify(formData));
 
       if (petProfile) {
         data.append('file', petProfile); 
       }
       const res = await registerPet(data);
-      console.log("pet created Succesfully: ", res)
       navigate('/pet-owner/pets');
+      console.log("Pet Created Successfully: ", res);
+      showNotification('success', 'Pet Added Successfully!', `${formData.name} has been added to your pets.`);
     } catch (err) {
       console.error("Registration error:", err.response?.data || err.message);
+      showNotification('error', 'Registration Failed', err.response?.data?.message || 'An error occurred while adding your pet. Please try again.');
     }
-
   };
 
   const handleCancel = () => navigate('/pets');
 
-
-
   return (
     <>
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={closeNotification}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+      />
+
       <div className="hidden sm:block">
         <Navbar />
       </div>
       {/* Mobile */}
       <div className="sm:hidden min-h-screen bg-white pb-20">
-        <div className="top-0 sm:hidden fixed left-0 p-4 z-50 flex items-center gap-2 bg-white w-full border-b border-gray-100">
+        <div className="top-0 sm:hidden fixed left-0 p-4 z-40 flex items-center gap-2 bg-white w-full border-b border-gray-100">
           <button
             onClick={() => navigate(-1)}
             className="rounded-full hover:bg-gray-300 transition"
@@ -200,16 +224,15 @@ export default function AddPetPage() {
               handleChange={handleChange}
               errors={errors}
             />            
-            <InputField label="Date of Birth" name="birthdate" value={formData.birthdate} onChange={handleChange} type="date" />
             <div className="grid grid-cols-2 gap-3">
-              <InputField label="Age" name="age" value={formData.age} onChange={handleChange} error={errors.age} required placeholder="e.g., 2y" />
+              <InputField label="Date of Birth" name="birthdate" value={formData.birthdate} onChange={handleChange} required type="date" />
               <InputField label="Weight" name="weight" value={formData.weight} onChange={handleChange} error={errors.weight} required placeholder="e.g., 8kg" />
             </div>
           </div>
 
           {/* Medical Information */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-lg">Medical Information</h3>
+            <h3 className="font-semibold text-lg">Medical Information (Optional)</h3>
             <TextareaField label="Allergies" name="allergies" value={formData.allergies} onChange={handleChange} placeholder="List any known allergies" />
             <TextareaField label="Current Medications" name="medications" value={formData.medications} onChange={handleChange} placeholder="List current medications" />
           </div>
@@ -278,15 +301,14 @@ export default function AddPetPage() {
                   handleChange={handleChange}
                   errors={errors}
                 />                
-                <InputField label="Date of Birth" name="birthdate" value={formData.birthdate} onChange={handleChange} type="date" />
                 <div className="grid grid-cols-2 gap-3">
-                  <InputField label="Age" name="age" value={formData.age} onChange={handleChange} error={errors.age} required placeholder="e.g., 2y" />
+                  <InputField label="Date of Birth" name="birthdate" value={formData.birthdate} onChange={handleChange} required type="date" />
                   <InputField label="Weight" name="weight" value={formData.weight} onChange={handleChange} error={errors.weight} required placeholder="e.g., 8kg" />
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Medical Information</h3>
+                <h3 className="font-semibold text-lg">Medical Information (Optional)</h3>
                 <TextareaField label="Allergies" name="allergies" value={formData.allergies} onChange={handleChange} placeholder="List any known allergies" />
                 <TextareaField label="Current Medications" name="medications" value={formData.medications} onChange={handleChange} placeholder="List current medications" />
               </div>

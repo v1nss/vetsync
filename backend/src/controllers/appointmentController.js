@@ -171,7 +171,7 @@ export const fetchAppointmentsByClinic = async (req, res) => {
           include: [{ model: ClinicAddress, as: "address" }]
         }
       ],
-      order: [["date", "ASC"], ["time", "ASC"]]
+      order: [["createdAt", "ASC"], ["time", "ASC"]]
     });
     return res 
           .status(200)

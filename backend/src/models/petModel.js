@@ -41,6 +41,14 @@ const Pet = sequelize.define("Pet", {
     type: DataTypes.ENUM("male", "female"),
     allowNull: false,
   },
+  color: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  weight: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   profileURL: {
     type: DataTypes.JSON,
     allowNull: true,

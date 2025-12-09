@@ -109,7 +109,7 @@ export const getEHRById = async (ehrId) => {
       {
         model: Pet,
         as: "pet",
-        attributes: ["pet_id", "name", "species", "breed", "birthdate", "gender"],
+        attributes: ["pet_id", "name", "species", "breed", "birthdate", "gender", "weight", "color"],
       },
       {
         model: VetProfessional,
@@ -186,52 +186,41 @@ export const getEHRsByPetOwner = async (petOwnerId) => {
 // If petOwnerId is provided, filter by it. Otherwise, get all EHRs for the pet.
 export const getEHRsByPet = async (petId, petOwnerId = null) => {
   const whereClause = { pet_id: petId };
+
   if (petOwnerId) {
     whereClause.pet_owner_id = petOwnerId;
+  } 
+
+  const include = [
+    {
+      model: VetProfessional,
+      as: "vetProfessional",
+      attributes: ["user_id"],
+      include: [
+        { model: User, attributes: ["first_name", "last_name", "email"] },
+      ],
+    },
+    { model: Clinic, as: "clinic", attributes: ["clinic_id", "name"] },
+    { model: Appointment, as: "appointment", attributes: ["appointment_id", "service", "date", "time"] },
+    { model: Vaccination, as: "vaccinations" },
+    { model: Deworming, as: "dewormings" },
+    { model: LabResult, as: "labResults" },
+  ];
+
+  if (!petOwnerId) {
+    baseIncludes.push({
+      model: Prescription,
+      as: "prescriptions",
+    });
   }
-  
+
   return await EHR.findAll({
     where: whereClause,
-    include: [
-      {
-        model: VetProfessional,
-        as: "vetProfessional",
-        attributes: ["user_id"],
-        include: [
-          {
-            model: User,
-            attributes: ["first_name", "last_name", "email"],
-          },
-        ],
-      },
-      {
-        model: Clinic,
-        as: "clinic",
-        attributes: ["clinic_id", "name"],
-      },
-      {
-        model: Appointment,
-        as: "appointment",
-        attributes: ["appointment_id", "service", "date", "time"],
-      },
-      {
-        model: Prescription,
-        as: "prescriptions",
-      },
-      {
-        model: Vaccination,
-        as: "vaccinations",
-      },
-      {
-        model: Deworming,
-        as: "dewormings",
-      },
-      {
-        model: LabResult,
-        as: "labResults",
-      },
+    include,
+    order: [
+      ["visit_date", "DESC"],
+      ["createdAt", "DESC"],
     ],
-    order: [["visit_date", "DESC"], ["createdAt", "DESC"]],
   });
 };
 

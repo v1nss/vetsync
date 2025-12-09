@@ -400,6 +400,50 @@ export default function ClinicViewPage({ onLike }) {
               ) : null;
             })()}
 
+            {/* Veterinarians Section */}
+            {clinic.vets && Array.isArray(clinic.vets) && clinic.vets.length > 0 && (
+              <div className="pb-8 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Our Veterinarians</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {clinic.vets.map((vet, index) => {
+                    const vetName = vet.User 
+                      ? `${vet.User.first_name || ''} ${vet.User.last_name || ''}`.trim()
+                      : 'Veterinarian';
+                    const profileImage = vet.User?.profile_image_url;
+                    
+                    return (
+                      <div key={vet.user_id || index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                        <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 shrink-0">
+                          {profileImage ? (
+                            <img 
+                              src={getImageUrl(profileImage)} 
+                              alt={vetName}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div className={`w-full h-full flex items-center justify-center text-gray-400 text-xl font-semibold ${profileImage ? 'hidden' : ''}`}>
+                            {vetName.charAt(0).toUpperCase()}
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-900 truncate">
+                            {vet.specialization ? `Dr. ${vetName}` : vetName}
+                          </h3>
+                          {vet.specialization && (
+                            <p className="text-sm text-gray-600 truncate">{vet.specialization}</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="pb-8 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">About this clinic</h2>
               <p ref={descRef} className={`text-gray-700 leading-relaxed ${!isExpanded && "line-clamp-4"}`}>
@@ -490,15 +534,15 @@ export default function ClinicViewPage({ onLike }) {
                 Book appointment
               </button>
               
-              <div className="text-center text-sm text-gray-500">
+              {/* <div className="text-center text-sm text-gray-500">
                 You won't be charged yet
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 z-50">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 z-9999">
         <button onClick={() => navigate(`/pet-owner/clinics/${slugify(clinic.name)}/book`, { state: { clinic } })}
           className="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-[#FEA08E] transition">
           Book appointment

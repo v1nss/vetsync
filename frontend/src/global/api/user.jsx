@@ -53,3 +53,14 @@ export const checkEmailExists = async (email) => {
     }
 };
 
+export const updateUserProfile = async (userId, profileData) => {
+    try {
+        const res = await api.put(`/users/update/${userId}`, profileData);
+        console.log('Profile update response:', res.data);
+        return res.data;
+    } catch (err) {
+        console.error('Profile update failed:', err.message);
+        throw err;
+    }
+};
+

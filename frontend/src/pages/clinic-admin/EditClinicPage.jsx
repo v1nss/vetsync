@@ -601,8 +601,10 @@ console.log("Existing Clinic Data:", existingClinic);
                 <div>
                   <label className="block text-sm text-gray-700 mb-2">Description (Optional)</label>
                   <textarea name="description" value={formData.description} onChange={handleChange} rows="4"
+                    maxLength={255}
                     className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl resize-none"
                     placeholder="Brief description of your clinic..." />
+                  <p className="text-xs text-gray-500 mt-1">{formData.description.length}/255 characters</p>
                 </div>
               </div>
             )}
