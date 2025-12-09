@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { FiChevronLeft } from "react-icons/fi";
 import { RiMicroscopeLine, RiSyringeLine } from "react-icons/ri";
-import { FaPrescription } from "react-icons/fa";
+import { FaPrescription, FaPills } from "react-icons/fa";
 import HealthRecordsTable from "./HealthRecordsTable";
 import HealthRecordModal from "./HealthRecordModal.jsx";
 
@@ -125,9 +125,52 @@ const mockHealthRecords = [
 
 export default function PetRecordsView({ pet, onBack, healthRecords, loading = false }) {
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [activeTab, setActiveTab] = useState('all');
 
   // Use actual data if provided, otherwise use mock data as fallback
   const displayHealthRecords = healthRecords !== null ? healthRecords : mockHealthRecords;
+  
+  // Filter records by category
+  const filteredRecords = useMemo(() => {
+    if (activeTab === 'all') return displayHealthRecords;
+    
+    return displayHealthRecords.filter(record => {
+      const docs = record.documents || {};
+      switch (activeTab) {
+        case 'lab':
+          return docs.labResults && docs.labResults.length > 0;
+        case 'prescriptions':
+          return docs.prescriptions && docs.prescriptions.length > 0;
+        case 'vaccinations':
+          return docs.vaccineRecords && docs.vaccineRecords.length > 0;
+        case 'deworming':
+          return docs.deworming && docs.deworming.length > 0;
+        default:
+          return true;
+      }
+    });
+  }, [displayHealthRecords, activeTab]);
+  
+  // Count records by category
+  const categoryCounts = useMemo(() => {
+    const counts = {
+      all: displayHealthRecords.length,
+      lab: 0,
+      prescriptions: 0,
+      vaccinations: 0,
+      deworming: 0
+    };
+    
+    displayHealthRecords.forEach(record => {
+      const docs = record.documents || {};
+      if (docs.labResults && docs.labResults.length > 0) counts.lab++;
+      if (docs.prescriptions && docs.prescriptions.length > 0) counts.prescriptions++;
+      if (docs.vaccineRecords && docs.vaccineRecords.length > 0) counts.vaccinations++;
+      if (docs.deworming && docs.deworming.length > 0) counts.deworming++;
+    });
+    
+    return counts;
+  }, [displayHealthRecords]);
 
   const calculateAge = (birthdate) => {
     if (!birthdate) return "Age unknown";
@@ -205,6 +248,66 @@ export default function PetRecordsView({ pet, onBack, healthRecords, loading = f
           </p>
         </div>
 
+        {/* Category Tabs */}
+        <div className="mb-4 border-b border-gray-200">
+          <div className="flex gap-1 overflow-x-auto pb-px">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`px-4 py-2 text-sm font-medium rounded-t-lg whitespace-nowrap transition-colors ${
+                activeTab === 'all'
+                  ? 'bg-primary text-white'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              All Records ({categoryCounts.all})
+            </button>
+            <button
+              onClick={() => setActiveTab('lab')}
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg whitespace-nowrap transition-colors ${
+                activeTab === 'lab'
+                  ? 'bg-primary text-white'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              <RiMicroscopeLine className="text-base" />
+              Lab Results ({categoryCounts.lab})
+            </button>
+            {/* <button
+              onClick={() => setActiveTab('prescriptions')}
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg whitespace-nowrap transition-colors ${
+                activeTab === 'prescriptions'
+                  ? 'bg-primary text-white'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              <FaPrescription className="text-base" />
+              Prescriptions ({categoryCounts.prescriptions})
+            </button> */}
+            <button
+              onClick={() => setActiveTab('vaccinations')}
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg whitespace-nowrap transition-colors ${
+                activeTab === 'vaccinations'
+                  ? 'bg-primary text-white'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              <RiSyringeLine className="text-base" />
+              Vaccinations ({categoryCounts.vaccinations})
+            </button>
+            <button
+              onClick={() => setActiveTab('deworming')}
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg whitespace-nowrap transition-colors ${
+                activeTab === 'deworming'
+                  ? 'bg-primary text-white'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              <FaPills className="text-base" />
+              Deworming ({categoryCounts.deworming})
+            </button>
+          </div>
+        </div>
+
         {/* Health Records Table */}
         {loading ? (
           <div className="border border-gray-200 rounded-xl overflow-hidden">
@@ -212,11 +315,17 @@ export default function PetRecordsView({ pet, onBack, healthRecords, loading = f
               <p className="text-gray-600">Loading health records...</p>
             </div>
           </div>
-        ) : (
+        ) : filteredRecords.length > 0 ? (
           <HealthRecordsTable 
-            healthRecords={displayHealthRecords} 
+            healthRecords={filteredRecords} 
             onRecordClick={setSelectedRecord}
           />
+        ) : (
+          <div className="border border-gray-200 rounded-xl overflow-hidden">
+            <div className="text-center py-12">
+              <p className="text-gray-600">No {activeTab !== 'all' ? activeTab : ''} records found</p>
+            </div>
+          </div>
         )}
       </div>
 

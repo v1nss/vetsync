@@ -5,6 +5,7 @@ import {
   deletePetService,
   updatePetService,
 } from "../services/petService.js";
+import Pet from "../models/petModel.js";
 
 export const createPet = async (req, res) => {
   try {
@@ -67,13 +68,33 @@ export const updatePet = async (req, res) => {
   try {
     const owner_id = req.user.id;
     const { pet_id } = req.params;
-    const newPetData = req.body; // New data for the pet
+    
+    // Parse FormData - pet data is sent as JSON string in FormData
+    let newPetData = {};
+    if (req.body && req.body.pet) {
+      // If pet is a string (JSON), parse it
+      try {
+        newPetData = typeof req.body.pet === 'string' ? JSON.parse(req.body.pet) : req.body.pet;
+      } catch (parseError) {
+        // If parsing fails, try using req.body directly
+        newPetData = req.body;
+      }
+    } else {
+      // Fallback: use req.body directly if not FormData
+      newPetData = req.body || {};
+    }
 
-    const updatedPet = await updatePetService(pet_id, owner_id, newPetData);
+    // Handle file upload if present (for profile picture updates)
+    const updatedPet = await updatePetService(pet_id, owner_id, newPetData, req.file);
+    
+    // Reload the pet to get all updated data including associations
+    const finalPet = await Pet.findOne({ where: { pet_id, owner_id } });
+    
     return res
       .status(200)
-      .json({ message: "Pet updated successfully", pet: updatedPet });
+      .json({ message: "Pet updated successfully", pet: finalPet });
   } catch (error) {
+    console.error("Update pet error:", error);
     res
       .status(500)
       .json({ message: "Error updating pet", error: error.message });

@@ -17,7 +17,7 @@ router.get("/", authenticate, verifyOwner, getMyPets);
 
 router.get("/:pet_id", authenticate, verifyOwner, getPetById);
 
-router.patch("/:pet_id", authenticate, verifyOwner, updatePet);
+router.patch("/:pet_id", upload.single('file'), authenticate, verifyOwner, updatePet);
 
 router.delete("/:pet_id", authenticate, verifyOwner, deletePet);
 

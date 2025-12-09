@@ -1,4 +1,4 @@
-import { uploadFiles } from "../../global/utils/drive.js";
+import { uploadFiles, deleteFiles } from "../../global/utils/drive.js";
 import Pet from "../models/petModel.js";
 import User from "../models/users/userModel.js";
 
@@ -60,14 +60,48 @@ export const deletePetService = async (pet_id, owner_id) => {
   });
 };
 
-export const updatePetService = async (pet_id, owner_id, updateData) => {
+export const updatePetService = async (pet_id, owner_id, updateData, file = null) => {
   const pet = await Pet.findOne({ where: { pet_id, owner_id } });
 
   if (!pet) {
     throw new Error("Pet not found or access denied");
   }
 
-  await pet.update(updateData);
+  // Handle profile picture update
+  let petProfile = pet.profileURL; // Keep existing profile if no new file
+  
+  if (file) {
+    // Delete old profile picture from Google Drive if it exists
+    if (pet.profileURL && pet.profileURL.id) {
+      try {
+        await deleteFiles(pet.profileURL.id);
+        console.log(`Deleted old pet profile picture: ${pet.profileURL.id}`);
+      } catch (err) {
+        console.error("Error deleting old pet profile picture:", err.message);
+        // Continue with upload even if deletion fails
+      }
+    }
+
+    // Upload new profile picture
+    const { id: fileId, name: fileName } = await uploadFiles(
+      file,
+      process.env.GDRIVE_FOLDER_ID
+    );
+
+    petProfile = {
+      id: fileId,
+      name: fileName,
+      link: `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`,
+    };
+  }
+
+  // Update pet data including profile picture
+  const finalUpdateData = {
+    ...updateData,
+    profileURL: petProfile,
+  };
+
+  await pet.update(finalUpdateData);
   return pet; // return the updated pet object
 };
 

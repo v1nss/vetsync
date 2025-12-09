@@ -25,3 +25,18 @@ export const fetchAllPetsById = async () => {
         throw err;
     }
 };
+
+export const updatePet = async (petId, petData) => {
+    try {
+        const res = await api.patch(`/pets/${petId}`, petData, {
+            headers: {
+                "Content-Type": "multipart/form-data"
+            },
+        });
+        console.log('Pet Updated: ', res.data);
+        return res.data;
+    } catch (err) {
+        console.error("Unable to update pet: ", err);
+        throw err;
+    }
+};
