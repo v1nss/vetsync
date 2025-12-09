@@ -133,24 +133,92 @@ export const registerVetProfessional = async (req, adminUserId) => {
   return user;
 };
 
-export const updateUserProfile = async (userId, profileData) => {
-  // should handle multiple userTypes
-  let new_hash = null;
+export const updateUserProfile = async (req, userId) => {
+  const { body, file } = req;
+  
+  // Parse the user JSON sent in form-data
+  const profileData = body.user ? JSON.parse(body.user) : body;
+  
   const user = await User.findByPk(userId);
   if (!user) throw new Error("User not found");
 
-  const { password } = profileData;
-
-  const isMatch = await bcrypt.compare(password, user.password_hash);
-  if (!isMatch) {
-    new_hash = await bcrypt.hash(password, 10);
+  // Handle password change
+  let new_hash = null;
+  if (profileData.currentPassword && profileData.newPassword) {
+    // Verify current password
+    const isMatch = await bcrypt.compare(profileData.currentPassword, user.password_hash);
+    if (!isMatch) {
+      throw new Error("Current password is incorrect");
+    }
+    
+    // Hash new password
+    new_hash = await bcrypt.hash(profileData.newPassword, 10);
   }
 
-  await user.update({
-    password_hash: new_hash || user.password_hash,
-    ...profileData
+  // Handle profile picture update
+  let userProfile = user.profile_image_url;
+  if (file) {
+    // Delete old profile picture from Google Drive if it exists
+    if (userProfile && userProfile.id) {
+      try {
+        await deleteFiles(userProfile.id);
+        console.log(`Deleted old profile picture: ${userProfile.id}`);
+      } catch (err) {
+        console.error("Error deleting old profile picture:", err.message);
+        // Continue with upload even if deletion fails
+      }
+    }
+
+    // Upload new profile picture
+    const uploadedFile = await uploadFiles(
+      file,
+      process.env.GDRIVE_FOLDER_ID
+    );
+
+    userProfile = {
+      id: uploadedFile.id,
+      name: uploadedFile.name,
+      link: `https://lh3.googleusercontent.com/d/${uploadedFile.id}`,
+      viewLink: uploadedFile.webViewLink,
+      downloadLink: uploadedFile.webContentLink,
+      thumbnail: `https://drive.google.com/thumbnail?id=${uploadedFile.id}&sz=w400`
+    };
+  }
+
+  // Prepare update data
+  const updateData = {};
+  
+  // Update basic fields
+  if (profileData.first_name) updateData.first_name = profileData.first_name;
+  if (profileData.last_name) updateData.last_name = profileData.last_name;
+  if (profileData.phone_number) updateData.phone_number = profileData.phone_number;
+  if (profileData.address) updateData.address = profileData.address;
+  if (profileData.bio !== undefined) updateData.bio = profileData.bio;
+  
+  // Update password if changed
+  if (new_hash) {
+    updateData.password_hash = new_hash;
+  }
+  
+  // Update profile image if changed
+  if (userProfile) {
+    updateData.profile_image_url = userProfile;
+  }
+
+  await user.update(updateData);
+  
+  // Return updated user without password hash, including VetProfessional if exists
+  const updatedUser = await User.findByPk(userId, {
+    include: [
+      {
+        model: VetProfessional,
+        required: false
+      }
+    ],
+    attributes: { exclude: ['password_hash'] }
   });
-  return user;
+  
+  return updatedUser;
 }
 
 export const getUserById = async (userId) => {
