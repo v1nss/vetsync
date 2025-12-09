@@ -31,6 +31,7 @@ export default function PetDetail({ pet }) {
 
     fetchRecentEHRs();
   }, [pet]);
+
   const InfoCard = ({ label, value }) => (
     <div className="text-center md:p-4 md:bg-gray-50 md:rounded-2xl">
       <p className="font-medium mb-1 text-xl md:text-2xl">
@@ -39,6 +40,34 @@ export default function PetDetail({ pet }) {
       <p className="text-sm text-gray-500">{label}</p>
     </div>
   );
+
+    // Calculate age from birthdate
+  const calculateAge = (birthdate) => {
+    if (!birthdate) return null;
+    
+    const birth = new Date(birthdate);
+    const today = new Date();
+    
+    let years = today.getFullYear() - birth.getFullYear();
+    let months = today.getMonth() - birth.getMonth();
+    
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+    
+    if (years > 0) {
+      return `${years}y ${months > 0 ? ` ${months}m` : ''}`;
+    } else if (months > 0) {
+      return `${months}m`;
+    } else {
+      const days = Math.floor((today - birth) / (1000 * 60 * 60 * 24));
+      return `${days}d`;
+    }
+  };
+
+  const petBirthdate = pet?.birthdate;
+  const petAge = calculateAge(petBirthdate);
 
   const InfoSection = ({ title, children }) => (
     <div className="mb-6">
@@ -70,10 +99,10 @@ export default function PetDetail({ pet }) {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6 md:gap-6 md:mb-8">
+      <div className="grid grid-cols-2 gap-4 mb-6 md:gap-6 md:mb-8">
         <InfoCard label="Gender" value={pet.gender === 'male' ? 'Male' : 'Female'} />
-        <InfoCard label="Age" value={pet.ageValue || pet.age} />
-        <InfoCard label="Weight" value={pet.weight} />
+        <InfoCard label="Age" value={petAge} />
+        {/* <InfoCard label="Weight" value={pet.weight} /> */}
       </div>
 
       {/* Basic Information */}
@@ -81,7 +110,7 @@ export default function PetDetail({ pet }) {
         <div className="bg-white border border-gray-200 rounded-2xl p-4">
           <InfoRow label="Species" value={pet.species ? pet.species.charAt(0).toUpperCase() + pet.species.slice(1) : '-'} />
           <InfoRow label="Color" value={pet.color} />
-          <InfoRow label="Date of Birth" value={pet.dateOfBirth || '-'} />
+          <InfoRow label="Date of Birth" value={pet.birthdate || '-'} />
         </div>
       </InfoSection>
 
