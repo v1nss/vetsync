@@ -542,7 +542,7 @@ export default function ClinicViewPage({ onLike }) {
         </div>
       </div>
 
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 z-50">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 z-9999">
         <button onClick={() => navigate(`/pet-owner/clinics/${slugify(clinic.name)}/book`, { state: { clinic } })}
           className="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-[#FEA08E] transition">
           Book appointment

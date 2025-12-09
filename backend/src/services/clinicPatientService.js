@@ -20,7 +20,7 @@ export const getClinicPatients = async (clinicId) => {
       {
         model: Pet,
         as: "pet",
-        attributes: ["pet_id", "name", "species", "breed", "birthdate", "gender", "profileURL", "owner_id"],
+        attributes: ["pet_id", "name", "species", "breed", "birthdate", "gender", "profileURL", "owner_id", "weight", "color"],
         include: [
           {
             model: User,
@@ -66,7 +66,7 @@ export const getClinicPatient = async (clinicId, petId) => {
       {
         model: Pet,
         as: "pet",
-        attributes: ["pet_id", "name", "species", "breed", "birthdate", "gender", "profileURL", "owner_id"],
+        attributes: ["pet_id", "name", "species", "breed", "birthdate", "gender", "profileURL", "owner_id", "weight", "color"],
       },
     ],
   });
@@ -130,7 +130,7 @@ export const getClinicPatientsEHRs = async (clinicId) => {
       {
         model: Pet,
         as: "pet",
-        attributes: ["pet_id", "name", "species", "breed", "birthdate", "gender", "owner_id"],
+        attributes: ["pet_id", "name", "species", "breed", "birthdate", "gender", "owner_id", "weight", "color"],
         include: [
           {
             model: User,

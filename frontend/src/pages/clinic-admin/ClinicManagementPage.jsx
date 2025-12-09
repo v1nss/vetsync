@@ -1,10 +1,108 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, memo, useCallback } from "react";
 import { FaEdit, FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock, FaImage, FaSave, FaTimes, FaPlus, FaCamera, FaChevronLeft, FaChevronRight, FaExpand, FaClinicMedical } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import { fetchMyClinic, updateClinic } from "../../global/api/clinicAdmin";
 import DriveImage from "../../components/DriveImage";
 import ImageViewerModal from "../../components/ImageViewerModal";
 import NotificationModal from "../../components/NotificationModal";
+
+// Move InputField outside component to prevent recreation on every render
+const InputField = memo(({ label, icon: Icon, field, type = "text", rows, currentData, isEditing, onInputChange, maxLength }) => {
+  // Special handling for address field
+  if (field === 'address') {
+    const address = currentData?.address;
+    let addressString = '';
+    
+    if (typeof address === 'string') {
+      addressString = address;
+    } else if (address && typeof address === 'object') {
+      const parts = [
+        address.street,
+        address.barangay,
+        address.city,
+        address.province,
+        address.zipcode
+      ].filter(Boolean);
+      addressString = parts.join(', ');
+      if (address.landmark) {
+        addressString += ` (${address.landmark})`;
+      }
+    }
+    
+    const isEmpty = !addressString || addressString.trim() === '';
+    
+    return (
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {Icon && <Icon className="inline mr-2 text-primary" />}{label}
+        </label>
+        {isEditing ? (
+          <textarea 
+            key={`address-${currentData?.clinic_id || 'new'}`}
+            value={addressString} 
+            onChange={(e) => onInputChange(field, e.target.value)} 
+            rows={rows} 
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent" 
+            placeholder={`Enter ${label.toLowerCase()}...`} 
+          />
+        ) : (
+          <p className={isEmpty ? "text-gray-400 italic" : "text-gray-900"}>
+            {isEmpty ? `No ${label.toLowerCase()} provided` : addressString}
+          </p>
+        )}
+      </div>
+    );
+  }
+  
+  const isEmpty = !currentData?.[field] || (typeof currentData[field] === 'string' && currentData[field].trim() === '');
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        {Icon && <Icon className="inline mr-2 text-primary" />}{label}
+      </label>
+      {isEditing ? (
+        rows ? (
+          <div>
+            <textarea 
+              key={`${field}-${currentData?.clinic_id || 'new'}`}
+              value={currentData?.[field] || ''} 
+              onChange={(e) => {
+                if (maxLength && e.target.value.length > maxLength) return;
+                onInputChange(field, e.target.value);
+              }} 
+              rows={rows} 
+              maxLength={maxLength}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent" 
+              placeholder={`Enter ${label.toLowerCase()}...`} 
+            />
+            {maxLength && (
+              <p className="text-xs text-gray-500 mt-1 text-right">
+                {(currentData?.[field] || '').length}/{maxLength} characters
+              </p>
+            )}
+          </div>
+        ) : (
+          <input 
+            key={`${field}-${currentData?.clinic_id || 'new'}`}
+            type={type} 
+            value={currentData?.[field] || ''} 
+            onChange={(e) => {
+              if (maxLength && e.target.value.length > maxLength) return;
+              onInputChange(field, e.target.value);
+            }} 
+            maxLength={maxLength}
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent" 
+            placeholder={`Enter ${label.toLowerCase()}...`} 
+          />
+        )
+      ) : (
+        <p className={isEmpty ? "text-gray-400 italic" : "text-gray-900"}>
+          {isEmpty ? `No ${label.toLowerCase()} provided` : currentData[field]}
+        </p>
+      )}
+    </div>
+  );
+});
 
 export default function ClinicManagementPage() {
   const { token } = useAuth();
@@ -39,6 +137,17 @@ export default function ClinicManagementPage() {
     title: '', 
     message: '' 
   });
+
+  // Memoize currentData to prevent unnecessary re-renders (MUST be before any early returns)
+  const currentData = useMemo(() => {
+    return isEditing ? editedClinic : clinic;
+  }, [isEditing, editedClinic, clinic]);
+  
+  // Memoize handleInputChange to prevent recreation on every render
+  const handleInputChangeMemoized = useCallback((field, value) => {
+    setEditedClinic(prev => ({ ...prev, [field]: value }));
+  }, []);
+
   const handleEdit = () => { setIsEditing(true); setEditedClinic({ ...clinic }); };
   const handleCancel = () => { setIsEditing(false); setEditedClinic({ ...clinic }); };
   const handleSave = async () => {
@@ -112,25 +221,49 @@ export default function ClinicManagementPage() {
     setViewerIndex(null);
   };
 
-  const handleInputChange = (field, value) => setEditedClinic(prev => ({ ...prev, [field]: value }));
-  const addService = () => { 
+  // Remove the old handleInputChange since we're using the memoized version
+  const addService = useCallback(() => { 
     if (newService.trim()) { 
-      const currentServices = currentData?.service || currentData?.services || [];
-      setEditedClinic(prev => ({ 
-        ...prev, 
-        service: Array.isArray(currentServices) ? [...currentServices, newService.trim()] : [newService.trim()],
-        services: Array.isArray(currentServices) ? [...currentServices, newService.trim()] : [newService.trim()]
-      })); 
+      setEditedClinic(prev => {
+        const currentServices = prev?.service || prev?.services || [];
+        const servicesArray = Array.isArray(currentServices) ? currentServices : [];
+        return { 
+          ...prev, 
+          service: [...servicesArray, newService.trim()],
+          services: [...servicesArray, newService.trim()]
+        };
+      }); 
       setNewService(""); 
     } 
+  }, [newService]);
+  
+  const removeService = useCallback((index) => {
+    setEditedClinic(prev => {
+      const currentServices = prev?.service || prev?.services || [];
+      const servicesArray = Array.isArray(currentServices) ? currentServices : [];
+      return { 
+        ...prev, 
+        service: servicesArray.filter((_, i) => i !== index),
+        services: servicesArray.filter((_, i) => i !== index)
+      };
+    });
+  }, []);
+
+  // Helper function to format time
+  const formatTime = (time) => {
+    if (!time) return '';
+    // If time is in HH:MM format, convert to 12-hour format
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
   };
-  const removeService = (index) => {
-    const currentServices = currentData?.service || currentData?.services || [];
-    setEditedClinic(prev => ({ 
-      ...prev, 
-      service: currentServices.filter((_, i) => i !== index),
-      services: currentServices.filter((_, i) => i !== index)
-    }));
+
+  // Helper function to get schedule for a day
+  const getScheduleForDay = (dayOfWeek) => {
+    if (!currentData?.schedules || !Array.isArray(currentData.schedules)) return null;
+    return currentData.schedules.find(s => s.day_of_week === dayOfWeek);
   };
   
   // Handle clinic image upload
@@ -192,92 +325,6 @@ export default function ClinicManagementPage() {
       </div>
     </div>
   );
-
-  const currentData = isEditing ? editedClinic : clinic;
-  
-  const InputField = ({ label, icon: Icon, field, type = "text", rows }) => {
-    // Special handling for address field
-    if (field === 'address') {
-      const address = currentData?.address;
-      let addressString = '';
-      
-      if (typeof address === 'string') {
-        addressString = address;
-      } else if (address && typeof address === 'object') {
-        const parts = [
-          address.street,
-          address.barangay,
-          address.city,
-          address.province,
-          address.zipcode
-        ].filter(Boolean);
-        addressString = parts.join(', ');
-        if (address.landmark) {
-          addressString += ` (${address.landmark})`;
-        }
-      }
-      
-      const isEmpty = !addressString || addressString.trim() === '';
-      
-      return (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            {Icon && <Icon className="inline mr-2 text-primary" />}{label}
-          </label>
-          {isEditing ? (
-            <textarea 
-              value={addressString} 
-              onChange={(e) => handleInputChange(field, e.target.value)} 
-              rows={rows} 
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent" 
-              placeholder={`Enter ${label.toLowerCase()}...`} 
-            />
-          ) : (
-            <p className={isEmpty ? "text-gray-400 italic" : "text-gray-900"}>
-              {isEmpty ? `No ${label.toLowerCase()} provided` : addressString}
-            </p>
-          )}
-        </div>
-      );
-    }
-    
-    const isEmpty = !currentData?.[field] || (typeof currentData[field] === 'string' && currentData[field].trim() === '');
-    return (
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {Icon && <Icon className="inline mr-2 text-primary" />}{label}
-        </label>
-        {isEditing ? (
-          rows ? (
-            <textarea value={currentData?.[field] || ''} onChange={(e) => handleInputChange(field, e.target.value)} rows={rows} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent" placeholder={`Enter ${label.toLowerCase()}...`} />
-          ) : (
-            <input type={type} value={currentData?.[field] || ''} onChange={(e) => handleInputChange(field, e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent" placeholder={`Enter ${label.toLowerCase()}...`} />
-          )
-        ) : (
-          <p className={isEmpty ? "text-gray-400 italic" : "text-gray-900"}>
-            {isEmpty ? `No ${label.toLowerCase()} provided` : currentData[field]}
-          </p>
-        )}
-      </div>
-    );
-  };
-
-  // Helper function to format time
-  const formatTime = (time) => {
-    if (!time) return '';
-    // If time is in HH:MM format, convert to 12-hour format
-    const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const hour12 = hour % 12 || 12;
-    return `${hour12}:${minutes} ${ampm}`;
-  };
-
-  // Helper function to get schedule for a day
-  const getScheduleForDay = (dayOfWeek) => {
-    if (!currentData?.schedules || !Array.isArray(currentData.schedules)) return null;
-    return currentData.schedules.find(s => s.day_of_week === dayOfWeek);
-  };
 
   return (
     <main>
@@ -554,13 +601,50 @@ export default function ClinicManagementPage() {
               <div className="bg-white rounded-2xl border border-gray-200 p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Basic Information</h2>
                 <div className="space-y-5">
-                  <InputField label="Clinic Name" field="name" />
-                  <InputField label="Address" icon={FaMapMarkerAlt} field="address" rows={2} />
+                  <InputField 
+                    label="Clinic Name" 
+                    field="name" 
+                    currentData={currentData}
+                    isEditing={isEditing}
+                    onInputChange={handleInputChangeMemoized}
+                  />
+                  <InputField 
+                    label="Address" 
+                    icon={FaMapMarkerAlt} 
+                    field="address" 
+                    rows={2}
+                    currentData={currentData}
+                    isEditing={isEditing}
+                    onInputChange={handleInputChangeMemoized}
+                  />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <InputField label="Contact Number" icon={FaPhone} field="contact_number" />
-                    <InputField label="Email Address" icon={FaEnvelope} field="email" type="email" />
+                    <InputField 
+                      label="Contact Number" 
+                      icon={FaPhone} 
+                      field="contact_number"
+                      currentData={currentData}
+                      isEditing={isEditing}
+                      onInputChange={handleInputChangeMemoized}
+                    />
+                    <InputField 
+                      label="Email Address" 
+                      icon={FaEnvelope} 
+                      field="email" 
+                      type="email"
+                      currentData={currentData}
+                      isEditing={isEditing}
+                      onInputChange={handleInputChangeMemoized}
+                    />
                   </div>
-                  <InputField label="Description" field="description" rows={4} />
+                  <InputField 
+                    label="Description" 
+                    field="description" 
+                    rows={4}
+                    maxLength={255}
+                    currentData={currentData}
+                    isEditing={isEditing}
+                    onInputChange={handleInputChangeMemoized}
+                  />
                 </div>
               </div>
 

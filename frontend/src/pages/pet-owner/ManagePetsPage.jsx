@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaPlus, FaChevronLeft } from 'react-icons/fa';
 import PetItem from '../../components/PetItem';
@@ -9,9 +9,9 @@ import { fetchAllPetsById } from '../../global/api/pet';
 
 export default function ManagePetsPage() {
   const navigate = useNavigate();
-  const [selected, setSelected] = useState([]);
+  const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [pets, setPets] = useState(null)
+  const [pets, setPets] = useState(null);
 
   useEffect(() => {
 
@@ -23,7 +23,6 @@ export default function ManagePetsPage() {
         if (!res) {
           console.log("no pets exist");
           setPets(null);
-          setIsPending(false);
         } else {
           setPets(res);
         }
@@ -38,6 +37,13 @@ export default function ManagePetsPage() {
   }, [])
 
   const handleAddPet = () => navigate('add');
+
+  const handlePetUpdate = useCallback((updatedPet) => {
+    // Update the pets list with the updated pet
+    setPets(prev => prev?.map(p => p.pet_id === updatedPet.pet_id ? updatedPet : p));
+    // Update the selected pet
+    setSelected(updatedPet);
+  }, []);
 
   return (
     <main>
@@ -82,7 +88,7 @@ export default function ManagePetsPage() {
           </>
         ) : (
           <>
-            <div className="flex items-center justify-between p-4 border-b border-gray-100">
+            <div className="sticky top-0 bg-white flex items-center justify-between p-4 border-b border-gray-100">
               <div className="flex items-center gap-3">
                 <button onClick={() => setSelected(null)} className="p-2 hover:bg-gray-50 rounded-full transition">
                   <FaChevronLeft />
@@ -93,7 +99,7 @@ export default function ManagePetsPage() {
                 <FaSearch />
               </button>
             </div>
-            <PetDetail pet={selected} />
+            <PetDetail pet={selected} onUpdate={handlePetUpdate} />
           </>
         )}
       </div>
@@ -145,7 +151,7 @@ export default function ManagePetsPage() {
 
             <div className="col-span-8 bg-white rounded-2xl p-6 border border-gray-200">
               {selected ? (
-                <PetDetail pet={selected} />
+                <PetDetail pet={selected} onUpdate={handlePetUpdate} />
               ) : (
                 <div className="flex items-center justify-center h-full text-center text-gray-400">
                   <div>
