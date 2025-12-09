@@ -220,7 +220,7 @@ export default function SettingsPage() {
         {/* Desktop Layout */}
         <div className="hidden lg:block">
           <Navbar />
-          <div className="max-w-7xl mx-auto pb-8 pt-4 px-4 sm:px-6">
+          <div className="min-h-[79vh] max-w-7xl mx-auto pb-8 pt-4 px-4 sm:px-6">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 Account Settings
