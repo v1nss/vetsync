@@ -1,31 +1,78 @@
-import { useState } from 'react';
-import { FaChevronLeft, FaCamera, FaCheckCircle, FaTimes, FaExclamationCircle } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
+import { FaChevronLeft, FaCamera, FaUser, FaLock, FaEnvelope, FaPhone, FaMapMarkerAlt, FaEdit, FaSave, FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import { useAuth } from '../../../context/AuthContext';
 import DriveImage from '../../../components/DriveImage';
 import NotificationModal from '../../../components/NotificationModal';
+import { updateUserProfile } from '../../../global/api/user';
 
 export default function ProfileSettingsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  
   const [formData, setFormData] = useState({
-    fullName: user?.full_name || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    address: user?.address || '',
-    bio: user?.bio || '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    address: '',
+    bio: '',
   });
 
   const [profileImage, setProfileImage] = useState(null);
-  const [preview, setPreview] = useState(user?.profile_image_url || null);
+  const [preview, setPreview] = useState(null);
   const [notification, setNotification] = useState({ isOpen: false, type: 'success', title: '', message: '' });
+  
+  // Password change state
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [passwordError, setPasswordError] = useState('');
 
-  const getInitials = (name) => {
-    if (!name) return 'U';
-    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  // Fetch profile data
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      
+      if (user) {
+        setFormData({
+          firstName: user.first_name || '',
+          lastName: user.last_name || '',
+          email: user.email || '',
+          phone: user.phone_number || '',
+          address: user.address || '',
+          bio: user.bio || '',
+        });
+        
+        if (user.profile_image_url?.link) {
+          setPreview(user.profile_image_url.link);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getInitials = (firstName, lastName) => {
+    if (!firstName && !lastName) return 'U';
+    const first = firstName?.[0] || '';
+    const last = lastName?.[0] || '';
+    return (first + last).toUpperCase();
   };
 
   const showNotification = (type, title, message) => {
@@ -55,21 +102,89 @@ export default function ProfileSettingsPage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
+  const handleSaveProfile = async () => {
     try {
-      // API call to update profile would go here
-      // const data = new FormData();
-      // data.append('user', JSON.stringify(formData));
-      // if (profileImage) data.append('file', profileImage);
-      // await updateUserProfile(data);
+      setSaving(true);
       
+      const profileData = {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        phone_number: formData.phone,
+        address: formData.address,
+        bio: formData.bio,
+      };
+      
+      // If there's a new image, handle it here
+      // const data = new FormData();
+      // data.append('user', JSON.stringify(profileData));
+      // if (profileImage) data.append('file', profileImage);
+      
+      await updateUserProfile(user.id, profileData);
+      
+      setIsEditing(false);
+      setProfileImage(null);
       showNotification('success', 'Profile Updated!', 'Your profile has been successfully updated.');
+      
+      // Refresh user data
+      fetchProfile();
     } catch (err) {
-      showNotification('error', 'Update Failed', 'An error occurred while updating your profile.');
+      console.error('Error saving profile:', err);
+      showNotification('error', 'Update Failed', err.response?.data?.error || 'An error occurred while updating your profile.');
+    } finally {
+      setSaving(false);
     }
   };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setProfileImage(null);
+    fetchProfile();
+  };
+
+  const handlePasswordChange = async () => {
+    setPasswordError('');
+    
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setPasswordError('All fields are required');
+      return;
+    }
+    
+    if (passwordData.newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters');
+      return;
+    }
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    try {
+      await updateUserProfile(user.id, {
+        password: passwordData.newPassword,
+      });
+      
+      showNotification('success', 'Password Changed!', 'Your password has been successfully updated.');
+      setShowPasswordModal(false);
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error) {
+      console.error('Error changing password:', error);
+      setPasswordError(error.response?.data?.error || 'An error occurred while changing password');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="hidden lg:block"><Navbar /></div>
+        <div className="flex justify-center items-center h-screen">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  const fullName = [formData.firstName, formData.lastName].filter(Boolean).join(' ') || 'User';
 
   return (
     <>
@@ -81,108 +196,269 @@ export default function ProfileSettingsPage() {
         message={notification.message}
       />
 
+      {/* Password Change Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 relative animate-scale-in">
+            <button
+              onClick={() => {
+                setShowPasswordModal(false);
+                setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                setPasswordError('');
+              }}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+            >
+              <FaTimes className="text-xl" />
+            </button>
+
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Change Password</h2>
+
+            {passwordError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm">
+                {passwordError}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <p className="text-xs text-gray-500 mt-1">Must be at least 6 characters</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                  setPasswordError('');
+                }}
+                className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-2xl hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePasswordChange}
+                className="flex-1 px-4 py-3 bg-primary text-white rounded-2xl hover:bg-[#FEA08E] transition"
+              >
+                Change Password
+              </button>
+            </div>
+          </div>
+
+          <style>{`
+            @keyframes scale-in {
+              from { transform: scale(0.9); opacity: 0; }
+              to { transform: scale(1); opacity: 1; }
+            }
+            .animate-scale-in { animation: scale-in 0.2s ease-out; }
+          `}</style>
+        </div>
+      )}
+
       <div className="min-h-screen bg-background">
         {/* Mobile Layout */}
         <div className="lg:hidden">
           <div className="bg-white min-h-screen pb-20">
-            <div className="sticky top-0 p-4 z-10 flex items-center gap-2 bg-white border-b border-gray-100">
-              <button onClick={() => navigate(-1)} className="flex gap-2 items-center justify-center rounded-full hover:bg-gray-300 transition">
+            <div className="sticky top-0 p-4 z-10 flex items-center justify-between bg-white border-b border-gray-100">
+              <button onClick={() => navigate(-1)} className="flex gap-2 items-center rounded-full hover:bg-gray-300 transition">
                 <FaChevronLeft className="text-gray-500" />
-                <span className="text-xl font-medium">Edit Profile</span>
+                <span className="text-xl font-medium">My Profile</span>
               </button>
+              {!isEditing ? (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-[#FEA08E] transition"
+                >
+                  <FaEdit /> Edit
+                </button>
+              ) : (
+                <button
+                  onClick={handleCancelEdit}
+                  className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
+                >
+                  <FaTimes /> Cancel
+                </button>
+              )}
             </div>
 
-            <form onSubmit={handleSubmit} className="p-4 space-y-6">
+            <div className="p-4 space-y-6">
               {/* Profile Photo */}
-              <div className="flex flex-col items-center">
+              <div className="flex flex-col items-center py-6">
                 <div className="relative">
                   <div className="w-32 h-32 rounded-full bg-primary text-white flex items-center justify-center text-3xl font-semibold overflow-hidden">
                     {preview ? (
                       <img src={preview} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
-                      <span>{getInitials(formData.fullName)}</span>
+                      <span>{getInitials(formData.firstName, formData.lastName)}</span>
                     )}
                   </div>
-                  <label htmlFor="profileImageMobile" className="absolute bottom-0 right-0 w-10 h-10 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FEA08E] transition">
-                    <FaCamera className="text-white" />
-                  </label>
+                  {isEditing && (
+                    <label htmlFor="profileImageMobile" className="absolute bottom-0 right-0 w-10 h-10 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FEA08E] transition shadow-lg">
+                      <FaCamera className="text-white" />
+                    </label>
+                  )}
                   <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" id="profileImageMobile" />
                 </div>
-                <p className="text-sm text-gray-500 mt-3">Click camera icon to change photo</p>
+                <h2 className="text-xl font-bold text-gray-900 mt-4">{fullName}</h2>
+                <p className="text-sm text-gray-500">{formData.email}</p>
               </div>
 
-              {/* Form Fields */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                  <input
-                    type="text"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Enter your full name"
-                  />
-                </div>
+              {/* Personal Information */}
+              <div className="bg-white rounded-2xl border border-gray-200 p-4">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <FaUser className="text-primary" />
+                  Personal Information
+                </h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                    <input
+                      type="text"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:text-gray-600"
+                      placeholder="Enter your first name"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Enter your email"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                    <input
+                      type="text"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:text-gray-600"
+                      placeholder="Enter your last name"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Enter your phone number"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <FaEnvelope className="inline mr-2 text-primary" />
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      disabled
+                      className="w-full px-4 py-3 border border-gray-300 rounded-2xl bg-gray-50 text-gray-600"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Enter your address"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <FaPhone className="inline mr-2 text-primary" />
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:text-gray-600"
+                      placeholder="Enter your phone number"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
-                  <textarea
-                    name="bio"
-                    value={formData.bio}
-                    onChange={handleChange}
-                    rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                    placeholder="Tell us about yourself"
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <FaMapMarkerAlt className="inline mr-2 text-primary" />
+                      Address
+                    </label>
+                    <input
+                      type="text"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:text-gray-600"
+                      placeholder="Enter your address"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+                    <textarea
+                      name="bio"
+                      value={formData.bio}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary resize-none disabled:bg-gray-50 disabled:text-gray-600"
+                      placeholder="Tell us about yourself"
+                    />
+                  </div>
                 </div>
               </div>
-            </form>
 
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 flex gap-3">
-              <button onClick={() => navigate(-1)} className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-2xl hover:bg-gray-50 transition">
-                Cancel
-              </button>
-              <button onClick={handleSubmit} className="flex-1 px-4 py-3 bg-primary text-white rounded-2xl hover:bg-[#FEA08E] transition">
-                Save Changes
-              </button>
+              {/* Security Section */}
+              <div className="bg-white rounded-2xl border border-gray-200 p-4">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <FaLock className="text-primary" />
+                  Security
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">Keep your account secure by updating your password regularly</p>
+                <button
+                  onClick={() => setShowPasswordModal(true)}
+                  className="w-full px-4 py-3 border border-primary text-primary rounded-2xl font-medium hover:bg-primary hover:text-white transition"
+                >
+                  Change Password
+                </button>
+              </div>
             </div>
+
+            {isEditing && (
+              <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4">
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={saving}
+                  className="w-full px-4 py-3 bg-primary text-white rounded-2xl hover:bg-[#FEA08E] transition disabled:opacity-50 font-medium"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -193,100 +469,172 @@ export default function ProfileSettingsPage() {
             <div className="flex items-center gap-4 mb-8">
               <button onClick={() => navigate(-1)} className="flex items-center gap-2">
                 <FaChevronLeft className="text-gray-500" />
-                <h1 className="text-2xl font-medium">Edit Profile</h1>
+                <h1 className="text-2xl font-medium">My Profile</h1>
               </button>
             </div>
 
-            <div className="bg-white rounded-2xl p-8 border border-gray-200">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="flex flex-col items-center mb-8">
-                  <div className="relative">
-                    <div className="w-32 h-32 rounded-full bg-primary text-white flex items-center justify-center text-3xl font-semibold overflow-hidden">
-                      {preview ? (
-                        <img src={preview} alt="Profile" className="w-full h-full object-cover" />
-                      ) : (
-                        <span>{getInitials(formData.fullName)}</span>
-                      )}
-                    </div>
-                    <label htmlFor="profileImageDesktop" className="absolute bottom-0 right-0 w-10 h-10 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FEA08E] transition">
-                      <FaCamera className="text-white" />
-                    </label>
-                    <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" id="profileImageDesktop" />
+            {/* Profile Picture Section */}
+            <div className="bg-white rounded-2xl p-6 border border-gray-200 mb-6">
+              <div className="flex items-center gap-6">
+                <div className="relative">
+                  <div className="w-32 h-32 rounded-full bg-primary text-white flex items-center justify-center text-3xl font-semibold overflow-hidden">
+                    {preview ? (
+                      <img src={preview} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <span>{getInitials(formData.firstName, formData.lastName)}</span>
+                    )}
                   </div>
-                  <p className="text-sm text-gray-500 mt-3">Click camera icon to change photo</p>
+                  {isEditing && (
+                    <label className="absolute bottom-0 right-0 w-10 h-10 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FEA08E] transition shadow-lg">
+                      <FaCamera className="text-white" />
+                      <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                    </label>
+                  )}
+                </div>
+                
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold text-gray-900">{fullName}</h2>
+                  <p className="text-gray-600 mt-1">{formData.email}</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                    <input
-                      type="text"
-                      name="fullName"
-                      value={formData.fullName}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Enter your full name"
-                    />
-                  </div>
+                <div className="flex gap-3">
+                  {!isEditing ? (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-semibold hover:bg-[#FEA08E] transition"
+                    >
+                      <FaEdit /> Edit Profile
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="flex items-center gap-2 px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition"
+                      >
+                        <FaTimes /> Cancel
+                      </button>
+                      <button
+                        onClick={handleSaveProfile}
+                        disabled={saving}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-semibold hover:bg-[#FEA08E] transition disabled:opacity-50"
+                      >
+                        <FaSave /> {saving ? 'Saving...' : 'Save Changes'}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Enter your email"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Enter your phone number"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                    <input
-                      type="text"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Enter your address"
-                    />
-                  </div>
+            {/* Personal Information */}
+            <div className="bg-white rounded-2xl p-6 border border-gray-200 mb-6">
+              <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                <FaUser className="text-primary" />
+                Personal Information
+              </h3>
+              
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:text-gray-600"
+                    placeholder="Enter your first name"
+                  />
                 </div>
 
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:text-gray-600"
+                    placeholder="Enter your last name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <FaEnvelope className="inline mr-2 text-primary" />
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    disabled
+                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl bg-gray-50 text-gray-600"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <FaPhone className="inline mr-2 text-primary" />
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:text-gray-600"
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <FaMapMarkerAlt className="inline mr-2 text-primary" />
+                    Address
+                  </label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:text-gray-600"
+                    placeholder="Enter your address"
+                  />
+                </div>
+
+                <div className="col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
                   <textarea
                     name="bio"
                     value={formData.bio}
                     onChange={handleChange}
+                    disabled={!isEditing}
                     rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary resize-none disabled:bg-gray-50 disabled:text-gray-600"
                     placeholder="Tell us about yourself"
                   />
                 </div>
+              </div>
+            </div>
 
-                <div className="flex gap-3 pt-6 border-t border-gray-100">
-                  <button type="button" onClick={() => navigate(-1)} className="px-6 py-3 border border-gray-300 text-gray-700 rounded-2xl hover:bg-gray-50 transition">
-                    Cancel
-                  </button>
-                  <button type="submit" className="px-6 py-3 bg-primary text-white rounded-2xl hover:bg-[#FEA08E] transition">
-                    Save Changes
-                  </button>
-                </div>
-              </form>
+            {/* Security Section */}
+            <div className="bg-white rounded-2xl p-6 border border-gray-200">
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <FaLock className="text-primary" />
+                Security
+              </h3>
+              <p className="text-gray-600 mb-4">Keep your account secure by updating your password regularly</p>
+              <button
+                onClick={() => setShowPasswordModal(true)}
+                className="px-5 py-2.5 border border-primary text-primary rounded-xl font-semibold hover:bg-primary hover:text-white transition"
+              >
+                Change Password
+              </button>
             </div>
           </div>
           <Footer />

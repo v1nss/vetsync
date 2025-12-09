@@ -1,17 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  FaSearch,
-  FaChevronRight,
-  FaChevronLeft,
-  FaBell,
-  FaLock,
-  FaPalette,
-  FaInfoCircle,
-  FaQuestionCircle,
-  FaExclamationTriangle,
-  FaMars,
-  FaVenus,
-} from "react-icons/fa";
+import { FaSearch, FaChevronRight, FaChevronLeft, FaBell, FaLock, FaPalette, FaInfoCircle, FaQuestionCircle, FaExclamationTriangle, FaMars, FaVenus, FaSignOutAlt } from "react-icons/fa";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import { useNavigate } from "react-router";
@@ -21,12 +9,12 @@ import DriveImage from "../../components/DriveImage";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { user, token } = useAuth();
+  const { user, token, logout } = useAuth();
   
   // Get full name with fallback
   const fullName = [user?.first_name, user?.last_name]
-  .filter(name => name && name.trim())
-  .join(' ') || user?.email || 'User';
+    .filter(name => name && name.trim())
+    .join(' ') || user?.email || 'User';
 
   // Get initials from name
   const getInitials = (name) => {
@@ -73,6 +61,11 @@ export default function SettingsPage() {
     { icon: FaExclamationTriangle, label: "Report a problem", section: "info", path: "/pet-owner/settings/report" },
   ];
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   // Reusable Components
   const ProfileButton = ({ className = "" }) => (
     <button 
@@ -92,7 +85,7 @@ export default function SettingsPage() {
         )}
       </div>
       <div className="flex-1 text-left ml-3 lg:ml-4 min-w-0">
-        <p className="font-semibold truncate">{fullName}</p>
+        <p className="font-semibold lg:text-lg truncate">{fullName}</p>
         <p className="text-sm text-gray-500 truncate">{user?.user_type?.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}</p>
       </div>
       <FaChevronRight className="text-gray-400 text-sm shrink-0 ml-2" />
@@ -156,9 +149,9 @@ export default function SettingsPage() {
             <div className="sticky top-0 flex items-center justify-between p-4 bg-white border-b border-gray-100 z-10">
               <div className="flex items-center gap-2">
                 <button onClick={() => navigate(-1)} className="flex gap-2 items-center justify-center rounded-full hover:bg-gray-300 transition">
-              <FaChevronLeft className="text-gray-500" />
-              <span className="text-xl font-medium">Account Settings</span>
-            </button>
+                  <FaChevronLeft className="text-gray-500" />
+                  <span className="text-xl font-medium">Account Settings</span>
+                </button>
               </div>
               <button className="p-2 hover:bg-gray-50 rounded-full transition">
                 <FaSearch className="text-gray-600" />
@@ -210,6 +203,14 @@ export default function SettingsPage() {
                   <SettingsButton key={idx} option={option} />
                 ))}
               </div>
+
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-3 p-4 bg-primary text-white rounded-xl border border-red-200 hover:bg-red-100 transition"
+              >
+                <span className="font-medium">Logout</span>
+              </button>
             </div>
           </div>
         </div>
@@ -282,6 +283,17 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+
+          {/* Logout Button */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-3 p-4 bg-primary text-white rounded-2xl border border-red-200 hover:bg-red-100 transition"
+            >
+              <span className="font-medium">Logout</span>
+            </button>
+          </div>
+
           <Footer />
         </div>
       </div>
