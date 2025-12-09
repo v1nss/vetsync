@@ -5,6 +5,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { registerUser, checkEmailExists } from "../global/api/user";
 import SuccessModal from "../components/SuccessModal";
+import TermsModal from "../components/TermsModal";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -17,6 +18,8 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const [user, setUser] = useState({
     // full_name: "",
@@ -347,7 +350,7 @@ export default function RegisterPage() {
                 <p className="text-xs text-gray-500 mt-1">At least 8 characters with uppercase, lowercase, and number</p>
               </div>
 
-              <div className="mb-8">
+              <div className="mb-6">
                 <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="confirm-password">
                   Confirm Password
                 </label>
@@ -376,9 +379,31 @@ export default function RegisterPage() {
                 {errors.confirmPassword && ( <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p> )}
               </div>
 
+              {/* Terms and Conditions Checkbox */}
+              <div className="flex items-start gap-2 mb-6">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  className="mt-1 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                  required
+                />
+                <label htmlFor="terms" className="text-sm text-gray-700">
+                  I agree to the{' '}
+                  <button
+                    type="button"
+                    onClick={() => setShowTermsModal(true)}
+                    className="text-primary hover:underline font-medium"
+                  >
+                    Terms and Conditions
+                  </button>
+                </label>
+              </div>
+
               <button 
                 type="submit" 
-                disabled={isSubmitting}
+                disabled={isSubmitting || !termsAccepted}
                 className="w-full bg-primary text-white py-3 rounded-2xl hover:bg-[#FEA08E] transition disabled:opacity-50"
               >
                 {isSubmitting ? "Registering..." : "Register"}
@@ -399,6 +424,16 @@ export default function RegisterPage() {
         isOpen={showSuccessModal} 
         onClose={handleModalClose}
         userType={userType}
+      />
+
+      {/* Terms Modal */}
+      <TermsModal 
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onAccept={() => {
+          setTermsAccepted(true);
+          setShowTermsModal(false);
+        }}
       />
     </section>
   );
