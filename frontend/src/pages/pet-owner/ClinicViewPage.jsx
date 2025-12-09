@@ -5,7 +5,8 @@ import { IoClose } from "react-icons/io5";
 import { BsGrid3X3Gap } from "react-icons/bs";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { slugify } from "../../utils/slugify";
-import Navbar from "../../components/Navbar.jsx";
+import Navbar from "../../components/Navbar";
+import Footer from "../../components/Footer";
 import React, {useEffect, useState} from "react";
 import { fetchClinicById } from "../../global/api/clinic";
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
@@ -552,6 +553,7 @@ export default function ClinicViewPage({ onLike }) {
       </div>
 
       <div className="lg:hidden h-20"></div>
+      <Footer />
     </main>
   );
 }

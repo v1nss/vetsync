@@ -19,7 +19,23 @@ const FAQItem = ({ question, answer, isOpen, onClick }) => (
     </button>
     {isOpen && (
       <div className="px-4 pb-4">
-        <p className="text-gray-600 text-sm leading-relaxed">{answer}</p>
+        {typeof answer === 'string' ? (
+          <p className="text-gray-600 text-sm leading-relaxed">{answer}</p>
+        ) : (
+          <div className="text-gray-600 text-sm leading-relaxed">
+            {answer.text && <p className="mb-2">{answer.text}</p>}
+            {answer.list && (
+              <ul className="space-y-1">
+                {answer.list.map((item, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-primary mt-1">•</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
     )}
   </div>
@@ -38,106 +54,78 @@ export default function FAQsPage() {
     );
   };
 
-  const faqCategories = [
+  const faqs = [
     {
-      category: 'Getting Started',
-      faqs: [
-        {
-          question: 'How do I create an account?',
-          answer: 'You can create an account by clicking the "Sign Up" button on the home page. Choose whether you\'re a pet owner or a clinic, then fill in your information and verify your email address.'
-        },
-        {
-          question: 'Is VetSync free to use?',
-          answer: 'VetSync is free for pet owners. Veterinary clinics can choose from various subscription plans based on their needs and the features they require.'
-        },
-        {
-          question: 'What devices can I use VetSync on?',
-          answer: 'VetSync works on desktop computers, tablets, and smartphones. We have web applications and mobile apps for both iOS and Android devices.'
-        }
-      ]
+      question: 'What is VetSync?',
+      answer: 'VetSync is a web-based system that supports veterinary clinics in managing operations, appointments, records, and pet health information.'
     },
     {
-      category: 'Appointments',
-      faqs: [
-        {
-          question: 'How do I book an appointment?',
-          answer: 'Navigate to the Appointments section, select your pet and preferred clinic, choose an available time slot, and confirm your booking. You\'ll receive a confirmation notification.'
-        },
-        {
-          question: 'Can I reschedule or cancel appointments?',
-          answer: 'Yes, you can reschedule or cancel appointments through the Appointments section. Please note that cancellation policies may vary by clinic, so check with them for specific requirements.'
-        },
-        {
-          question: 'Will I receive appointment reminders?',
-          answer: 'Yes, you\'ll receive appointment reminders 24 hours before your scheduled time via push notification, email, or SMS based on your notification preferences.'
-        }
-      ]
+      question: 'Who can use VetSync?',
+      answer: 'Veterinarians, clinic staff/admin, and pet owners in Parañaque City.'
     },
     {
-      category: 'Pet Health Records',
-      faqs: [
-        {
-          question: 'How do I add my pet\'s information?',
-          answer: 'Go to the "My Pets" section and click "Add Pet". Fill in your pet\'s details including name, species, breed, age, and upload a photo. You can also add medical information like allergies and current medications.'
-        },
-        {
-          question: 'Can I access my pet\'s medical history?',
-          answer: 'Yes, all medical records, vaccination history, and visit notes from participating clinics are stored in your pet\'s profile and accessible anytime.'
-        },
-        {
-          question: 'How do I share my pet\'s records with a new vet?',
-          answer: 'You can generate a shareable link or PDF of your pet\'s medical records from their profile. This can be shared with any veterinarian or clinic.'
-        }
-      ]
+      question: 'What problems does VetSync solve?',
+      answer: {
+        list: [
+          'Long waiting times',
+          'Lost or incomplete pet records',
+          'Manual and error-prone clinic processes',
+          'Difficulty tracking treatments, vaccinations, and appointments'
+        ]
+      }
     },
     {
-      category: 'Security & Privacy',
-      faqs: [
-        {
-          question: 'Is my data secure?',
-          answer: 'Yes, we use industry-standard encryption to protect your data. All information is stored securely and we never share your personal or pet information without your explicit consent.'
-        },
-        {
-          question: 'Can I delete my account?',
-          answer: 'Yes, you can delete your account at any time from the Settings page. Please note that this action is permanent and will delete all your data including pet records.'
-        },
-        {
-          question: 'Who can see my pet\'s information?',
-          answer: 'Only you and the veterinary clinics you\'ve authorized can access your pet\'s information. Clinics can only see records for appointments you\'ve booked with them.'
-        }
-      ]
+      question: 'What features does VetSync offer?',
+      answer: {
+        list: [
+          'Online appointments',
+          'Pet health records',
+          'Treatment and vaccination history',
+          'Notifications and updates thru Gmail'
+        ]
+      }
     },
     {
-      category: 'Billing & Payments',
-      faqs: [
-        {
-          question: 'How do I pay for appointments?',
-          answer: 'Payment methods vary by clinic. Some clinics accept online payment through VetSync, while others require payment at the clinic. Check with your specific clinic for their payment options.'
-        },
-        {
-          question: 'Can I get invoices for my appointments?',
-          answer: 'Yes, invoices are available in the Appointments section. You can view, download, or email invoices for your records or insurance claims.'
-        }
-      ]
+      question: 'How does VetSync help veterinary clinics?',
+      answer: 'It organizes records and reduces manual work so clinics can deliver faster and more reliable service.'
+    },
+    {
+      question: 'How does VetSync help pet owners?',
+      answer: 'Pet owners can view records, track vaccinations, monitor upcoming appointments, and connect with the clinic easily.'
+    },
+    {
+      question: 'Is VetSync accessible on any device?',
+      answer: 'Yes. It is web-based and works on phones, tablets, and computers with internet access.'
+    },
+    {
+      question: 'Is the system secure?',
+      answer: 'Yes. VetSync uses secure login, controlled user access, and protected data storage.'
+    },
+    {
+      question: 'Is VetSync only for clinics?',
+      answer: 'No. It is designed for both clinics and pet owners, providing a connected system for better pet care.'
     }
   ];
 
-  const allFAQs = faqCategories.flatMap((cat, catIdx) =>
-    cat.faqs.map((faq, faqIdx) => ({
-      ...faq,
-      category: cat.category,
-      index: `${catIdx}-${faqIdx}`
-    }))
-  );
-
   const filteredFAQs = searchQuery
-    ? allFAQs.filter(
-        (faq) =>
-          faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          faq.answer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          faq.category.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : null;
+    ? faqs.filter((faq, idx) => {
+        const searchLower = searchQuery.toLowerCase();
+        const questionMatch = faq.question.toLowerCase().includes(searchLower);
+        
+        let answerMatch = false;
+        if (typeof faq.answer === 'string') {
+          answerMatch = faq.answer.toLowerCase().includes(searchLower);
+        } else if (faq.answer.text) {
+          answerMatch = faq.answer.text.toLowerCase().includes(searchLower);
+        } else if (faq.answer.list) {
+          answerMatch = faq.answer.list.some(item => 
+            item.toLowerCase().includes(searchLower)
+          );
+        }
+        
+        return questionMatch || answerMatch;
+      }).map((faq, idx) => ({ ...faq, originalIndex: faqs.indexOf(faq) }))
+    : faqs.map((faq, idx) => ({ ...faq, originalIndex: idx }));
 
   return (
     <div className="min-h-screen bg-background">
@@ -146,7 +134,7 @@ export default function FAQsPage() {
         <div className="bg-white min-h-screen pb-20">
           <div className="sticky top-0 p-4 z-10 bg-white border-b border-gray-100">
             <div className="flex items-center gap-2 mb-4">
-              <button onClick={() => navigate(-1)} className="flex gap-2 items-center justify-center rounded-full hover:bg-gray-300 transition">
+              <button onClick={() => navigate(-1)} className="flex gap-2 items-center rounded-full hover:bg-gray-300 transition">
                 <FaChevronLeft className="text-gray-500" />
                 <span className="text-xl font-medium">FAQs</span>
               </button>
@@ -166,42 +154,21 @@ export default function FAQsPage() {
           </div>
 
           <div className="p-4">
-            {filteredFAQs ? (
-              filteredFAQs.length > 0 ? (
-                <div className="bg-white rounded-2xl border border-gray-200">
-                  {filteredFAQs.map((faq) => (
-                    <FAQItem
-                      key={faq.index}
-                      question={faq.question}
-                      answer={faq.answer}
-                      isOpen={openItems.includes(faq.index)}
-                      onClick={() => toggleItem(faq.index)}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-gray-500">No FAQs found matching your search.</p>
-                </div>
-              )
-            ) : (
-              <div className="space-y-6">
-                {faqCategories.map((category, catIdx) => (
-                  <div key={catIdx}>
-                    <h2 className="font-semibold text-lg mb-3">{category.category}</h2>
-                    <div className="bg-white rounded-2xl border border-gray-200">
-                      {category.faqs.map((faq, faqIdx) => (
-                        <FAQItem
-                          key={`${catIdx}-${faqIdx}`}
-                          question={faq.question}
-                          answer={faq.answer}
-                          isOpen={openItems.includes(`${catIdx}-${faqIdx}`)}
-                          onClick={() => toggleItem(`${catIdx}-${faqIdx}`)}
-                        />
-                      ))}
-                    </div>
-                  </div>
+            {filteredFAQs.length > 0 ? (
+              <div className="bg-white rounded-2xl border border-gray-200">
+                {filteredFAQs.map((faq) => (
+                  <FAQItem
+                    key={faq.originalIndex}
+                    question={faq.question}
+                    answer={faq.answer}
+                    isOpen={openItems.includes(faq.originalIndex)}
+                    onClick={() => toggleItem(faq.originalIndex)}
+                  />
                 ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-500">No FAQs found matching your search.</p>
               </div>
             )}
 
@@ -212,7 +179,7 @@ export default function FAQsPage() {
                 Can't find what you're looking for? Contact our support team.
               </p>
               <button 
-                onClick={() => navigate('/settings/report')}
+                onClick={() => navigate('/pet-owner/settings/report')}
                 className="w-full bg-primary text-white py-3 rounded-2xl hover:bg-[#FEA08E] transition"
               >
                 Contact Support
@@ -245,47 +212,26 @@ export default function FAQsPage() {
             />
           </div>
 
-          {filteredFAQs ? (
-            filteredFAQs.length > 0 ? (
-              <div className="bg-white rounded-2xl border border-gray-200 p-6">
-                {filteredFAQs.map((faq) => (
-                  <FAQItem
-                    key={faq.index}
-                    question={faq.question}
-                    answer={faq.answer}
-                    isOpen={openItems.includes(faq.index)}
-                    onClick={() => toggleItem(faq.index)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
-                <p className="text-gray-500">No FAQs found matching your search.</p>
-              </div>
-            )
-          ) : (
-            <div className="space-y-6">
-              {faqCategories.map((category, catIdx) => (
-                <div key={catIdx} className="bg-white rounded-2xl border border-gray-200 p-6">
-                  <h2 className="font-semibold text-lg mb-4">{category.category}</h2>
-                  <div>
-                    {category.faqs.map((faq, faqIdx) => (
-                      <FAQItem
-                        key={`${catIdx}-${faqIdx}`}
-                        question={faq.question}
-                        answer={faq.answer}
-                        isOpen={openItems.includes(`${catIdx}-${faqIdx}`)}
-                        onClick={() => toggleItem(`${catIdx}-${faqIdx}`)}
-                      />
-                    ))}
-                  </div>
-                </div>
+          {filteredFAQs.length > 0 ? (
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-8">
+              {filteredFAQs.map((faq) => (
+                <FAQItem
+                  key={faq.originalIndex}
+                  question={faq.question}
+                  answer={faq.answer}
+                  isOpen={openItems.includes(faq.originalIndex)}
+                  onClick={() => toggleItem(faq.originalIndex)}
+                />
               ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center mb-8">
+              <p className="text-gray-500">No FAQs found matching your search.</p>
             </div>
           )}
 
           {/* Contact Section */}
-          <div className="bg-primary/5 rounded-2xl p-8 border border-primary/20 mt-8">
+          <div className="bg-primary/5 rounded-2xl p-8 border border-primary/20">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-semibold text-lg mb-2">Still have questions?</h3>
@@ -294,7 +240,7 @@ export default function FAQsPage() {
                 </p>
               </div>
               <button 
-                onClick={() => navigate('/settings/report')}
+                onClick={() => navigate('/pet-owner/settings/report')}
                 className="bg-primary text-white px-8 py-3 rounded-2xl hover:bg-[#FEA08E] transition whitespace-nowrap"
               >
                 Contact Support
