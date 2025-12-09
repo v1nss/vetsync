@@ -1,6 +1,9 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/users/userModel.js';
+import VetProfessional from '../models/users/vetProfessionalModel.js';
+import PetOwner from '../models/users/petOwnerModel.js';
+import ClinicAdmin from '../models/users/clinicAdminModel.js';
 import generateToken from '../../global/utils/generateToken.js';
 import generateRefreshToken from '../../global/utils/generateRefreshToken.js';
 import dotenv from 'dotenv';
@@ -8,7 +11,23 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const loginUser = async ({ email, password }) => {
-  const user = await User.findOne({ where: { email } });
+  const user = await User.findOne({ 
+    where: { email },
+    include: [
+      {
+        model: VetProfessional,
+        required: false
+      },
+      {
+        model: PetOwner,
+        required: false
+      },
+      {
+        model: ClinicAdmin,
+        required: false
+      }
+    ]
+  });
   if (!user) throw new Error('User not found');
 
   const isMatch = await bcrypt.compare(password, user.password_hash);
@@ -17,16 +36,9 @@ export const loginUser = async ({ email, password }) => {
   const token = generateToken({ id: user.id, user_type: user.user_type });
   const refreshToken = generateRefreshToken({ id: user.id, user_type: user.user_type });
 
-  // Return user without password
-  const userWithoutPassword = {
-    id: user.id,
-    email: user.email,
-    user_type: user.user_type,
-    full_name: user.full_name,
-    phone_number: user.phone_number,
-    profile_image_url: user.profile_image_url,
-    createdAt: user.createdAt,
-  };
+  // Return user without password hash
+  const userWithoutPassword = user.toJSON();
+  delete userWithoutPassword.password_hash;
 
   return { user: userWithoutPassword, token, refreshToken };
 };

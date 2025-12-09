@@ -1,5 +1,8 @@
 import { loginUser, refreshAccessToken } from "../services/authService.js";
 import User from "../models/users/userModel.js";
+import VetProfessional from "../models/users/vetProfessionalModel.js";
+import PetOwner from "../models/users/petOwnerModel.js";
+import ClinicAdmin from "../models/users/clinicAdminModel.js";
 import { lstat } from "fs";
 
 export const login = async (req, res) => {
@@ -97,22 +100,32 @@ export const refreshToken = async (req, res) => {
 
 export const getMe = async (req, res) => {
   try {
-    // req.user is already attached by authenticate middleware
-    const user = req.user;
+    const userId = req.user.id;
+    
+    // Fetch user with associations
+    const user = await User.findByPk(userId, {
+      include: [
+        {
+          model: VetProfessional,
+          required: false
+        },
+        {
+          model: PetOwner,
+          required: false
+        },
+        {
+          model: ClinicAdmin,
+          required: false
+        }
+      ],
+      attributes: { exclude: ['password_hash'] }
+    });
 
-    // Return user without password
-    const userResponse = {
-      id: user.id,
-      email: user.email,
-      user_type: user.user_type,
-      first_name: user.first_name,
-      last_name: user.last_name,
-      phone_number: user.phone_number,
-      profile_image_url: user.profile_image_url,
-      createdAt: user.createdAt,
-    };
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-    return res.status(200).json({ user: userResponse });
+    return res.status(200).json({ user });
   } catch (err) {
     console.error("Get user error:", err);
     return res.status(500).json({ message: "Error fetching user" });

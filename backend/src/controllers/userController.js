@@ -34,8 +34,7 @@ export const createVetProfessional = async (req, res) => {
 export const updateUserDetails = async (req, res) => {
   try {
     const userId = req.user.id; // from JWT or session
-    const profileData = req.body;
-    const updatedUser = await updateUserProfile(userId, profileData);
+    const updatedUser = await updateUserProfile(req, userId);
     res
       .status(200)
       .json({

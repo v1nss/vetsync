@@ -1,18 +1,7 @@
 import { useState, useEffect } from "react";
-import {
-  FaSearch,
-  FaChevronRight,
-  FaChevronLeft,
-  FaBell,
-  FaLock,
-  FaPalette,
-  FaInfoCircle,
-  FaQuestionCircle,
-  FaExclamationTriangle,
-  FaMars,
-  FaVenus,
-} from "react-icons/fa";
+import { FaSearch, FaChevronRight, FaChevronLeft, FaBell, FaLock, FaPalette, FaInfoCircle, FaQuestionCircle, FaExclamationTriangle, FaMars, FaVenus, FaSignOutAlt } from "react-icons/fa";
 import Navbar from "../../components/Navbar";
+import Footer from "../../components/Footer";
 import { useNavigate } from "react-router";
 import { fetchAllPetsById } from "../../global/api/pet";
 import { useAuth } from "../../context/AuthContext";
@@ -20,10 +9,12 @@ import DriveImage from "../../components/DriveImage";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { user, token } = useAuth();
+  const { user, token, logout } = useAuth();
   
   // Get full name with fallback
-  const fullName = user?.full_name || user?.email || 'User';
+  const fullName = [user?.first_name, user?.last_name]
+    .filter(name => name && name.trim())
+    .join(' ') || user?.email || 'User';
 
   // Get initials from name
   const getInitials = (name) => {
@@ -37,44 +28,51 @@ export default function SettingsPage() {
   };
 
   const [loading, setLoading] = useState(true);
-  const [pets, setPets] = useState([])
+  const [pets, setPets] = useState([]);
   
-    useEffect(() => {
-      const fetchAllPets = async () => {
-        setLoading(true);
-        // setSelected(null);
-        try {
-          const res = await fetchAllPetsById(token);
-          if (!res) {
-            console.log("no pets exist");
-            setPets(null);
-            setIsPending(false);
-          } else {
-            setPets(res);
-          }
-        } catch (err) {
-          console.error("Unable to get pets by ID:", err.message);
-        } finally {
-          setLoading(false);
+  useEffect(() => {
+    const fetchAllPets = async () => {
+      setLoading(true);
+      try {
+        const res = await fetchAllPetsById(token);
+        console.log(res);
+        if (!res) {
+          console.log("no pets exist");
+          setPets([]);
+        } else {
+          setPets(res);
         }
-      };
-  
-      fetchAllPets()
-    }, [])
+      } catch (err) {
+        console.error("Unable to get pets by ID:", err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllPets();
+  }, [token]);
 
   const settingsOptions = [
-    { icon: FaBell, label: "Notifications", section: "other" },
-    { icon: FaLock, label: "Security", section: "other" },
-    { icon: FaPalette, label: "Appearance", section: "other" },
-    { icon: FaInfoCircle, label: "About VetSync", section: "info" },
-    { icon: FaQuestionCircle, label: "FAQs", section: "info" },
-    { icon: FaExclamationTriangle, label: "Report a problem", section: "info" },
+    { icon: FaBell, label: "Notifications", section: "other", path: "/pet-owner/settings/notifications" },
+    { icon: FaLock, label: "Security", section: "other", path: "/pet-owner/settings/security" },
+    { icon: FaPalette, label: "Appearance", section: "other", path: "/pet-owner/settings/appearance" },
+    { icon: FaInfoCircle, label: "About VetSync", section: "info", path: "/pet-owner/settings/about" },
+    { icon: FaQuestionCircle, label: "FAQs", section: "info", path: "/pet-owner/settings/faqs" },
+    { icon: FaExclamationTriangle, label: "Report a problem", section: "info", path: "/pet-owner/settings/report" },
   ];
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   // Reusable Components
   const ProfileButton = ({ className = "" }) => (
-    <button className={`w-full flex items-center hover:bg-gray-50 rounded-2xl transition ${className}`}>
-      <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-lg overflow-hidden">
+    <button 
+      onClick={() => navigate('/pet-owner/settings/profile')}
+      className={`w-full flex items-center hover:bg-gray-50 rounded-2xl transition ${className}`}
+    >
+      <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-lg overflow-hidden shrink-0">
         {user?.profile_image_url ? (
           <DriveImage
             image={user.profile_image_url}
@@ -82,14 +80,15 @@ export default function SettingsPage() {
             className="w-full h-full object-cover"
             fallbackIcon={false}
           />
-        ) : null}
-        {!user?.profile_image_url && getInitials(fullName)}
+        ) : (
+          <span>{getInitials(fullName)}</span>
+        )}
       </div>
-      <div className="flex-1 text-left ml-3 lg:ml-4">
-        <p className="font-semibold lg:text-lg">{fullName}</p>
-        <p className="text-sm text-gray-500">{user?.user_type?.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}</p>
+      <div className="flex-1 text-left ml-3 lg:ml-4 min-w-0">
+        <p className="font-semibold lg:text-lg truncate">{fullName}</p>
+        <p className="text-sm text-gray-500 truncate">{user?.user_type?.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}</p>
       </div>
-      <FaChevronRight className="text-gray-400 text-sm" />
+      <FaChevronRight className="text-gray-400 text-sm shrink-0 ml-2" />
     </button>
   );
 
@@ -99,7 +98,7 @@ export default function SettingsPage() {
       onClick={onClick}
       className={`hover:opacity-80 lg:hover:bg-gray-50 transition ${className}`}
     >
-      <div className="w-full aspect-square lg:w-16 lg:h-16 lg:aspect-auto bg-gray-100 rounded-2xl lg:rounded-xl mb-4 lg:mb-0 flex items-center justify-center">
+      <div className="w-full aspect-square lg:w-16 lg:h-16 lg:aspect-auto bg-gray-100 rounded-2xl lg:rounded-xl mb-4 lg:mb-0 flex items-center justify-center overflow-hidden shrink-0">
         {pet.profileURL?.link ? (
           <img
             src={pet.profileURL.link}
@@ -107,25 +106,28 @@ export default function SettingsPage() {
             className="w-full h-full object-cover rounded-2xl"
           />
         ) : (
-          <span className="text-2xl font-bold text-white">
+          <span className="text-2xl font-bold text-gray-400">
             {pet.name.charAt(0)}
           </span>
         )}
       </div>
-      <div className="flex items-center justify-center lg:justify-start gap-1 lg:gap-2 lg:flex-1">
-        <span className="text-sm lg:text-base font-medium">{pet.name}</span>
+      <div className="flex items-center justify-center lg:justify-start gap-1 lg:gap-2 lg:flex-1 min-w-0">
+        <span className="text-sm lg:text-base font-medium truncate">{pet.name}</span>
         {pet.gender === "male" ? (
-          <FaMars className="text-blue-500 text-xs lg:text-sm" />
+          <FaMars className="text-blue-500 text-xs lg:text-sm shrink-0" />
         ) : (
-          <FaVenus className="text-pink-500 text-xs lg:text-sm" />
+          <FaVenus className="text-pink-500 text-xs lg:text-sm shrink-0" />
         )}
       </div>
-      <FaChevronRight className="hidden lg:block text-gray-400 text-sm" />
+      <FaChevronRight className="hidden lg:block text-gray-400 text-sm shrink-0" />
     </button>
   );
 
   const SettingsButton = ({ option }) => (
-    <button className="w-full flex items-center justify-between py-3 px-2 lg:py-4 lg:px-4 hover:bg-gray-50 rounded-xl transition">
+    <button 
+      onClick={() => navigate(option.path)}
+      className="w-full flex items-center justify-between py-3 px-2 lg:py-4 lg:px-4 hover:bg-gray-50 rounded-xl transition"
+    >
       <div className="flex items-center gap-3 lg:gap-4">
         <option.icon className="text-gray-700 text-lg lg:text-xl" />
         <span className="text-sm lg:text-base">{option.label}</span>
@@ -144,15 +146,12 @@ export default function SettingsPage() {
         <div className="lg:hidden">
           <div className="bg-white min-h-screen pb-20">
             {/* Header */}
-            <div className="sticky top-0 flex items-center justify-between p-4 bg-white border-b border-gray-100">
+            <div className="sticky top-0 flex items-center justify-between p-4 bg-white border-b border-gray-100 z-10">
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => navigate(-1)}
-                  className="rounded-full hover:bg-gray-300 transition"
-                >
+                <button onClick={() => navigate(-1)} className="flex gap-2 items-center justify-center rounded-full hover:bg-gray-300 transition">
                   <FaChevronLeft className="text-gray-500" />
+                  <span className="text-xl font-medium">Account Settings</span>
                 </button>
-                <h1 className="text-xl font-medium">Account Settings</h1>
               </div>
               <button className="p-2 hover:bg-gray-50 rounded-full transition">
                 <FaSearch className="text-gray-600" />
@@ -177,8 +176,13 @@ export default function SettingsPage() {
                   </button>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
-                  {pets.map((pet) => (
-                    <PetCard key={pet.pet_id} pet={pet} className="text-center" />
+                  {pets.slice(0, 3).map((pet) => (
+                    <PetCard 
+                      key={pet.pet_id} 
+                      pet={pet} 
+                      onClick={() => navigate('/pet-owner/pets')}
+                      className="text-center" 
+                    />
                   ))}
                 </div>
               </div>
@@ -199,6 +203,14 @@ export default function SettingsPage() {
                   <SettingsButton key={idx} option={option} />
                 ))}
               </div>
+
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-3 p-4 bg-primary text-white rounded-xl border border-red-200 hover:bg-red-100 transition"
+              >
+                <span className="font-medium">Logout</span>
+              </button>
             </div>
           </div>
         </div>
@@ -229,14 +241,14 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="font-semibold text-lg">My Pets</h2>
                     <button 
-                      className="text-sm text-primary hover:underline"
+                      className="text-sm text-primary hover:underline shrink-0"
                       onClick={() => navigate("/pet-owner/pets")}
                     >
                       See more <FaChevronRight className="inline text-xs" />
                     </button>
                   </div>
                   <div className="space-y-2">
-                    {pets.map((pet) => (
+                    {pets.slice(0, 5).map((pet) => (
                       <PetCard 
                         key={pet.pet_id} 
                         pet={pet} 
@@ -271,6 +283,18 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+
+          {/* Logout Button */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-3 p-4 bg-primary text-white rounded-2xl border border-red-200 hover:bg-red-100 transition"
+            >
+              <span className="font-medium">Logout</span>
+            </button>
+          </div>
+
+          <Footer />
         </div>
       </div>
     </main>

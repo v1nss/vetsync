@@ -23,7 +23,7 @@ router.post('/register', upload.single("file"), register); // for petOwner or cl
 router.get('/:id', authenticate, fetchUserDataById);
 
 // users Update Routes
-router.put('/update/:id', authenticate, updateUserDetails); // any logged in user
+router.put('/update/:id', authenticate, upload.single('file'), updateUserDetails); // any logged in user
 
 router.put('/email-check', checkEmailExists);
 
