@@ -157,7 +157,7 @@ export default function AddPetPage() {
     }
   };
 
-  const handleCancel = () => navigate('/pets');
+  const handleCancel = () => navigate("/pet-owner/pets");
 
   return (
     <>

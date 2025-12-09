@@ -140,8 +140,9 @@ export default function AppointmentPage() {
       case "pending":
         return "bg-yellow-100 text-yellow-800";
       case "completed":
-        return "bg-gray-100 text-gray-800";
-      case "canceled":
+        return "bg-green-100 text-green-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
       case "cancelled":
         return "bg-red-100 text-red-800";
       default:
@@ -205,9 +206,10 @@ export default function AppointmentPage() {
     return appointment.pet?.name || "Pet";
   };
 
-  const getPetType = (appointment) => {
-    return appointment.pet?.species || "Unknown";
-  };
+const getPetType = (appointment) =>
+  appointment.pet?.species
+    ? appointment.pet.species.charAt(0).toUpperCase() + appointment.pet.species.slice(1)
+    : "Unknown";
 
   const getClinicName = (appointment) => {
     return appointment.clinic?.name || "Veterinary Clinic";

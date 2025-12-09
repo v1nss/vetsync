@@ -223,12 +223,12 @@ export default function VetProManagementPage() {
                           >
                             <FaEdit />
                           </button>
-                          <button
+                          {/* <button
                             onClick={() => handleDeleteVet(vet.id)}
                             className="text-red-600 hover:text-red-700"
                           >
                             <FaTrash />
-                          </button>
+                          </button> */}
                         </td>
                       </tr>
                     ))}
@@ -259,12 +259,12 @@ export default function VetProManagementPage() {
                       >
                         <FaEdit /> Edit
                       </button>
-                      <button
+                      {/* <button
                         onClick={() => handleDeleteVet(vet.id)}
                         className="px-3 py-2 bg-red-600 text-white rounded-lg text-sm"
                       >
                         <FaTrash />
-                      </button>
+                      </button> */}
                     </div>
                   </div>
                 ))}

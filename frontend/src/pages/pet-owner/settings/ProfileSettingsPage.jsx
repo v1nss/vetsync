@@ -24,6 +24,7 @@ export default function ProfileSettingsPage() {
     address: '',
     bio: '',
   });
+  const countryCode = "+63"; // Fixed to Philippines
 
   const [profileImage, setProfileImage] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -43,6 +44,14 @@ export default function ProfileSettingsPage() {
     fetchProfile();
   }, []);
 
+  // Parse phone number to remove country code for display
+  const parsePhoneNumber = (phoneNumber) => {
+    if (!phoneNumber) return '';
+    // Remove country code if present
+    const cleaned = phoneNumber.replace(/^\+63\s*/, '').replace(/\D/g, '');
+    return cleaned;
+  };
+
   const fetchProfile = async () => {
     try {
       setLoading(true);
@@ -52,8 +61,8 @@ export default function ProfileSettingsPage() {
           firstName: user.first_name || '',
           lastName: user.last_name || '',
           email: user.email || '',
-          phone: user.phone_number || '',
-          address: user.address || '',
+          phone: parsePhoneNumber(user.phone_number || ''),
+          address: user.PetOwner?.address || '',
           bio: user.bio || '',
         });
         
@@ -102,14 +111,24 @@ export default function ProfileSettingsPage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handlePhoneNumberChange = (e) => {
+    const value = e.target.value;
+    // Only allow numbers, spaces, hyphens, and parentheses
+    const numericValue = value.replace(/[^\d\s\-()]/g, '');
+    setFormData(prev => ({ ...prev, phone: numericValue }));
+  };
+
   const handleSaveProfile = async () => {
     try {
       setSaving(true);
       
+      // Format phone number with country code
+      const formattedPhone = countryCode + " " + formData.phone.replace(/\D/g, '');
+      
       const profileData = {
         first_name: formData.firstName,
         last_name: formData.lastName,
-        phone_number: formData.phone,
+        phone_number: formattedPhone,
         address: formData.address,
         bio: formData.bio,
       };
@@ -122,8 +141,8 @@ export default function ProfileSettingsPage() {
           firstName: response.user.first_name || '',
           lastName: response.user.last_name || '',
           email: response.user.email || '',
-          phone: response.user.phone_number || '',
-          address: response.user.address || '',
+          phone: parsePhoneNumber(response.user.phone_number || ''),
+          address: response.user.PetOwner?.address || '',
           bio: response.user.bio || '',
         });
         
@@ -402,15 +421,21 @@ export default function ProfileSettingsPage() {
                       <FaPhone className="inline mr-2 text-primary" />
                       Phone Number
                     </label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      disabled={!isEditing}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:text-gray-600"
-                      placeholder="Enter your phone number"
-                    />
+                    <div className="flex gap-2 w-full">
+                      <div className="flex items-center justify-center px-3 sm:px-4 py-3 border border-gray-300 rounded-2xl bg-gray-50 text-gray-700 text-sm font-medium whitespace-nowrap shrink-0">
+                        🇵🇭 +63
+                      </div>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handlePhoneNumberChange}
+                        disabled={!isEditing}
+                        className="focus:outline-none flex-1 min-w-0 text-sm px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:text-gray-600"
+                        placeholder="912 345 6789"
+                        maxLength={15}
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -592,15 +617,21 @@ export default function ProfileSettingsPage() {
                     <FaPhone className="inline mr-2 text-primary" />
                     Phone Number
                   </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    disabled={!isEditing}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:text-gray-600"
-                    placeholder="Enter your phone number"
-                  />
+                  <div className="flex gap-2 w-full">
+                    <div className="flex items-center justify-center px-3 sm:px-4 py-3 border border-gray-300 rounded-2xl bg-gray-50 text-gray-700 text-sm font-medium whitespace-nowrap shrink-0">
+                      🇵🇭 +63
+                    </div>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handlePhoneNumberChange}
+                      disabled={!isEditing}
+                      className="focus:outline-none flex-1 min-w-0 text-sm px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-primary disabled:bg-gray-50 disabled:text-gray-600"
+                      placeholder="912 345 6789"
+                      maxLength={15}
+                    />
+                  </div>
                 </div>
 
                 <div className="col-span-2">

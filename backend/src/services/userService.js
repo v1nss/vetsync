@@ -5,6 +5,7 @@ import ClinicAdmin from "../models/users/clinicAdminModel.js";
 import VetProfessional from "../models/users/vetProfessionalModel.js";
 import Clinic from "../models/clinicModel.js";
 import { uploadFiles, deleteFiles } from "../../global/utils/drive.js";
+import PetOwnerModel from "../models/users/petOwnerModel.js";
 
 export const registerUser = async (userData) => {
   const { body, file } = userData;
@@ -12,7 +13,7 @@ export const registerUser = async (userData) => {
   // Parse the user JSON sent in form-data
   const user = JSON.parse(body.user);
   console.log("Parsed user data: ", user);
-  const { first_name, last_name, email, password, user_type, address, clinic_name } = user;
+  const { first_name, last_name, email, password, user_type, phone_number, address, clinic_name } = user;
   // Check if email already exists
   const existing = await User.findOne({ where: { email } });
   if (existing) throw new Error("Email already registered");
@@ -49,6 +50,7 @@ export const registerUser = async (userData) => {
       email,
       password_hash: hashedPassword,
       user_type,
+      phone_number,
       profile_image_url: userProfile,
     });
 
@@ -185,14 +187,13 @@ export const updateUserProfile = async (req, userId) => {
     };
   }
 
-  // Prepare update data
+  // Prepare update data for User table
   const updateData = {};
   
   // Update basic fields
   if (profileData.first_name) updateData.first_name = profileData.first_name;
   if (profileData.last_name) updateData.last_name = profileData.last_name;
   if (profileData.phone_number) updateData.phone_number = profileData.phone_number;
-  if (profileData.address) updateData.address = profileData.address;
   if (profileData.bio !== undefined) updateData.bio = profileData.bio;
   
   // Update password if changed
@@ -207,11 +208,26 @@ export const updateUserProfile = async (req, userId) => {
 
   await user.update(updateData);
   
-  // Return updated user without password hash, including VetProfessional if exists
+  // Update PetOwner address if user is a pet owner
+  if (user.user_type === "pet_owner" && profileData.address !== undefined) {
+    let petOwner = await PetOwner.findOne({ where: { user_id: userId } });
+    if (petOwner) {
+      await petOwner.update({ address: profileData.address });
+    } else {
+      // Create PetOwner record if it doesn't exist
+      await PetOwner.create({ user_id: userId, address: profileData.address });
+    }
+  }
+  
+  // Return updated user without password hash, including associations
   const updatedUser = await User.findByPk(userId, {
     include: [
       {
         model: VetProfessional,
+        required: false
+      },
+      {
+        model: PetOwner,
         required: false
       }
     ],

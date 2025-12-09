@@ -256,7 +256,7 @@ export default function PetRecordsView({ pet, onBack, healthRecords, loading = f
             <div className="text-white">
               <h2 className="text-2xl font-bold mb-1">{pet.name}</h2>
               <p className="text-white/90">
-                {pet.species} • {pet.breed} • {calculateAge(pet.birthdate)}
+                {pet?.species ? pet.species.charAt(0).toUpperCase() + pet.species.slice(1) : ""} • {pet.breed} • {calculateAge(pet.birthdate)}
               </p>
             </div>
           </div>

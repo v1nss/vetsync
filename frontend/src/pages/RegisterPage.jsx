@@ -22,14 +22,16 @@ export default function RegisterPage() {
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   const [user, setUser] = useState({
-    // full_name: "",
     first_name: "",
     last_name: "",
     email: "",
     user_type: "",
+    phone_number: "",
+    address: "",
     clinic_name: "",
     password: "",
   });
+  const countryCode = "+63"; 
 
   const handleRoleChange = (role) => {
     setUserType(role);
@@ -40,6 +42,14 @@ export default function RegisterPage() {
     const { name, value } = e.target;
     setUser((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const handlePhoneNumberChange = (e) => {
+    const value = e.target.value;
+    // Only allow numbers, spaces, hyphens, and parentheses
+    const numericValue = value.replace(/[^\d\s\-()]/g, '');
+    setUser((prev) => ({ ...prev, phone_number: numericValue }));
+    if (errors.phone_number) setErrors((prev) => ({ ...prev, phone_number: "" }));
   };
 
   const handleProfilePictureChange = (e) => {
@@ -81,6 +91,14 @@ export default function RegisterPage() {
     if (!user.email.trim()) newErrors.email = "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) 
       newErrors.email = "Invalid email format";
+    if (!user.phone_number.trim()) newErrors.phone_number = "Phone number is required";
+    else {
+      const digitsOnly = user.phone_number.replace(/\D/g, '');
+      if (digitsOnly.length < 7 || digitsOnly.length > 15) 
+        newErrors.phone_number = "Phone number must be between 7 and 15 digits";
+    }
+    if (user.user_type === "pet_owner" && !user.address.trim()) 
+      newErrors.address = "Address is required";
     if (!user.password) newErrors.password = "Password is required";
     else if (user.password.length < 8) newErrors.password = "Minimum 8 characters";
     else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(user.password)) 
@@ -111,14 +129,24 @@ export default function RegisterPage() {
     }
 
     if (user.user_type === "clinic_admin") {
-      navigate("/register-clinic", { state: { user, profilePicture } });
+      // Format phone number with country code before navigating
+      const userWithPhone = {
+        ...user,
+        phone_number: countryCode + " " + user.phone_number.replace(/\D/g, '')
+      };
+      navigate("/register-clinic", { state: { user: userWithPhone, profilePicture } });
       setIsSubmitting(false);
       return;
     }
 
     try {
       var formData = new FormData();
-      formData.append('user', JSON.stringify(user));
+      // Combine country code with phone number
+      const userWithPhone = {
+        ...user,
+        phone_number: countryCode + " " + user.phone_number.replace(/\D/g, '')
+      };
+      formData.append('user', JSON.stringify(userWithPhone));
       if (profilePicture) formData.append('file', profilePicture);
       
       await registerUser(formData);
@@ -144,10 +172,11 @@ export default function RegisterPage() {
     setConfirmPassword("");
     setErrors({});
     setUser({
-      // full_name: "",
       first_name: "",
       last_name: "",
       email: "",
+      phone_number: "",
+      address: "",
       user_type: "",
       clinic_name: "",
       password: "",
@@ -260,22 +289,6 @@ export default function RegisterPage() {
                 )}
               </div>
 
-              {/* <div className="mb-4">
-                <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="name">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  className={`focus:outline-none w-full text-sm px-4 py-3 border rounded-2xl ${ errors.full_name ? 'border-red-500' : 'border-gray-300' }`}
-                  placeholder="Enter your full name"
-                  onChange={handleOnChange}
-                  name="full_name"
-                  value={user.full_name}
-                />
-                {errors.full_name && ( <p className="text-red-500 text-xs mt-1">{errors.full_name}</p> )}
-              </div> */}
-
               <div className="mb-4">
                 <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="first-name">
                   First Name
@@ -321,6 +334,44 @@ export default function RegisterPage() {
                 />
                 {errors.email && ( <p className="text-red-500 text-xs mt-1">{errors.email}</p> )}
               </div>
+
+              <div className="mb-4">
+                <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="phone_number">Contact Number</label>
+                <div className="flex gap-2 w-full">
+                  <div className="flex items-center justify-center px-3 sm:px-4 py-3 border border-gray-300 rounded-2xl bg-gray-50 text-gray-700 text-sm font-medium whitespace-nowrap shrink-0">
+                    🇵🇭 +63
+                  </div>
+                  <input
+                    type="tel"
+                    id="phone_number"
+                    className={`focus:outline-none flex-1 min-w-0 text-sm px-4 py-3 border rounded-2xl ${ errors.phone_number ? 'border-red-500' : 'border-gray-300' }`}
+                    placeholder="912 345 6789"
+                    onChange={handlePhoneNumberChange}
+                    name="phone_number"
+                    value={user.phone_number}
+                    maxLength={15}
+                  />
+                </div>
+                {errors.phone_number && ( <p className="text-red-500 text-xs mt-1">{errors.phone_number}</p> )}
+              </div>
+
+              {user.user_type === "pet_owner" && (
+                <div className="mb-4">
+                  <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="address">
+                    Address
+                  </label>
+                  <input
+                    type="text"
+                    id="address"
+                    className={`focus:outline-none w-full text-sm px-4 py-3 border rounded-2xl ${ errors.address ? 'border-red-500' : 'border-gray-300' }`}
+                    placeholder="Enter your address"
+                    onChange={handleOnChange}
+                    name="address"
+                    value={user.address}
+                  />
+                  {errors.address && ( <p className="text-red-500 text-xs mt-1">{errors.address}</p> )}
+                </div>
+              )}
 
               <div className="mb-4">
                 <label className="label-required block text-sm text-gray-700 mb-2" htmlFor="password">

@@ -1,19 +1,28 @@
-import { Resend } from 'resend';
 import dotenv from 'dotenv';
+import brevo from "@getbrevo/brevo";
 
 dotenv.config();
 
-// Initialize Resend client (will be created lazily if API key is available)
-let resend = null;
+// Brevo (Sendinblue) configuration
+const getBrevoConfig = () => {
+  const apiKey = process.env.BREVO_API_KEY?.trim();
+  const fromEmail = process.env.BREVO_FROM_EMAIL?.trim() || 'noreply@sendinblue.com';
+  const fromName = process.env.BREVO_FROM_NAME?.trim() || 'VetSync';
 
-const getResendClient = () => {
-  if (!resend) {
-    const apiKey = process.env.RESEND_API_KEY?.trim();
-    if (apiKey) {
-      resend = new Resend(apiKey);
-    }
+  if (!apiKey) {
+    throw new Error('BREVO_API_KEY must be set in .env file');
   }
-  return resend;
+
+  // Validate API key format (should start with 'xkeysib-')
+  if (!apiKey.startsWith('xkeysib-')) {
+    console.warn('⚠️  Warning: API key format might be incorrect. Brevo API keys usually start with "xkeysib-"');
+  }
+
+  return {
+    apiKey,
+    fromEmail,
+    fromName
+  };
 };
 
 // Email template for appointment approval
@@ -143,16 +152,21 @@ const getRejectionEmailTemplate = (ownerName, petName, clinicName, appointmentDa
   `;
 };
 
-// Send email function
+// Send email function using Brevo (Sendinblue) API
 export const sendEmail = async (to, subject, html, text = null) => {
   try {
-    // Check if Resend API key is configured
-    const resendApiKey = process.env.RESEND_API_KEY?.trim();
-    const fromEmail = process.env.RESEND_FROM_EMAIL?.trim() || 'onboarding@resend.dev';
-    
-    if (!resendApiKey) {
-      console.warn('Resend API key not configured. Skipping email send.');
-      console.warn('To enable emails, set RESEND_API_KEY in your .env file');
+    // Check if Brevo is configured
+    let brevoConfig;
+    try {
+      brevoConfig = getBrevoConfig();
+    } catch (configError) {
+      console.warn('Brevo not configured. Skipping email send.');
+      console.warn('To enable emails, set BREVO_API_KEY in your .env file');
+      console.warn('For Brevo free tier setup:');
+      console.warn('1. Sign up at https://www.brevo.com/');
+      console.warn('2. Get your API key from Brevo dashboard (Settings → API Keys)');
+      console.warn('3. Add BREVO_API_KEY to .env');
+      console.warn('4. Optionally set BREVO_FROM_EMAIL and BREVO_FROM_NAME');
       return { success: false, message: 'Email service not configured' };
     }
 
@@ -163,33 +177,74 @@ export const sendEmail = async (to, subject, html, text = null) => {
       return { success: false, error: 'Invalid recipient email format' };
     }
 
-    // Get Resend client
-    const resendClient = getResendClient();
-    if (!resendClient) {
-      return { success: false, error: 'Resend client not initialized' };
+    // Initialize Brevo client with API key
+    const apiInstance = new brevo.TransactionalEmailsApi();
+    
+    // Set API key for authentication
+    // Try multiple methods for compatibility
+    if (apiInstance.setApiKey) {
+      apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, brevoConfig.apiKey);
+    } else if (apiInstance.authentications && apiInstance.authentications['api-key']) {
+      apiInstance.authentications['api-key'].apiKey = brevoConfig.apiKey;
+    } else {
+      // Direct assignment as fallback
+      apiInstance.apiKey = brevoConfig.apiKey;
     }
 
-    // Send email using Resend
-    const { data, error } = await resendClient.emails.send({
-      from: fromEmail,
-      to: to,
+    // Generate plain text version from HTML if not provided
+    const plainText = text || html.replace(/<[^>]*>/g, '').replace(/\n\s*\n/g, '\n').trim();
+
+    // Prepare email data
+    const sendSmtpEmail = {
+      sender: { 
+        email: brevoConfig.fromEmail, 
+        name: brevoConfig.fromName 
+      },
+      to: [{ email: to }],
       subject: subject,
-      html: html,
-      ...(text && { text: text }),
-    });
+      htmlContent: html,
+      textContent: plainText
+    };
 
-    if (error) {
-      console.error('❌ Error sending email via Resend:', error);
-      return { success: false, error: error.message || 'Failed to send email' };
-    }
+    // Send email via Brevo API
+    const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
 
-    console.log('✅ Email sent successfully:', data?.id);
-    return { success: true, messageId: data?.id };
+    console.log('✅ Email sent successfully via Brevo:', response.messageId);
+    return { 
+      success: true, 
+      messageId: response.messageId,
+      provider: 'brevo'
+    };
   } catch (error) {
     console.error('❌ Error sending email:', error.message);
     
+    // Provide helpful error guidance
+    if (error.response) {
+      console.error('Brevo API error details:', error.response.body || error.response.text);
+    }
+    
+    // Log API key preview for debugging (first 10 chars only)
+    const apiKeyPreview = brevoConfig?.apiKey ? `${brevoConfig.apiKey.substring(0, 10)}...` : 'not set';
+    console.error('API Key preview:', apiKeyPreview);
+    
+    console.error('\n🔧 Brevo Setup Troubleshooting:');
+    console.error('1. Verify BREVO_API_KEY in .env is correct (get it from: https://app.brevo.com/settings/keys/api)');
+    console.error('2. Make sure there are NO spaces or quotes around the API key in .env');
+    console.error('3. The API key should look like: xkeysib-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
+    console.error('4. Check your Brevo account has available credits (free tier: 300 emails/day)');
+    console.error('5. Verify BREVO_FROM_EMAIL is set (or uses default)');
+    console.error('6. Make sure your Brevo account is verified');
+    console.error('7. Restart your server after updating .env file');
+    console.error('\n💡 Note: You only need the API KEY, NOT the SMTP credentials for this setup.');
+    console.error('   SMTP credentials are for a different method (nodemailer), not needed here.');
+    
     // Don't throw error - email failure shouldn't break the main flow
-    return { success: false, error: error.message, code: error.code };
+    return { 
+      success: false, 
+      error: error.message || 'Failed to send email',
+      details: error.response?.body || error.response?.text,
+      statusCode: error.response?.statusCode || error.statusCode
+    };
   }
 };
 
