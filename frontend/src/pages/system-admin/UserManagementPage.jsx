@@ -21,20 +21,10 @@ export default function UserManagementPage() {
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
 
   useEffect(() => {
-    const mockUsers = [
-      { user_id: 1, name: "Dr. Maria Santos", email: "maria.santos@email.com", phone: "+63 917 123 4567", role: "vet_pro", status: "active", joined_date: "2024-01-15", address: "123 Main St, Quezon City" },
-      { user_id: 2, name: "Juan Dela Cruz", email: "juan.delacruz@email.com", phone: "+63 917 234 5678", role: "pet_owner", status: "active", joined_date: "2024-02-20", address: "456 Oak Ave, Manila" },
-      { user_id: 3, name: "Med Connect Admin", email: "clinic_admin@medconnect.ph", phone: "+63 917 345 6789", role: "clinic_admin", status: "active", joined_date: "2023-12-01", address: "789 Pine Rd, Makati" },
-      { user_id: 4, name: "Dr. Ana Reyes", email: "ana.reyes@email.com", phone: "+63 917 456 7890", role: "vet_pro", status: "active", joined_date: "2024-03-10", address: "321 Maple Dr, Pasig" },
-      { user_id: 5, name: "Pedro Martinez", email: "pedro.martinez@email.com", phone: "+63 917 567 8901", role: "pet_owner", status: "inactive", joined_date: "2024-01-05", address: "654 Birch Ln, Taguig" },
-      { user_id: 6, name: "Dr. Roberto Garcia", email: "roberto.garcia@email.com", phone: "+63 917 678 9012", role: "vet_pro", status: "active", joined_date: "2024-04-01", address: "987 Cedar St, Mandaluyong" }
-    ];
-
     const fetchAllUsersData = async () => {
       setLoading(true);
       try {
         const allUsers = await fetchAllUsers();
-        console.log("Fetched users:", allUsers);
         setUsers(allUsers);
         setFilteredUsers(allUsers);
       } catch (err) {

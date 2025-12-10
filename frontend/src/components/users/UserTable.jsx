@@ -47,7 +47,7 @@ export default function UserTable({ users, onViewDetails }) {
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="text-sm text-gray-900">{user.phone_numebr || "N/A"}</div>
+                  <div className="text-sm text-gray-900">{user.phone_number || "N/A"}</div>
                 </td>
                 <td className="px-6 py-4">
                   <span

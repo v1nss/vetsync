@@ -1,6 +1,8 @@
 import { FaPaw, FaClock, FaPhone, FaEnvelope, FaUserMd, FaCheckCircle, FaTimesCircle, FaBan, FaCheck, FaExclamationTriangle, FaFileAlt } from "react-icons/fa";
+import { useAuth } from "../../context/AuthContext";
 
 export default function AppointmentCard({ appointment, onStatusChange, onComplete, onViewDetails }) {
+  const { role } = useAuth();
   const getStatusBadge = (status) => {
     const styles = {
       pending: "bg-yellow-100 text-yellow-700",
@@ -122,7 +124,7 @@ export default function AppointmentCard({ appointment, onStatusChange, onComplet
             </>
           )}
 
-          {appointment.status === 'approved' && (
+          {appointment.status === 'approved' && role !== 'clinic_admin' && (
             <button
               onClick={() => onComplete(appointment)}
               className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
