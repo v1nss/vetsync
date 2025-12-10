@@ -9,6 +9,16 @@ export default function ClinicAdminNavbar() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    return name
+      .split(" ")
+      .map(n => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   // Get full name with fallback
   const fullName = user?.first_name + " " + user?.last_name || 'User';
 
