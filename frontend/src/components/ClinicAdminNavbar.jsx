@@ -54,7 +54,7 @@ export default function ClinicAdminNavbar() {
                     {!user?.profile_image_url && getInitials(fullName)}
                 </div>
               <span className="text-sm font-medium text-gray-700 hidden sm:block">
-                {user?.full_name || 'Clinic Admin'}
+                {user?.fullName || 'Clinic Admin'}
               </span>
               <FaChevronDown className={`text-gray-400 text-xs transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -62,7 +62,7 @@ export default function ClinicAdminNavbar() {
             {isOpen && (
               <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
                 <div className="px-4 py-3 border-b border-gray-100">
-                  <p className="text-sm font-medium text-gray-900">{user?.full_name || 'Clinic Admin'}</p>
+                  <p className="text-sm font-medium text-gray-900">{user?.fullName || 'Clinic Admin'}</p>
                   <p className="text-xs text-gray-500">{user?.email || 'admin@clinic.com'}</p>
                 </div>
                 
