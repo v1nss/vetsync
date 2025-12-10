@@ -55,7 +55,7 @@ export default function PetOwnerEHR() {
               veterinarian: ehr.vetProfessional?.User 
                 ? `Dr. ${ehr.vetProfessional.User.first_name} ${ehr.vetProfessional.User.last_name}`
                 : ehr.appointment?.assigned_vet || "Veterinarian",
-              reason: ehr.appointment?.service || "General Checkup",
+              reason: ehr.appointment?.service || ehr?.service || "General Checkup",
               clinic_name: ehr.clinic?.name || "Veterinary Clinic",
               documents: {
                 labResults: ehr.labResults && ehr.labResults.length > 0
