@@ -42,7 +42,7 @@ export default function UserMobileCards({ users, onViewDetails }) {
             <div className="space-y-2 mb-3">
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <FaPhone className="text-gray-400" />
-                {user.phone_numebr || "N/A"}
+                {user.phone_number || "N/A"}
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <FaCalendar className="text-gray-400" />
