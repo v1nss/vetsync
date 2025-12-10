@@ -404,7 +404,7 @@ export default function PetDetail({ pet, onUpdate }) {
       </InfoSection>
 
       {/* Medical Information */}
-      <InfoSection title="Medical Information">
+      {/* <InfoSection title="Medical Information">
         <div className="bg-white border border-gray-200 rounded-2xl p-4">
           {isEditing ? (
             <div className="space-y-3">
@@ -436,10 +436,10 @@ export default function PetDetail({ pet, onUpdate }) {
             </>
           )}
         </div>
-      </InfoSection>
+      </InfoSection> */}
 
       {/* Additional Notes */}
-      <InfoSection title="Additional Notes">
+      {/* <InfoSection title="Additional Notes">
         <div className="bg-white border border-gray-200 rounded-2xl p-4">
           {isEditing ? (
             <textarea
@@ -453,7 +453,7 @@ export default function PetDetail({ pet, onUpdate }) {
             <p className="text-sm text-gray-700">{pet.notes || '-'}</p>
           )}
         </div>
-      </InfoSection>
+      </InfoSection> */}
 
       {/* Recent Appointments */}
       <InfoSection title="Recent Health Records">

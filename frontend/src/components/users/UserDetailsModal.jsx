@@ -4,7 +4,6 @@ import DriveImage from '../DriveImage';
 
 export default function UserDetailsModal({ user, onClose }) {
   if (!user) return null;
-
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -45,7 +44,7 @@ export default function UserDetailsModal({ user, onClose }) {
 
             <div className="bg-gray-50 rounded-xl p-4">
               <div className="text-sm text-gray-600 mb-1">Phone Number</div>
-              <div className="font-semibold text-gray-900">{user.phone_numebr || "N/A"}</div>
+              <div className="font-semibold text-gray-900">{user.phone_number || "N/A"}</div>
             </div>
 
             <div className="bg-gray-50 rounded-xl p-4">

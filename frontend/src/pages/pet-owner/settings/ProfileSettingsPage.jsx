@@ -454,7 +454,7 @@ export default function ProfileSettingsPage() {
                     />
                   </div>
 
-                  <div>
+                  {/* <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
                     <textarea
                       name="bio"
@@ -465,7 +465,7 @@ export default function ProfileSettingsPage() {
                       className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary resize-none disabled:bg-gray-50 disabled:text-gray-600"
                       placeholder="Tell us about yourself"
                     />
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
@@ -650,7 +650,7 @@ export default function ProfileSettingsPage() {
                   />
                 </div>
 
-                <div className="col-span-2">
+                {/* <div className="col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
                   <textarea
                     name="bio"
@@ -661,7 +661,7 @@ export default function ProfileSettingsPage() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary resize-none disabled:bg-gray-50 disabled:text-gray-600"
                     placeholder="Tell us about yourself"
                   />
-                </div>
+                </div> */}
               </div>
             </div>
 
