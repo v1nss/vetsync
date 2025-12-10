@@ -10,7 +10,7 @@ export default function ClinicAdminNavbar() {
   const dropdownRef = useRef(null);
 
   // Get full name with fallback
-  const fullName = user?.full_name || user?.email || 'User';
+  const fullName = user?.first_name + " " + user?.last_name || 'User';
 
   useEffect(() => {
     const handleClickOutside = (event) => {
