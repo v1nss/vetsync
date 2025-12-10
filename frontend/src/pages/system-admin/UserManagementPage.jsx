@@ -25,7 +25,6 @@ export default function UserManagementPage() {
       setLoading(true);
       try {
         const allUsers = await fetchAllUsers();
-        console.log("Fetched users:", allUsers);
         setUsers(allUsers);
         setFilteredUsers(allUsers);
       } catch (err) {

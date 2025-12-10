@@ -63,7 +63,7 @@ const EHR = sequelize.define("EHR", {
   },
   service: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   attached_files: {
     type: DataTypes.JSON,
