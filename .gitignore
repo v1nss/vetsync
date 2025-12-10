@@ -13,7 +13,7 @@ __pycache__/
 *.pyo
 *.pyd
 *.pyc
-backend\seed.js
+backend/seed.js
 # Environments
 .env
 .venv/
