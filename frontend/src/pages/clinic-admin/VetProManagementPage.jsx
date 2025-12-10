@@ -70,16 +70,19 @@ export default function VetProManagementPage() {
         isOpen: true,
         type: 'success',
         title: 'Vet Added! 🎉',
-        message: `${vetData.name} has been successfully added to your team.`
+        message: `${vetData.first_name} ${vetData.last_name} has been successfully added to your team.`
       });
     } catch (err) {
       console.error("Failed to add vet:", err);
+      // Don't close modal on error so user can fix and retry
       setNotification({
         isOpen: true,
         type: 'error',
         title: 'Failed to Add Vet',
-        message: err.response?.data?.error || err.message || 'Unable to add the veterinarian. Please try again.'
+        message: err.response?.data?.error || err.response?.data?.message || err.message || 'Unable to add the veterinarian. Please try again.'
       });
+      // Re-throw error so modal knows it failed
+      throw err;
     }
   };
 
@@ -103,12 +106,15 @@ export default function VetProManagementPage() {
       });
     } catch (err) {
       console.error("Failed to update vet:", err);
+      // Don't close modal on error so user can fix and retry
       setNotification({
         isOpen: true,
         type: 'error',
         title: 'Update Failed',
-        message: err.response?.data?.error || err.message || 'Unable to update veterinarian information. Please try again.'
+        message: err.response?.data?.error || err.response?.data?.message || err.message || 'Unable to update veterinarian information. Please try again.'
       });
+      // Re-throw error so modal knows it failed
+      throw err;
     }
   };
 

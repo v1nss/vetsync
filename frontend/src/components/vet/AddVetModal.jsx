@@ -16,8 +16,6 @@ export default function AddVetModal({ isOpen, onClose, onSubmit, vet }) {
   const [profilePreview, setProfilePreview] = useState(null);
   const [existingProfileImage, setExistingProfileImage] = useState(null);
   const [errors, setErrors] = useState({});
-  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -44,6 +42,7 @@ export default function AddVetModal({ isOpen, onClose, onSubmit, vet }) {
       setExistingProfileImage(null);
     }
     setErrors({});
+    setIsSubmitting(false);
   }, [vet, isOpen]);
 
   const handleChange = (e) => {
@@ -90,30 +89,19 @@ export default function AddVetModal({ isOpen, onClose, onSubmit, vet }) {
     
     try {
       // Call the onSubmit function passed from parent
+      // Parent handles success/error notifications
       await onSubmit(formData, profilePicture);
       
-      // Show success notification after loading completes
-      if (!vet) {
-        // Adding new vet
-        setSuccessMessage(`${formData.name} has been successfully registered as a veterinary professional!`);
-      } else {
-        // Updating existing vet
-        setSuccessMessage(`${formData.name}'s profile has been successfully updated!`);
-      }
-      setShowSuccessNotification(true);
+      // Only close modal on success - parent will show notification
+      // Don't show success notification here, let parent handle it
       
     } catch (error) {
-      console.error("Error submitting vet data:", error);
-      // Handle error - you might want to show an error notification here
+      // Error is handled by parent, just re-throw to stop modal from closing
+      throw error;
     } finally {
       // Stop loading regardless of success or failure
       setIsSubmitting(false);
     }
-  };
-
-  const handleSuccessClose = () => {
-    setShowSuccessNotification(false);
-    onClose(); // Close the main modal after success notification
   };
 
   if (!isOpen) return null;
@@ -126,7 +114,14 @@ export default function AddVetModal({ isOpen, onClose, onSubmit, vet }) {
             <h2 className="text-xl font-bold text-gray-900">
               {vet ? "Edit Vet Professional" : "Add Vet Professional"}
             </h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <button 
+              onClick={() => {
+                setIsSubmitting(false);
+                onClose();
+              }} 
+              className="text-gray-400 hover:text-gray-600"
+              disabled={isSubmitting}
+            >
               <FaTimes />
             </button>
           </div>
@@ -249,7 +244,10 @@ export default function AddVetModal({ isOpen, onClose, onSubmit, vet }) {
             <div className="flex gap-3 pt-4">
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => {
+                  setIsSubmitting(false);
+                  onClose();
+                }}
                 disabled={isSubmitting}
                 className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -273,16 +271,6 @@ export default function AddVetModal({ isOpen, onClose, onSubmit, vet }) {
           </form>
         </div>
       </div>
-
-      {/* Success Notification Modal */}
-      <NotificationModal
-        isOpen={showSuccessNotification}
-        onClose={handleSuccessClose}
-        type="success"
-        title={vet ? "Profile Updated!" : "Registration Successful!"}
-        message={successMessage}
-        buttonText="Done"
-      />
     </>
   );
 }
