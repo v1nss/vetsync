@@ -4,7 +4,6 @@ import { FaCalendarAlt, FaCalendarCheck, FaClock, FaCheckCircle, FaClipboardList
 import NotificationModal from "../../components/NotificationModal";
 import CalendarModal from "../../components/appointments/CalendarModal";
 import AppointmentDetailsModal from "../../components/appointments/AppointmentDetailsModal";
-import VetAppointmentCard from "../../components/appointments/VetAppointmentCard";
 import AppointmentsFilters from "../../components/appointments/AppointmentsFilters";
 import AddHealthRecordModal from "../../components/EHR/AddHealthRecordModal";
 import { useVetAppointments } from "../../hooks/useVetAppointments";
@@ -204,13 +203,11 @@ export default function VetAppointmentsPage() {
               </p>
             </div>
           ) : (
-            filteredAppointments.map((appointment) => (
-              <VetAppointmentTable
-                appointments={appointments}
-                onMarkComplete={handleMarkComplete}
-                onViewDetails={handleViewDetails}
-              />
-            ))
+            <VetAppointmentTable
+              appointments={filteredAppointments}
+              onMarkComplete={handleMarkComplete}
+              onViewDetails={handleViewDetails}
+            />
           )}
         </div>
       </div>
