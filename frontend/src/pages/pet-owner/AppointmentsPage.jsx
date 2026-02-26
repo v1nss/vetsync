@@ -8,6 +8,7 @@ import RebookModal from "../../components/appointments/RebookModal";
 import NotificationModal from "../../components/NotificationModal";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import { deleteAppointment } from "../../global/api/appointment.jsx";
+import PetOwnerAppointmentTable from "../../components/appointments/PetOwnerAppointmentTable.jsx";
 
 export default function AppointmentPage() {
   const [activeTab, setActiveTab] = useState("upcoming");
@@ -303,113 +304,129 @@ const getPetType = (appointment) =>
                 </p>
               </div>
             ) : (
-              appointments.map((appointment) => (
-                <div
-                  key={appointment.appointment_id}
-                  className="bg-white border border-gray-200 rounded-2xl hover:border-primary transition-shadow p-6"
-                >
-                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between">
-                    {/* Left Section */}
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h3 className="text-xl font-semibold text-gray-900">
-                            {getPetName(appointment)}
-                            <span className="text-gray-500 font-normal text-base ml-2">
-                              ({getPetType(appointment)})
-                            </span>
-                          </h3>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {getAppointmentType(appointment)}
-                          </p>
-                        </div>
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                            appointment.status
-                          )}`}
-                        >
-                          {appointment.status?.charAt(0).toUpperCase() + appointment.status?.slice(1)}
-                        </span>
-                      </div>
+              // appointments.map((appointment) => (
+              //   <div
+              //     key={appointment.appointment_id}
+              //     className="bg-white border border-gray-200 rounded-2xl hover:border-primary transition-shadow p-6"
+              //   >
+              //     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between">
+              //       {/* Left Section */}
+              //       <div className="flex-1">
+              //         <div className="flex items-start justify-between mb-3">
+              //           <div>
+              //             <h3 className="text-xl font-semibold text-gray-900">
+              //               {getPetName(appointment)}
+              //               <span className="text-gray-500 font-normal text-base ml-2">
+              //                 ({getPetType(appointment)})
+              //               </span>
+              //             </h3>
+              //             <p className="text-sm text-gray-600 mt-1">
+              //               {getAppointmentType(appointment)}
+              //             </p>
+              //           </div>
+              //           <span
+              //             className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+              //               appointment.status
+              //             )}`}
+              //           >
+              //             {appointment.status?.charAt(0).toUpperCase() + appointment.status?.slice(1)}
+              //           </span>
+              //         </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                        <div className="flex items-center text-gray-700">
-                          <FaCalendarAlt className="h-5 w-5 mr-2 text-primary" />
-                          <span className="text-sm">{formatDate(appointment.date)}</span>
-                        </div>
-                        <div className="flex items-center text-gray-700">
-                          <FaClock className="h-5 w-5 mr-2 text-primary" />
-                          <span className="text-sm">{formatTime(appointment.time)}</span>
-                        </div>
-                        <div className="flex items-center text-gray-700">
-                          <FaUser className="h-5 w-5 mr-2 text-primary" />
-                          <span className="text-sm">
-                            {getVeterinarianName(appointment)}
-                          </span>
-                        </div>
-                        <div className="flex items-center text-gray-700">
-                          <FaPhone className="h-5 w-5 mr-2 text-primary" />
-                          <span className="text-sm">
-                            {getClinicPhone(appointment)}
-                          </span>
-                        </div>
-                      </div>
+              //         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+              //           <div className="flex items-center text-gray-700">
+              //             <FaCalendarAlt className="h-5 w-5 mr-2 text-primary" />
+              //             <span className="text-sm">{formatDate(appointment.date)}</span>
+              //           </div>
+              //           <div className="flex items-center text-gray-700">
+              //             <FaClock className="h-5 w-5 mr-2 text-primary" />
+              //             <span className="text-sm">{formatTime(appointment.time)}</span>
+              //           </div>
+              //           <div className="flex items-center text-gray-700">
+              //             <FaUser className="h-5 w-5 mr-2 text-primary" />
+              //             <span className="text-sm">
+              //               {getVeterinarianName(appointment)}
+              //             </span>
+              //           </div>
+              //           <div className="flex items-center text-gray-700">
+              //             <FaPhone className="h-5 w-5 mr-2 text-primary" />
+              //             <span className="text-sm">
+              //               {getClinicPhone(appointment)}
+              //             </span>
+              //           </div>
+              //         </div>
 
-                      <div className="flex items-start text-gray-700 mt-3">
-                        <FaMapMarkerAlt className="h-5 w-5 mr-2 text-primary shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-medium">
-                            {getClinicName(appointment)}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {getClinicAddress(appointment)}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+              //         <div className="flex items-start text-gray-700 mt-3">
+              //           <FaMapMarkerAlt className="h-5 w-5 mr-2 text-primary shrink-0 mt-0.5" />
+              //           <div>
+              //             <p className="text-sm font-medium">
+              //               {getClinicName(appointment)}
+              //             </p>
+              //             <p className="text-sm text-gray-600">
+              //               {getClinicAddress(appointment)}
+              //             </p>
+              //           </div>
+              //         </div>
+              //       </div>
 
-                    {/* Right Section - Actions */}
-                    {activeTab === "upcoming" && (
-                      <div className="flex flex-col space-y-2 mt-4 lg:mt-0 lg:ml-6">
-                        <button 
-                        onClick={() => handleViewDetails(appointment)}
-                        className="px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/80 transition-colors text-sm font-medium"
-                      >
-                          View Details
-                        </button>
-                        {/* <button 
-                        onClick={() => handleRescheduleClick(appointment)}
-                        className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium"
-                      >
-                          Reschedule
-                        </button> */}
-                        <button 
-                          onClick={() => handleCancel(appointment)}
-                          className="px-4 py-2 bg-white text-red-600 border border-red-300 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    )}
+              //       {/* Right Section - Actions */}
+              //       {activeTab === "upcoming" && (
+              //         <div className="flex flex-col space-y-2 mt-4 lg:mt-0 lg:ml-6">
+              //           <button 
+              //           onClick={() => handleViewDetails(appointment)}
+              //           className="px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/80 transition-colors text-sm font-medium"
+              //         >
+              //             View Details
+              //           </button>
+              //           {/* <button 
+              //           onClick={() => handleRescheduleClick(appointment)}
+              //           className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium"
+              //         >
+              //             Reschedule
+              //           </button> */}
+              //           <button 
+              //             onClick={() => handleCancel(appointment)}
+              //             className="px-4 py-2 bg-white text-red-600 border border-red-300 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium"
+              //           >
+              //             Cancel
+              //           </button>
+              //         </div>
+              //       )}
 
-                    {activeTab === "past" && (
-                      <div className="flex flex-col space-y-2 mt-4 lg:mt-0 lg:ml-6">
-                        <button 
-                        onClick={() => handleViewDetails(appointment)}
-                        className="px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/80 transition-colors text-sm font-medium"
-                      >
-                          View Details
-                        </button>
-                        {/* <button 
-                        onClick={() => setRebookModal({ isOpen: true, appointment })}
-                        className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium">
-                          Book Again
-                        </button> */}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))
+              //       {activeTab === "past" && (
+              //         <div className="flex flex-col space-y-2 mt-4 lg:mt-0 lg:ml-6">
+              //           <button 
+              //           onClick={() => handleViewDetails(appointment)}
+              //           className="px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/80 transition-colors text-sm font-medium"
+              //         >
+              //             View Details
+              //           </button>
+              //           {/* <button 
+              //           onClick={() => setRebookModal({ isOpen: true, appointment })}
+              //           className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium">
+              //             Book Again
+              //           </button> */}
+              //         </div>
+              //       )}
+              //     </div>
+              //   </div>
+              // ))
+              <PetOwnerAppointmentTable
+                appointments={appointments}
+                activeTab={activeTab}
+                onViewDetails={handleViewDetails}
+                onCancel={handleCancel}
+                getPetName={getPetName}
+                getPetType={getPetType}
+                getAppointmentType={getAppointmentType}
+                getStatusColor={getStatusColor}
+                formatDate={formatDate}
+                formatTime={formatTime}
+                getVeterinarianName={getVeterinarianName}
+                getClinicPhone={getClinicPhone}
+                getClinicName={getClinicName}
+                getClinicAddress={getClinicAddress}
+              />
             )}
           </div>
         )}

@@ -4,13 +4,13 @@ import { FaCalendarAlt, FaCalendarCheck, FaClock, FaCheckCircle, FaClipboardList
 import NotificationModal from "../../components/NotificationModal";
 import CalendarModal from "../../components/appointments/CalendarModal";
 import AppointmentDetailsModal from "../../components/appointments/AppointmentDetailsModal";
-import VetAppointmentCard from "../../components/appointments/VetAppointmentCard";
 import AppointmentsFilters from "../../components/appointments/AppointmentsFilters";
 import AddHealthRecordModal from "../../components/EHR/AddHealthRecordModal";
 import { useVetAppointments } from "../../hooks/useVetAppointments";
 import { updateAppointmentStatus } from "../../global/api/appointment";
 import { createEHR } from "../../global/api/ehr";
 import Navbar from "../../components/Navbar";
+import VetAppointmentTable from "../../components/appointments/VetAppointmentTable";
 
 export default function VetAppointmentsPage() {
   const { user } = useAuth();
@@ -203,14 +203,11 @@ export default function VetAppointmentsPage() {
               </p>
             </div>
           ) : (
-            filteredAppointments.map((appointment) => (
-              <VetAppointmentCard
-                key={appointment.id}
-                appointment={appointment}
-                onMarkComplete={handleMarkComplete}
-                onViewDetails={handleViewDetails}
-              />
-            ))
+            <VetAppointmentTable
+              appointments={filteredAppointments}
+              onMarkComplete={handleMarkComplete}
+              onViewDetails={handleViewDetails}
+            />
           )}
         </div>
       </div>

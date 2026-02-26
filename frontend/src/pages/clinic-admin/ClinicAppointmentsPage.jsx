@@ -13,6 +13,7 @@ import { fetchAppointmentsByClinic, updateAppointmentStatus, assignVetToAppointm
 import { fetchMyClinic } from "../../global/api/clinicAdmin";
 import { fetchClinicVets } from "../../global/api/clinicAdmin";
 import {ClinicStatusContext} from "../../context/ClinicStatusContext";
+import AppointmentTable from "../../components/appointments/Appointmenttable";
 
 const STATUS_MESSAGES = {
   approved: {
@@ -528,13 +529,13 @@ export default function ClinicAppointmentsPage() {
             </div>
           ) : (
             filteredAppointments.map((appointment) => (
-              <AppointmentCard
-                key={appointment.id}
-                appointment={appointment}
+              <AppointmentTable
+                appointments={filteredAppointments}
                 onStatusChange={handleStatusChange}
                 onComplete={handleCompleteAppointment}
                 onViewDetails={handleViewDetails}
               />
+
             ))
           )}
         </div>
