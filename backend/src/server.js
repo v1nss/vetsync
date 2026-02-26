@@ -11,6 +11,8 @@ import systemAdminRoutes from "./routes/systemAdminRoutes.js";
 import ApprovalLogRoutes from "./routes/approvalLogsRoutes.js";
 import ehrRoutes from "./routes/ehrRoutes.js";
 import clinicPatientRoutes from "./routes/clinicPatientRoutes.js";
+import reportsRoutes from "./routes/reportsRoutes.js";
+import { auditLogger } from "../global/middleware/auditMiddleware.js";
 import testRoute from './routes/testRoute.js'
 
 const app = express();
@@ -22,6 +24,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+app.use(auditLogger);
 
 //user Routes
 app.use("/api/users", userRoutes);
@@ -46,6 +49,9 @@ app.use("/api/approval-logs", ApprovalLogRoutes);
 // EHR Routes
 app.use("/api/ehr", ehrRoutes);
 app.use("/api/clinic-patients", clinicPatientRoutes);
+
+// Reports Routes
+app.use("/api/reports", reportsRoutes);
 
 // app.use('/api', testRoute);
 

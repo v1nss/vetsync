@@ -9,10 +9,8 @@ import PetOwnerModel from "../models/users/petOwnerModel.js";
 
 export const registerUser = async (userData) => {
   const { body, file } = userData;
-  console.log("Received body: ", file);
   // Parse the user JSON sent in form-data
   const user = JSON.parse(body.user);
-  console.log("Parsed user data: ", user);
   const { first_name, last_name, email, password, user_type, phone_number, address, clinic_name } = user;
   // Check if email already exists
   const existing = await User.findOne({ where: { email } });
@@ -164,7 +162,6 @@ export const updateUserProfile = async (req, userId) => {
     if (userProfile && userProfile.id) {
       try {
         await deleteFiles(userProfile.id);
-        console.log(`Deleted old profile picture: ${userProfile.id}`);
       } catch (err) {
         console.error("Error deleting old profile picture:", err.message);
         // Continue with upload even if deletion fails
@@ -306,7 +303,6 @@ export const updateVetProfessional = async (req, vetUserId, adminUserId) => {
     if (userProfile && userProfile.id) {
       try {
         await deleteFiles(userProfile.id);
-        console.log(`Deleted old profile picture: ${userProfile.id}`);
       } catch (err) {
         console.error("Error deleting old profile picture:", err.message);
         // Continue with upload even if deletion fails

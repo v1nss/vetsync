@@ -11,6 +11,7 @@ import ClinicSchedule from "./clinicScheduleModel.js";
 import ClinicPatient from "./clinicPatientModel.js";
 import Appointment from "./appointmentModel.js";
 import ApprovalLog from "./approvalLogsModel.js";
+import AuditLog from "./auditLogModel.js";
 
 // EHR models - imported after Appointment to avoid circular dependency
 import EHR from "./ehrModel.js";
@@ -47,5 +48,6 @@ export {
   Deworming,
   LabResult,
   ApprovalLog,
+  AuditLog,
   syncDB,
 };
