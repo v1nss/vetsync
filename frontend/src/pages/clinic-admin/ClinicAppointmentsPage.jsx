@@ -528,15 +528,12 @@ export default function ClinicAppointmentsPage() {
               <p className="text-gray-600">Try adjusting your filters or search terms</p>
             </div>
           ) : (
-            filteredAppointments.map((appointment) => (
-              <AppointmentTable
-                appointments={filteredAppointments}
-                onStatusChange={handleStatusChange}
-                onComplete={handleCompleteAppointment}
-                onViewDetails={handleViewDetails}
-              />
-
-            ))
+            <AppointmentTable
+              appointments={filteredAppointments}
+              onStatusChange={handleStatusChange}
+              onComplete={handleCompleteAppointment}
+              onViewDetails={handleViewDetails}
+            />
           )}
         </div>
       </div>
