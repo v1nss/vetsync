@@ -22,6 +22,9 @@ venv/
 .idea/
 .vscode/
 
+#Others
+seeders/
+
 # Logs
 logs/
 *.log
