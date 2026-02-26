@@ -11,6 +11,7 @@ import { useVetAppointments } from "../../hooks/useVetAppointments";
 import { updateAppointmentStatus } from "../../global/api/appointment";
 import { createEHR } from "../../global/api/ehr";
 import Navbar from "../../components/Navbar";
+import VetAppointmentTable from "../../components/appointments/VetAppointmentTable";
 
 export default function VetAppointmentsPage() {
   const { user } = useAuth();
@@ -204,9 +205,8 @@ export default function VetAppointmentsPage() {
             </div>
           ) : (
             filteredAppointments.map((appointment) => (
-              <VetAppointmentCard
-                key={appointment.id}
-                appointment={appointment}
+              <VetAppointmentTable
+                appointments={appointments}
                 onMarkComplete={handleMarkComplete}
                 onViewDetails={handleViewDetails}
               />
