@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Sidebar from "../../components/Sidebar";
-import { FaClinicMedical, FaUserMd } from "react-icons/fa";
+import { FaClinicMedical, FaUserMd, FaChartBar } from "react-icons/fa";
 import { IoMenu } from "react-icons/io5";
 import ConfirmationModal from "../../components/ConfirmationModal";
 
@@ -26,6 +26,7 @@ export default function SystemAdminLayout() {
   };
 
   const clinicAdminLinks = [
+    { name: "Dashboard", icon: <FaChartBar />, path: "/system-admin/dashboard" },
     { name: "Clinics Management", icon: <FaClinicMedical />, path: "/system-admin/clinics" },
     { name: "Users Management", icon: <FaUserMd />, path: "/system-admin/users" },
   ];
