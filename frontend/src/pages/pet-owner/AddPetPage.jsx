@@ -86,10 +86,6 @@ const CAT_BREEDS = [
   'Other',
 ];
 
-// ─── All components defined OUTSIDE the page component ───────────────────────
-// (Defining components inside a parent causes them to remount on every render,
-//  which steals focus from inputs after each keystroke.)
-
 const InputField = ({ label, name, value, onChange, error, required, ...props }) => (
   <div>
     <label className={`block text-sm font-medium text-gray-700 mb-2 ${required ? 'label-required' : ''}`}>
@@ -212,7 +208,6 @@ const BreedSelect = ({ species, value, onChange, error, required, disabled }) =>
   );
 };
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AddPetPage() {
   const {token} = useAuth();
   const navigate = useNavigate();
