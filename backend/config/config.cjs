@@ -1,8 +1,6 @@
-import dotenv from "dotenv";
+require("dotenv").config();
 
-dotenv.config();
-
-export default {
+module.exports = {
   development: {
     username: process.env.DB_USER || "postgres",
     password: process.env.DB_PASSWORD || "password",
@@ -19,12 +17,12 @@ export default {
   },
   production: {
     use_env_variable: "PGURL",
-    dialect: "postgres",              
+    dialect: "postgres",
     dialectOptions: {
       ssl: {
         require: true,
-        rejectUnauthorized: false
-      }
-    }
-  }
+        rejectUnauthorized: false,
+      },
+    },
+  },
 };
