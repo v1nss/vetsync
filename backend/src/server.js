@@ -1,7 +1,7 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import { syncDB } from "./models/index.js";
+// import { syncDB } from "./models/index.js";
 import userRoutes from "./routes/userRoutes.js";
 import authRoutes from './routes/authRoutes.js';
 import petRoutes from "./routes/petRoutes.js";
@@ -70,8 +70,8 @@ app.use("/api/reports", reportsRoutes);
 //   res.send("Authentication complete! Tokens saved.");
 // });
 
-syncDB().then(() => {
-  app.listen(port, () => {
-    console.log(`Server listening on port ${port}`);
-  });
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
+
+

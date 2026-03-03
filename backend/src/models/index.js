@@ -21,14 +21,14 @@ import Deworming from "./dewormingModel.js";
 import LabResult from "./labResultModel.js";
 
 // Sync all models with the database
-const syncDB = async () => {
-  try {
-    await sequelize.sync({ alter: true }); // or { force: true } for dev reset // default alter: true
-    console.log("Users Database & tables synced successfully!");
-  } catch (err) {
-    console.error("Error syncing database:", err);
-  }
-};
+// const syncDB = async () => {
+//   try {
+//     await sequelize.sync({ alter: true }); // or { force: true } for dev reset // default alter: true
+//     console.log("Users Database & tables synced successfully!");
+//   } catch (err) {
+//     console.error("Error syncing database:", err);
+//   }
+// };
 
 export {
   sequelize,
@@ -49,5 +49,5 @@ export {
   LabResult,
   ApprovalLog,
   AuditLog,
-  syncDB,
+  // syncDB,
 };
