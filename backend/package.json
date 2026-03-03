@@ -7,6 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
+    "migrate": "sequelize-cli db:migrate",
     "test-email": "node test-email.js",
     "test-email-send": "node test-email.js --send-test",
     "test-brevo": "node test-brevo.js"
