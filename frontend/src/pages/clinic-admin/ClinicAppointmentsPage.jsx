@@ -13,7 +13,7 @@ import { fetchAppointmentsByClinic, updateAppointmentStatus, assignVetToAppointm
 import { fetchMyClinic } from "../../global/api/clinicAdmin";
 import { fetchClinicVets } from "../../global/api/clinicAdmin";
 import {ClinicStatusContext} from "../../context/ClinicStatusContext";
-import AppointmentTable from "../../components/appointments/Appointmenttable";
+import AppointmentTable from "../../components/appointments/AppointmentTable";
 
 const STATUS_MESSAGES = {
   approved: {
