@@ -7,7 +7,7 @@ const isProduction = process.env.NODE_ENV === "production";
 const sequelize = new Sequelize(process.env.PGURL, {
   dialect: "postgres",
   dialectOptions: isProduction
-    ? { ssl: { require: true, rejectUnauthorized: true } }
+    ? { ssl: { require: true, rejectUnauthorized: false } }
     : {},
   logging: isProduction ? false : console.log,
   pool: {

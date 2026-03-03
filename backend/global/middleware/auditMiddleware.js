@@ -1,9 +1,13 @@
 import AuditLog from "../../src/models/auditLogModel.js";
 
 export const auditLogger = (req, res, next) => {
+  if (req.method === "OPTIONS") return next();
+
   const start = Date.now();
 
   res.on("finish", async () => {
+    if (res.statusCode >= 400 && res.statusCode < 500 && !req.user) return;
+
     try {
       await AuditLog.create({
         method: req.method,

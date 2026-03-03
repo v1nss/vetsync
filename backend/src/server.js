@@ -20,15 +20,16 @@ const app = express();
 const port = process.env.PORT || 4000;
 
 // CORS config
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || "http://localhost:5173")
+  .split(",")
+  .map((o) => o.trim());
+
 app.use(cors({
   origin: function(origin, callback) {
-    const allowedOrigins = [
-      "http://localhost:5173",
-      "https://vetsync-business.vercel.app",
-    ];
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.warn(`CORS blocked origin: ${origin}`);
       callback(new Error("Not allowed by CORS"));
     }
   },
@@ -64,9 +65,6 @@ app.use("/api/approval-logs", ApprovalLogRoutes);
 // EHR Routes
 app.use("/api/ehr", ehrRoutes);
 app.use("/api/clinic-patients", clinicPatientRoutes);
-
-// Reports Routes
-app.use("/api/reports", reportsRoutes);
 
 // Reports Routes
 app.use("/api/reports", reportsRoutes);
