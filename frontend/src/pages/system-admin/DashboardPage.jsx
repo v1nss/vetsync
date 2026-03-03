@@ -1,10 +1,12 @@
 import { useState } from "react";
 import UserActivityTab from "../../components/reports/UserActivityTab";
 import AuditTrailTab from "../../components/reports/AuditTrailTab";
+import ClinicPerformanceTab from "../../components/reports/ClinicPerformanceTab";
 
 const TABS = [
   { key: "activity", label: "User Activity Reports" },
   { key: "audit", label: "Audit Trail Reports" },
+  { key: "clinic", label: "Clinic Performance Reports" },
 ];
 
 export default function DashboardPage() {
@@ -46,6 +48,7 @@ export default function DashboardPage() {
       {/* Tab Content */}
       {activeTab === "activity" && <UserActivityTab />}
       {activeTab === "audit" && <AuditTrailTab />}
+      {activeTab === "clinic" && <ClinicPerformanceTab /> }
     </div>
   );
 }

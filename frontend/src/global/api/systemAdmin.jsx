@@ -72,3 +72,13 @@ export const fetchAuditTrail = async (params = {}) => {
     throw err;
   }
 };
+
+export const fetchClinicPerformanceReport = async () => {
+  try {
+    const res = await api.get("/reports/clinic-performance");
+    return res.data;
+  } catch (err) {
+    console.error("Unable to fetch clinic performance report", err);
+    throw err;
+  }
+};

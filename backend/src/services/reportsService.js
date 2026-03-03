@@ -3,6 +3,7 @@ import sequelize from "../../global/config/db.js";
 import Clinic from "../models/clinicModel.js";
 import User from "../models/users/userModel.js";
 import AuditLog from "../models/auditLogModel.js";
+import Appointment from "../models/appointmentModel.js";
 
 export const getUserActivityReport = async () => {
   const clinicStats = await Clinic.findAll({
@@ -146,4 +147,35 @@ export const getAuditTrail = async ({ page = 1, limit = 20, method, url, user_id
     page: parseInt(page, 10),
     totalPages: Math.ceil(count / limit),
   };
+};
+
+
+export const getClinicPerformanceReport = async () => {
+  const result = await Appointment.findAll({
+    where: { status: "completed" },
+    attributes: [
+      [col("Appointment.clinic_id"), "clinic_id"],
+      [fn("COUNT", col("Appointment.appointment_id")), "total_completed_appointments"],
+    ],
+    include: [
+      {
+        model: Clinic,
+        as: "clinic",
+        attributes: ["name"],
+      },
+    ],
+    group: ["Appointment.clinic_id", "clinic.clinic_id", "clinic.name"],
+    order: [[fn("COUNT", col("Appointment.appointment_id")), "DESC"]],
+    raw: true,
+    nest: true,
+  });
+
+  const ranked = result.map((row, index) => ({
+    rank: index + 1,
+    clinic_id: row.clinic_id,
+    clinic_name: row.clinic.name,
+    total_completed_appointments: parseInt(row.total_completed_appointments, 10),
+  }));
+
+  return { clinics: ranked };
 };
