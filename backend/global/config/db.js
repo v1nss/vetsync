@@ -2,27 +2,21 @@ import { Sequelize } from "sequelize";
 import dotenv from "dotenv";
 dotenv.config();
 
-// prod sequelize pg db config
-const sequelize = new Sequelize(
-  process.env.PGURL,
-  {
-    host: process.env.PGHOST,
-    port: process.env.PGPORT,
-    dialect: "postgres",
-    dialectOptions: {
-    ssl: {
-        require: true,
-        rejectUnauthorized: false
-      }
-    },
-    logging: false,
-    pool: {
-      max: 10,        // maximum number of connections
-      min: 0,
-      acquire: 30000, // wait 30s before throwing error
-      idle: 10000,    // close idle connections after 10s
-    },
-  }
-);
+const isProduction = process.env.NODE_ENV === "production";
+
+const sequelize = new Sequelize(process.env.PGURL, {
+  dialect: "postgres",
+  dialectOptions: isProduction
+    ? { ssl: { require: true, rejectUnauthorized: true } }
+    : {},
+  logging: isProduction ? false : console.log,
+  pool: {
+    max: isProduction ? 10 : 5,
+    min: 2,
+    acquire: 30000,
+    idle: 10000,
+  },
+  retry: { max: 3 },
+});
 
 export default sequelize;
