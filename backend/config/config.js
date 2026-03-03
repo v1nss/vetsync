@@ -18,8 +18,8 @@ export default {
     dialect: "postgres",
   },
   production: {
-    use_env_variable: "DATABASE_URL", // Railway provides this
-    dialect: "postgres",               // <- required
+    use_env_variable: process.env.PGURL, 
+    dialect: "postgres",              
     dialectOptions: {
       ssl: {
         require: true,
