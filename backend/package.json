@@ -8,7 +8,7 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "migrate": "sequelize-cli db:migrate",
-    "migrate:prod": "sequelize-cli db:migrate --env production",
+    "migrate:prod": "node scripts/test-db.cjs && sequelize-cli db:migrate --env production",
     "test-email": "node test-email.js",
     "test-email-send": "node test-email.js --send-test",
     "test-brevo": "node test-brevo.js"
