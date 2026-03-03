@@ -20,7 +20,10 @@ const app = express();
 const port = process.env.PORT || 4000;
 
 // CORS config
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || "http://localhost:5173")
+const allowedOrigins = (
+  process.env.ALLOWED_ORIGINS ||
+  "http://localhost:5173,https://vetsync-business.vercel.app"
+)
   .split(",")
   .map((o) => o.trim());
 
