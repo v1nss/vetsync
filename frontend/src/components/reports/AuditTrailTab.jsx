@@ -277,6 +277,8 @@ export default function AuditTrailTab() {
                   </p>
                   <div className="flex items-center justify-between text-xs text-gray-500">
                     <span>{log.user_email || "Anonymous"}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-gray-500">
                     <span>
                       {new Date(log.createdAt).toLocaleString()}
                     </span>
@@ -289,7 +291,7 @@ export default function AuditTrailTab() {
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-end">
+      <div className="flex justify-center md:justify-end max-w-full">
         <Pagination
           currentPage={page}
           totalPages={totalPages}
