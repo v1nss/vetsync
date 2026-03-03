@@ -7,6 +7,85 @@ import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import NotificationModal from '../../components/NotificationModal';
 
+// ─── Breed Data ───────────────────────────────────────────────────────────────
+const DOG_BREEDS = [
+  'Aspin (Asong Pinoy)',
+  'Labrador Retriever',
+  'German Shepherd',
+  'Golden Retriever',
+  'French Bulldog',
+  'Bulldog',
+  'Poodle',
+  'Beagle',
+  'Rottweiler',
+  'Yorkshire Terrier',
+  'Dachshund',
+  'Siberian Husky',
+  'Doberman Pinscher',
+  'Australian Shepherd',
+  'Boxer',
+  'Cavalier King Charles Spaniel',
+  'Shih Tzu',
+  'Great Dane',
+  'Miniature Schnauzer',
+  'Pembroke Welsh Corgi',
+  'Border Collie',
+  'Cocker Spaniel',
+  'Chihuahua',
+  'Pomeranian',
+  'Maltese',
+  'Bichon Frise',
+  'Boston Terrier',
+  'Shetland Sheepdog',
+  'Havanese',
+  'Basenji',
+  'Weimaraner',
+  'Vizsla',
+  'Akita',
+  'Chow Chow',
+  'Samoyed',
+  'Alaskan Malamute',
+  'Saint Bernard',
+  'Bernese Mountain Dog',
+  'Irish Setter',
+  'Dalmatian',
+  'Other',
+];
+
+const CAT_BREEDS = [
+  'Puspin (Pusang Pinoy)',
+  'Persian',
+  'Maine Coon',
+  'Ragdoll',
+  'Bengal',
+  'Siamese',
+  'Abyssinian',
+  'British Shorthair',
+  'Scottish Fold',
+  'American Shorthair',
+  'Russian Blue',
+  'Norwegian Forest Cat',
+  'Sphynx',
+  'Devon Rex',
+  'Cornish Rex',
+  'Birman',
+  'Tonkinese',
+  'Burmese',
+  'Exotic Shorthair',
+  'Oriental Shorthair',
+  'Turkish Angora',
+  'Balinese',
+  'Himalayan',
+  'Manx',
+  'Japanese Bobtail',
+  'Savannah',
+  'Chartreux',
+  'Occicat',
+  'Somali',
+  'Selkirk Rex',
+  'Other',
+];
+
 const InputField = ({ label, name, value, onChange, error, required, ...props }) => (
   <div>
     <label className={`block text-sm font-medium text-gray-700 mb-2 ${required ? 'label-required' : ''}`}>
@@ -62,6 +141,73 @@ const ButtonGroup = ({ options, name, required, formData, handleChange, errors }
   </div>
 );
 
+const BreedSelect = ({ species, value, onChange, error, required, disabled }) => {
+  const breeds = species === 'dog' ? DOG_BREEDS : species === 'cat' ? CAT_BREEDS : [];
+  const knownBreeds = breeds.slice(0, -1); // exclude 'Other'
+  const isCustomValue = value && value !== 'Other' && !knownBreeds.includes(value);
+  const dropdownValue = !value
+    ? ''
+    : knownBreeds.includes(value)
+    ? value
+    : breeds.length > 0
+    ? 'Other'
+    : '';
+
+  const handleDropdownChange = (e) => {
+    onChange({ target: { name: 'breed', value: e.target.value } });
+  };
+
+  const handleCustomChange = (e) => {
+    onChange({ target: { name: 'breed', value: e.target.value } });
+  };
+
+  return (
+    <div>
+      <label className={`block text-sm font-medium text-gray-700 mb-2 ${required ? 'label-required' : ''}`}>
+        Breed
+      </label>
+
+      {!species ? (
+        <div className="w-full text-sm px-4 py-3 border border-gray-200 bg-gray-50 text-gray-400 rounded-2xl cursor-not-allowed">
+          Please select a species first
+        </div>
+      ) : (
+        <>
+          <select
+            value={dropdownValue}
+            onChange={handleDropdownChange}
+            disabled={disabled}
+            className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl bg-white appearance-none cursor-pointer"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 1rem center',
+            }}
+          >
+            <option value="" disabled>Select a {species} breed</option>
+            {breeds.map((breed) => (
+              <option key={breed} value={breed}>{breed}</option>
+            ))}
+          </select>
+
+          {(dropdownValue === 'Other' || isCustomValue) && (
+            <input
+              type="text"
+              value={isCustomValue ? value : ''}
+              onChange={handleCustomChange}
+              placeholder="Enter breed name"
+              disabled={disabled}
+              className="focus:outline-none w-full text-sm px-4 py-3 border border-gray-300 rounded-2xl mt-2"
+            />
+          )}
+        </>
+      )}
+
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+    </div>
+  );
+};
+
 export default function AddPetPage() {
   const {token} = useAuth();
   const navigate = useNavigate();
@@ -93,6 +239,12 @@ export default function AddPetPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    // Reset breed when species changes
+    if (name === 'species') {
+      setFormData(prev => ({ ...prev, species: value, breed: '' }));
+      setErrors(prev => ({ ...prev, species: '', breed: '' }));
+      return;
+    }
     setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
@@ -143,7 +295,7 @@ export default function AddPetPage() {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = 'Pet name is required';
     if (!formData.species) newErrors.species = 'Species is required';
-    if (!formData.breed.trim()) newErrors.breed = 'Breed is required';
+    if (!formData.breed.trim() || formData.breed === 'Other') newErrors.breed = 'Please specify a breed';
     if (!formData.gender) newErrors.gender = 'Gender is required';
     if (!formData.weight.trim()) newErrors.weight = 'Weight is required';
     if (!petProfile) newErrors.image = 'Pet photo is required';
@@ -249,8 +401,15 @@ export default function AddPetPage() {
               formData={formData}
               handleChange={handleChange}
               errors={errors}
-            />            
-            <InputField label="Breed" name="breed" value={formData.breed} onChange={handleChange} error={errors.breed} required placeholder="Enter breed" disabled={isSubmitting} />
+            />
+            <BreedSelect
+              species={formData.species}
+              value={formData.breed}
+              onChange={handleChange}
+              error={errors.breed}
+              required
+              disabled={isSubmitting}
+            />
             <InputField label="Color" name="color" value={formData.color} onChange={handleChange} placeholder="e.g., Golden, Black & White" disabled={isSubmitting} />
             <ButtonGroup 
               name="gender" 
@@ -352,8 +511,15 @@ export default function AddPetPage() {
                   formData={formData}
                   handleChange={handleChange}
                   errors={errors}
-                />                
-                <InputField label="Breed" name="breed" value={formData.breed} onChange={handleChange} error={errors.breed} required placeholder="Enter breed" disabled={isSubmitting} />
+                />
+                <BreedSelect
+                  species={formData.species}
+                  value={formData.breed}
+                  onChange={handleChange}
+                  error={errors.breed}
+                  required
+                  disabled={isSubmitting}
+                />
                 <InputField label="Color" name="color" value={formData.color} onChange={handleChange} placeholder="e.g., Golden, Black & White" disabled={isSubmitting} />
                 <ButtonGroup 
                   name="gender" 

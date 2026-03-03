@@ -11,6 +11,7 @@ import ClinicSchedule from "./clinicScheduleModel.js";
 import ClinicPatient from "./clinicPatientModel.js";
 import Appointment from "./appointmentModel.js";
 import ApprovalLog from "./approvalLogsModel.js";
+import AuditLog from "./auditLogModel.js";
 
 // EHR models - imported after Appointment to avoid circular dependency
 import EHR from "./ehrModel.js";
@@ -20,14 +21,14 @@ import Deworming from "./dewormingModel.js";
 import LabResult from "./labResultModel.js";
 
 // Sync all models with the database
-const syncDB = async () => {
-  try {
-    await sequelize.sync({ alter: true }); // or { force: true } for dev reset // default alter: true
-    console.log("Users Database & tables synced successfully!");
-  } catch (err) {
-    console.error("Error syncing database:", err);
-  }
-};
+// const syncDB = async () => {
+//   try {
+//     await sequelize.sync({ alter: true }); // or { force: true } for dev reset // default alter: true
+//     console.log("Users Database & tables synced successfully!");
+//   } catch (err) {
+//     console.error("Error syncing database:", err);
+//   }
+// };
 
 export {
   sequelize,
@@ -47,5 +48,6 @@ export {
   Deworming,
   LabResult,
   ApprovalLog,
-  syncDB,
+  AuditLog,
+  // syncDB,
 };

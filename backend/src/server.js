@@ -1,7 +1,6 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import { syncDB } from "./models/index.js";
 import userRoutes from "./routes/userRoutes.js";
 import authRoutes from './routes/authRoutes.js';
 import petRoutes from "./routes/petRoutes.js";
@@ -11,10 +10,12 @@ import systemAdminRoutes from "./routes/systemAdminRoutes.js";
 import ApprovalLogRoutes from "./routes/approvalLogsRoutes.js";
 import ehrRoutes from "./routes/ehrRoutes.js";
 import clinicPatientRoutes from "./routes/clinicPatientRoutes.js";
+import reportsRoutes from "./routes/reportsRoutes.js";
+import { auditLogger } from "../global/middleware/auditMiddleware.js";
+
 import dotenv from "dotenv";
 
 dotenv.config();
-
 const app = express();
 const port = process.env.PORT || 4000;
 
@@ -38,6 +39,7 @@ app.use(cors({
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(auditLogger);
 
 //user Routes
 app.use("/api/users", userRoutes);
@@ -63,25 +65,14 @@ app.use("/api/approval-logs", ApprovalLogRoutes);
 app.use("/api/ehr", ehrRoutes);
 app.use("/api/clinic-patients", clinicPatientRoutes);
 
-// app.use('/api', testRoute);
+// Reports Routes
+app.use("/api/reports", reportsRoutes);
 
-// // app.use("/api")
-// import { getAuthUrl, getToken } from "../global/config/oauth.js";
+// Reports Routes
+app.use("/api/reports", reportsRoutes);
 
-// app.get("/", (req, res) => {
-//   res.redirect(getAuthUrl());
-// });
-
-// app.get("/oauth2callback", async (req, res) => {
-//   const code = req.query.code;
-//   const tokens = await getToken(code);
-
-//   console.log("TOKENS:", tokens);
-//   res.send("Authentication complete! Tokens saved.");
-// });
-
-syncDB().then(() => {
-  app.listen(port, () => {
-    console.log(`Server listening on port ${port}`);
-  });
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
+
+

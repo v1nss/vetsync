@@ -17,6 +17,7 @@ import SettingsPage from "../pages/pet-owner/SettingsPage";
 import VetAppointmentPage from "../pages/vet-pro/VetAppointmentsPage";
 import ClinicsManagementPage from "../pages/system-admin/ClinicsManagementPage";
 import UserManagementPage from "../pages/system-admin/UserManagementPage";
+import DashboardPage from "../pages/system-admin/DashboardPage";
 import RegisterClinicPage from "../pages/clinic-admin/RegisterClinicPage";
 import RegisterVetProPage from "../pages/clinic-admin/RegisterVetProPage";
 import AddPetPage from "../pages/pet-owner/AddPetPage";
@@ -117,7 +118,7 @@ const HomePageRoute = () => {
         case "vet_professional":
             return <Navigate to="/vet/appointments" replace />;
         case "system_admin":
-            return <Navigate to="/system-admin/clinics" replace />;
+            return <Navigate to="/system-admin/dashboard" replace />;
         default:
             return <Navigate to="/unauthorized" replace />;
     }
@@ -192,7 +193,8 @@ const AppRoutes = () => (
             {/* System Admin Routes */}
             <Route path="/system-admin" element={<SystemAdminRoute />}> 
                 <Route element={<SystemAdminLayout />}>
-                    <Route index element={<Navigate to="clinics" replace />} />
+                    <Route index element={<Navigate to="dashboard" replace />} />
+                    <Route path="dashboard" element={<DashboardPage />} />
                     <Route path="clinics" element={<ClinicsManagementPage />} />
                     <Route path="users" element={<UserManagementPage />} />
                 </Route>

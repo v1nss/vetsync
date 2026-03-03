@@ -52,3 +52,33 @@ export const fetchAllUsers = async () => {
     throw err;
   }
 };
+
+export const fetchUserActivityReport = async () => {
+  try {
+    const res = await api.get("/reports/user-activity");
+    return res.data;
+  } catch (err) {
+    console.error("Unable to fetch user activity report", err);
+    throw err;
+  }
+};
+
+export const fetchAuditTrail = async (params = {}) => {
+  try {
+    const res = await api.get("/reports/audit-trail", { params });
+    return res.data;
+  } catch (err) {
+    console.error("Unable to fetch audit trail", err);
+    throw err;
+  }
+};
+
+export const fetchClinicPerformanceReport = async () => {
+  try {
+    const res = await api.get("/reports/clinic-performance");
+    return res.data;
+  } catch (err) {
+    console.error("Unable to fetch clinic performance report", err);
+    throw err;
+  }
+};
