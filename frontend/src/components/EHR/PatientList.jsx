@@ -132,6 +132,14 @@ export default function PatientList({ patients, onSelect, searchTerm, setSearchT
                         <span className="truncate">{patient.owner.name}</span>
                       </div>
                     )}
+                    {patient.appointmentCount != null && (
+                      <div className="flex items-center gap-1">
+                        <span className="font-medium">Appointments:</span>
+                        <span className="px-1.5 py-0.5 bg-primary/10 text-primary rounded-full text-[10px] font-semibold">
+                          {patient.appointmentCount}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <FiChevronRight className="text-gray-400 mt-2 group-hover:text-primary transition" />

@@ -1,4 +1,5 @@
 import { Op } from "sequelize";
+import sequelize from "../../global/config/db.js";
 import ClinicPatient from "../models/clinicPatientModel.js";
 import Pet from "../models/petModel.js";
 import User from "../models/users/userModel.js";
@@ -33,12 +34,30 @@ export const getClinicPatients = async (clinicId) => {
     order: [["createdAt", "DESC"]],
   });
 
-  // Transform to include PetOwner address information
+  // Get appointment counts per pet for this clinic in a single query
+  const petIds = patients.map(cp => cp.pet?.pet_id).filter(Boolean);
+  const appointmentCounts = petIds.length > 0
+    ? await Appointment.findAll({
+        where: { pet_id: { [Op.in]: petIds }, clinic_id: clinicId },
+        attributes: [
+          "pet_id",
+          [sequelize.fn("COUNT", sequelize.col("appointment_id")), "appointmentCount"],
+        ],
+        group: ["pet_id"],
+        raw: true,
+      })
+    : [];
+
+  const countMap = {};
+  appointmentCounts.forEach((ac) => {
+    countMap[ac.pet_id] = parseInt(ac.appointmentCount, 10);
+  });
+
+  // Transform to include PetOwner address and appointment count
   const transformedPatients = await Promise.all(
     patients.map(async (cp) => {
       const pet = cp.pet;
       if (pet && pet.owner_id && pet.owner) {
-        // Get PetOwner address
         const petOwner = await PetOwner.findOne({
           where: { user_id: pet.owner_id },
           attributes: ["address"],
@@ -48,9 +67,16 @@ export const getClinicPatients = async (clinicId) => {
           pet.owner.petOwner = { address: petOwner.address };
         }
       }
+
+      cp.dataValues.appointmentCount = countMap[pet?.pet_id] || 0;
       return cp;
     })
   );
+
+  // Sort by appointment count descending (most appointments first)
+  transformedPatients.sort((a, b) => {
+    return (b.dataValues.appointmentCount || 0) - (a.dataValues.appointmentCount || 0);
+  });
 
   return transformedPatients;
 };

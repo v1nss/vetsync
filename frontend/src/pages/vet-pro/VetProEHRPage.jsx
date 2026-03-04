@@ -34,24 +34,25 @@ export default function VetProEHRPage() {
               dateOfBirth: pet?.birthdate || null,
               profileURL: pet?.profileURL || null,
               owner: {
-                id: owner?.id, // Add owner ID
+                id: owner?.id,
                 name: owner ? `${owner.first_name} ${owner.last_name}` : "Unknown",
                 email: owner?.email || "",
                 phone: owner?.phone_number || "",
                 address: petOwner?.address || "",
               },
-              clinic_id: cp.clinic_id, // Add clinic_id
-              // Calculate age
+              clinic_id: cp.clinic_id,
+              appointmentCount: cp.appointmentCount || 0,
               age: pet?.birthdate ? calculateAge(pet.birthdate) : "Unknown",
-              weight: "N/A", // Not available in current data
-              lastVisit: "N/A", // Can be calculated from EHR records
+              weight: "N/A",
+              lastVisit: "N/A",
               registration: cp.createdAt ? new Date(cp.createdAt).toLocaleDateString() : "N/A",
               nextAppointment: "N/A",
               primaryVet: "N/A",
               status: "Active",
             };
           });
-          
+
+          transformedPatients.sort((a, b) => b.appointmentCount - a.appointmentCount);
           setPatients(transformedPatients);
         } else {
           setPatients([]);

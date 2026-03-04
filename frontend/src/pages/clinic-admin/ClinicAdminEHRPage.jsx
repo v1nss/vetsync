@@ -32,13 +32,14 @@ export default function ClinicAdminEHRPage() {
             dateOfBirth: pet?.birthdate || null,
             profileURL: pet?.profileURL || null,
             owner: {
-              id: owner?.id, // Add owner ID
+              id: owner?.id,
               name: owner ? `${owner.first_name} ${owner.last_name}` : "Unknown",
               email: owner?.email || "",
               phone: owner?.phone_number || "",
               address: petOwner?.address || "",
             },
-            clinic_id: cp.clinic_id, // Add clinic_id
+            clinic_id: cp.clinic_id,
+            appointmentCount: cp.appointmentCount || 0,
             age: pet?.birthdate ? calculateAge(pet.birthdate) : "Unknown",
             weight: "N/A",
             lastVisit: "N/A",
@@ -51,6 +52,7 @@ export default function ClinicAdminEHRPage() {
           };
         });
 
+        transformedPatients.sort((a, b) => b.appointmentCount - a.appointmentCount);
         setPatients(transformedPatients);
       } else {
         setPatients([]);
