@@ -151,29 +151,30 @@ export const getAuditTrail = async ({ page = 1, limit = 20, method, url, user_id
 
 
 export const getClinicPerformanceReport = async () => {
-  const result = await Appointment.findAll({
-    where: { status: "completed" },
+  const result = await Clinic.findAll({
     attributes: [
-      [col("Appointment.clinic_id"), "clinic_id"],
-      [fn("COUNT", col("Appointment.appointment_id")), "total_completed_appointments"],
+      "clinic_id",
+      "name",
+      [fn("COUNT", col("appointments.appointment_id")), "total_completed_appointments"],
     ],
     include: [
       {
-        model: Clinic,
-        as: "clinic",
-        attributes: ["name"],
+        model: Appointment,
+        as: "appointments",
+        attributes: [],
+        where: { status: "completed" },
+        required: false,
       },
     ],
-    group: ["Appointment.clinic_id", "clinic.clinic_id", "clinic.name"],
-    order: [[fn("COUNT", col("Appointment.appointment_id")), "DESC"]],
+    group: ["Clinic.clinic_id", "Clinic.name"],
+    order: [[fn("COUNT", col("appointments.appointment_id")), "DESC"]],
     raw: true,
-    nest: true,
   });
 
   const ranked = result.map((row, index) => ({
     rank: index + 1,
     clinic_id: row.clinic_id,
-    clinic_name: row.clinic.name,
+    clinic_name: row.name,
     total_completed_appointments: parseInt(row.total_completed_appointments, 10),
   }));
 

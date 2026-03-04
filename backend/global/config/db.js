@@ -4,12 +4,16 @@ dotenv.config();
 
 const isProduction = process.env.NODE_ENV === "production";
 
-const sequelize = new Sequelize(process.env.PGURL, {
+const dbUrl =
+  process.env.PGURL ||
+  `postgres://${process.env.DB_USER || "postgres"}:${process.env.DB_PASSWORD || "password"}@${process.env.DB_HOST || "localhost"}:${process.env.DB_PORT || 5432}/${process.env.DB_DATABASE || "vetsync_dev"}`;
+
+const sequelize = new Sequelize(dbUrl, {
   dialect: "postgres",
   dialectOptions: isProduction
     ? { ssl: { require: true, rejectUnauthorized: false } }
     : {},
-  logging: isProduction ? false : console.log,
+  logging: false,
   pool: {
     max: isProduction ? 10 : 5,
     min: 2,
