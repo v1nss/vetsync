@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { FiChevronLeft, FiPlus } from "react-icons/fi";
+import { FiChevronLeft, FiPlus, FiDownload} from "react-icons/fi";
 import { RiMicroscopeLine, RiSyringeLine } from "react-icons/ri";
 import { FaPrescription, FaPills } from "react-icons/fa";
 import HealthRecordsTable from "./HealthRecordsTable";
@@ -9,8 +9,9 @@ import AddHealthRecordModalNoAppointment from "./AddHealthRecordModalNoAppointme
 import NotificationModal from "../NotificationModal";
 import { getVetClinicEHRs, getVetClinicPatient } from "../../global/api/clinicPatient";
 import { fetchAppointmentsByClinic } from "../../global/api/appointment";
+import { downloadPatientReport } from "../../global/api/clinicAdmin.jsx";
 
-export default function PatientProfile({ patient, onBack, healthRecords }) {
+export default function PatientProfile({ patient, onBack }) {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [displayHealthRecords, setDisplayHealthRecords] = useState([]);
@@ -34,10 +35,10 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
   // Fetch pet details and calculate medical summary
   useEffect(() => {
     const fetchPetDetailsAndSummary = async () => {
-      if (patient && patient.pet_id && patient.clinic_id) {
+      if (patient && patient.id && patient.clinic_id) {
         try {
           // Fetch pet details including weight, color, and profileURL
-          const petRes = await getVetClinicPatient(patient.pet_id);
+          const petRes = await getVetClinicPatient(patient.id);
           if (petRes && petRes.patient && petRes.patient.pet) {
             const pet = petRes.patient.pet;
             setPetDetails({
@@ -54,7 +55,7 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
             const appointmentsRes = await fetchAppointmentsByClinic(patient.clinic_id);
             if (appointmentsRes && appointmentsRes.appointments) {
               const petAppointments = appointmentsRes.appointments.filter(
-                apt => apt.pet_id === patient.pet_id && 
+                apt => apt.pet_id === patient.id && 
                 (apt.status === 'approved' || apt.status === 'pending' || apt.status === 'confirmed')
               );
               
@@ -106,7 +107,7 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
   // Fetch EHR records for this pet from the clinic (using clinic_patients as reference)
   useEffect(() => {
     const fetchEHRRecords = async () => {
-      if (patient && patient.pet_id) {
+      // if (patient && patient.id) {
         setLoadingRecords(true);
         try {
           // Fetch all EHRs for the clinic
@@ -114,7 +115,7 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
           console.log(res)
           if (res && res.ehrs) {
             // Filter EHRs for this specific pet
-            const petEHRs = res.ehrs.filter(ehr => ehr.pet_id === patient.pet_id);
+            const petEHRs = res.ehrs.filter(ehr => ehr.pet_id === patient.id);
             
             // Calculate last visit and primary vet from EHR records
             // Also get weight and color from pet data in EHR if available
@@ -241,15 +242,10 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
         } finally {
           setLoadingRecords(false);
         }
-      } else {
-        // Fallback to mock data if no pet_id
-        setDisplayHealthRecords(healthRecords);
-        setLoadingRecords(false);
-      }
     };
 
     fetchEHRRecords();
-  }, [patient, healthRecords]);
+  }, [patient]);
 
   // Filter records by category
   const filteredRecords = useMemo(() => {
@@ -358,6 +354,43 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
     }
   };
 
+  const payload = {
+    clinicName: displayHealthRecords[0]?.clinic_name || "Veterinary Clinic",
+    petId: patient.id,
+    petName: patient.name,
+    species: patient.species,
+    breed: patient.breed,
+    gender: patient.gender,
+    birthdate: patient.dateOfBirth,
+    weight: patient.weight,
+    age: patient.age,
+    owner: {
+      name: patient.owner.name,
+      email: patient.owner.email,
+      phone: patient.owner.phone,
+      address: patient.owner.address
+    },
+    registration: patient.registration,
+    appointmentCount: patient.appointmentCount,
+  }
+
+  const handleDownload = async (patientData) => {
+    try {
+      const blob = await downloadPatientReport(patientData);
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `patient-${patientData.petId || "report"}.pdf`;
+      link.click();
+
+      URL.revokeObjectURL(url); // clean up memory
+    } catch (err) {
+      console.error("Download failed", err);
+    }
+  };
+
+
   const petForModal = {
     name: patient.name,
     species: patient.species,
@@ -376,6 +409,13 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
             >
               <FiChevronLeft />
               <span className="text-2xl font-bold capitalize text-gray-900">{patient.name}'s Health Record</span>
+            </button>
+            <button
+              onClick={() => handleDownload(payload)}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium"
+            >
+              <FiDownload className="w-4 h-4" />
+              <span className="hidden sm:inline">Download Report</span>
             </button>
           </div>
         </div>
@@ -605,7 +645,7 @@ export default function PatientProfile({ patient, onBack, healthRecords }) {
         <AddHealthRecordModalNoAppointment
           patient={{
             ...patient,
-            pet_id: patient.pet_id || patient.id,
+            pet_id: patient.id,
             clinic_id: patient.clinic_id,
             owner: patient.owner ? {
               id: patient.owner.id,

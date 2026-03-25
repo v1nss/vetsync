@@ -1,4 +1,5 @@
 import { getUserActivityReport, getAuditTrail, getClinicPerformanceReport } from "../services/reportsService.js";
+import { generatePDFReport } from "../../global/utils/pdfGenerator.js";
 
 export const fetchUserActivityReport = async (req, res) => {
   try {
@@ -29,5 +30,20 @@ export const fetchClinicPerformanceReport = async (req, res) => {
   } catch (err) {
     console.error("Error fetching clinic performance report:", err.message);
     res.status(500).json({ error: err.message });
+  }
+};
+
+export const downloadPatientReport = async (req, res) => {
+  try {
+    const buffer = await generatePDFReport(req.body, "patient");
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="patient-${req.body.petId || "report"}.pdf"`);
+    res.setHeader("Content-Length", buffer.length);
+
+    res.status(200).send(buffer);
+  } catch (err) {
+    console.error("Failed to generate patient report", err);
+    res.status(500).json({ message: "Failed to generate report" });
   }
 };

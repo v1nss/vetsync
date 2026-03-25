@@ -14,7 +14,7 @@ export default function ClinicAdminEHRPage() {
     try {
       setLoading(true);
       const res = await getVetClinicPatients();
-
+      console.log("Fetched clinic patients:", res);
       if (res && res.patients) {
         const transformedPatients = res.patients.map(cp => {
           const pet = cp.pet;
@@ -22,8 +22,7 @@ export default function ClinicAdminEHRPage() {
           const petOwner = owner?.petOwner;
 
           return {
-            id: pet?.pet_id?.toString() || cp.id?.toString(),
-            pet_id: pet?.pet_id,
+            id: pet?.pet_id,
             name: pet?.name || "Unknown",
             species: pet?.species || "Unknown",
             breed: pet?.breed || "Unknown",
@@ -41,7 +40,7 @@ export default function ClinicAdminEHRPage() {
             clinic_id: cp.clinic_id,
             appointmentCount: cp.appointmentCount || 0,
             age: pet?.birthdate ? calculateAge(pet.birthdate) : "Unknown",
-            weight: "N/A",
+            weight: pet?.weight || "Unknown",
             lastVisit: "N/A",
             registration: cp.createdAt
               ? new Date(cp.createdAt).toLocaleDateString()
