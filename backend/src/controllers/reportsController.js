@@ -38,12 +38,27 @@ export const downloadPatientReport = async (req, res) => {
     const buffer = await generatePDFReport(req.body, "patient");
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="patient-${req.body.petId || "report"}.pdf"`);
+    res.setHeader("Content-Disposition", `attachment; filename="patient-${req.body.petName || "report"}.pdf"`);
     res.setHeader("Content-Length", buffer.length);
 
     res.status(200).send(buffer);
   } catch (err) {
     console.error("Failed to generate patient report", err);
+    res.status(500).json({ message: "Failed to generate report" });
+  }
+};
+
+export const downloadClinicReport = async (req, res) => {
+  try {
+    const buffer = await generatePDFReport(req.body, "clinic");
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="clinic-${req.body.clinicId || "report"}.pdf"`);
+    res.setHeader("Content-Length", buffer.length);
+
+    res.status(200).send(buffer);
+  } catch (err) {
+    console.error("Failed to generate clinic report", err);
     res.status(500).json({ message: "Failed to generate report" });
   }
 };

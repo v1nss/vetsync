@@ -178,7 +178,7 @@ async function generateClinicReport(pdfDoc, fonts, reportData) {
     color: COLORS.rowAlt, borderRadius: 6, borderColor: COLORS.border, borderWidth: 0.8,
   });
 
-  const icon = "⚙"; // placeholder symbol
+  const icon = "?"; // placeholder symbol
   drawText(page, icon,                        { x: MARGIN + CONTENT_W / 2 - 10, y: y - 30,  size: 24, font: fonts.bold,    color: COLORS.muted });
   drawText(page, "Clinic Report – Coming Soon", { x: MARGIN + CONTENT_W / 2 - 70, y: y - 68,  size: 14, font: fonts.bold,    color: COLORS.primary });
   drawText(page, "This section is reserved for clinic-level analytics.", { x: MARGIN + 60, y: y - 96,  size: 10, font: fonts.regular, color: COLORS.muted });
@@ -215,7 +215,7 @@ export const generatePDFReport = async (reportData, reportType) => {
 
   const fonts = await loadFonts(pdfDoc);
 
-  switch (reportType?.toLowerCase()) {
+  switch (reportType) {
     case "patient":
       await generatePatientReport(pdfDoc, fonts, reportData);
       break;

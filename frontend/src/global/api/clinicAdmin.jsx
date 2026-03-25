@@ -149,9 +149,35 @@ export const downloadPatientReport = async (patientData) => {
     }, {
       responseType: 'blob',
     });
-    return res.data;
+
+    const disposition = res.headers['Content-Disposition'];
+
+    let filename = `Patient-${patientData.petName || "Report"}.pdf`;
+
+    if (disposition) {
+      const match = disposition.match(/filename="(.+)"/);
+      if (match) filename = match[1];
+    }
+
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
   } catch (err) {
     console.error("Unable to download patient report", err);
+    throw err;
+  }
+}
+
+export const downloadClinicReport = async () => {
+  try {
+    const res = await api.get('/reports/clinic', {
+      responseType: 'blob',
+    });
+    return res.data;
+  } catch (err) {
+    console.error("Unable to download clinic report", err);
     throw err;
   }
 }

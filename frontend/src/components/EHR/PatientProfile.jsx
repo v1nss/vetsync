@@ -325,8 +325,6 @@ export default function PatientProfile({ patient, onBack }) {
       // TODO: Replace with actual API call
       // const savedRecord = await saveHealthRecord(newRecord);
       
-      console.log("Saving health record:", newRecord);
-      
       // Update local state
       setDisplayHealthRecords(prev => [newRecord, ...prev]);
       
@@ -389,7 +387,6 @@ export default function PatientProfile({ patient, onBack }) {
       console.error("Download failed", err);
     }
   };
-
 
   const petForModal = {
     name: patient.name,
