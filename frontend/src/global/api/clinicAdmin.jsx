@@ -150,16 +150,18 @@ export const downloadPatientReport = async (patientData) => {
       responseType: 'blob',
     });
 
-    const disposition = res.headers['Content-Disposition'];
+    const disposition = res.headers['content-disposition'];
 
     let filename = `Patient-${patientData.petName || "Report"}.pdf`;
 
     if (disposition) {
-      const match = disposition.match(/filename="(.+)"/);
-      if (match) filename = match[1];
+      const match = disposition?.match(/filename\*?=(?:UTF-8'')?["']?([^"';]+)/i);
+      if (match) filename = decodeURIComponent(match[1]);
     }
 
-    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const url = URL.createObjectURL(
+      new Blob([res.data], { type: "application/pdf" })
+    );
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
@@ -177,21 +179,23 @@ export const downloadClinicReport = async (clinicId) => {
     { responseType: "blob" }
   );
 
-    const disposition = res.headers['Content-Disposition'];
+    const disposition = res.headers['content-disposition'];
 
     let filename = `Clinic-${clinicId || "Report"}.pdf`;
 
     if (disposition) {
-      const match = disposition.match(/filename="(.+)"/);
-      if (match) filename = match[1];
+      const match = disposition?.match(/filename\*?=(?:UTF-8'')?["']?([^"';]+)/i);
+      if (match) filename = decodeURIComponent(match[1]);
     }
 
-    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const url = URL.createObjectURL(
+      new Blob([res.data], { type: "application/pdf" })
+    );
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
     link.click();
-
+    // return url;
   } catch (err) {
     console.error("Unable to download clinic report", err);
     throw err;

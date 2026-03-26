@@ -38,7 +38,8 @@ export const downloadPatientReport = async (req, res) => {
     const buffer = await generatePDFReport(req.body, "patient");
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="patient-${req.body.petName || "report"}.pdf"`);
+    res.setHeader("content-disposition", `attachment; filename="Patient ${req.body.petName} Report.pdf"`);
+    res.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
     res.setHeader("Content-Length", buffer.length);
 
     res.status(200).send(buffer);
@@ -54,7 +55,8 @@ export const downloadClinicReport = async (req, res) => {
     const buffer = await generatePDFReport(data, "clinic");
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="clinic-${req.params.clinicId || "report"}.pdf"`);
+    res.setHeader("content-disposition", `attachment; filename="${data.clinicName} Report.pdf"`);
+    res.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
     res.setHeader("Content-Length", buffer.length);
 
     res.status(200).send(buffer);

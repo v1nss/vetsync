@@ -6,7 +6,6 @@ import AuditLog from "../models/auditLogModel.js";
 import Appointment from "../models/appointmentModel.js";
 import ClinicPatient from "../models/clinicPatientModel.js";
 import Pet from "../models/petModel.js";
-import PetOwner from "../models/users/petOwnerModel.js";
 
 export const getUserActivityReport = async () => {
   const clinicStats = await Clinic.findAll({
@@ -185,6 +184,7 @@ export const getClinicPerformanceReport = async () => {
 };
 
 export const getClinicReport = async (clinicId) =>{
+  const clinicName = await Clinic.findByPk(clinicId, { attributes: ["name"], raw: true }).then(c => c ? c.name : "Clinic");
   const patients = await ClinicPatient.findAll({
     where: { clinic_id: clinicId },
     include: [
@@ -274,5 +274,6 @@ export const getClinicReport = async (clinicId) =>{
     patients: patientList,
     genderCounts,
     breedSummary,
+    clinicName
   };
 };

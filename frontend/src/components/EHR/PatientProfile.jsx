@@ -112,7 +112,6 @@ export default function PatientProfile({ patient, onBack }) {
         try {
           // Fetch all EHRs for the clinic
           const res = await getVetClinicEHRs();
-          console.log(res)
           if (res && res.ehrs) {
             // Filter EHRs for this specific pet
             const petEHRs = res.ehrs.filter(ehr => ehr.pet_id === patient.id);

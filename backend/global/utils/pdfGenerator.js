@@ -11,6 +11,7 @@ const COLORS = {
   white: rgb(1, 1, 1),
   danger: rgb(0.82, 0.22, 0.22),
   rowAlt: rgb(0.99, 0.96, 0.95),          // warm alternating row bg
+  female: rgb(0.75, 0.25, 0.55),         //
 };
 
 const PAGE_W = 595;  // A4
@@ -57,13 +58,13 @@ function drawPageHeader(page, fonts, clinicName, reportTitle) {
   page.drawRectangle({ x: 0, y: PAGE_H - 72, width: PAGE_W, height: 72, color: COLORS.primary });
 
   // Clinic name
-  drawText(page, clinicName, { x: MARGIN + 32, y: PAGE_H - 26, size: 15, font: fonts.bold, color: COLORS.white });
-  drawText(page, reportTitle, { x: MARGIN + 32, y: PAGE_H - 46, size: 9,  font: fonts.regular, color: COLORS.white });
+  drawText(page, clinicName, { x: MARGIN, y: PAGE_H - 28, size: 15, font: fonts.bold, color: COLORS.white });
+  drawText(page, reportTitle, { x: MARGIN, y: PAGE_H - 48, size: 9,  font: fonts.regular, color: COLORS.white });
 
   // Generated date (top-right)
   const dateStr = `Generated: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`;
   const dateW = fonts.regular.widthOfTextAtSize(dateStr, 8);
-  drawText(page, dateStr, { x: PAGE_W - MARGIN - dateW, y: PAGE_H - 46, size: 8, font: fonts.regular, color: COLORS.white });
+  drawText(page, dateStr, { x: PAGE_W - MARGIN - dateW, y: PAGE_H - 48, size: 8, font: fonts.regular, color: COLORS.white });
 }
 
 function drawPageFooter(page, fonts, pageNumber, totalPages) {
@@ -166,7 +167,7 @@ async function generatePatientReport(pdfDoc, fonts, reportData) {
 
 // ─── CLINIC report ────────────────────────────────────────────────────────────
 async function generateClinicReport(pdfDoc, fonts, reportData) {
-  const { patients = [], genderCounts = {}, breedSummary = [], clinicName = "Veterinary Clinic" } = reportData;
+  const { patients = [], genderCounts = {}, breedSummary = [], clinicName } = reportData;
  
   // ── Page 1: Summary ──────────────────────────────────────────────────────
   const page1 = pdfDoc.addPage([PAGE_W, PAGE_H]);
@@ -183,7 +184,7 @@ async function generateClinicReport(pdfDoc, fonts, reportData) {
   const cardW = (CONTENT_W - 12) / 4;
   const cards = [
     { label: "Total Patients",    value: String(totalPatients) },
-    { label: "Appointments",      value: String(totalAppts)    },
+    { label: "Total Appointments",value: String(totalAppts)    },
     { label: "Breeds Registered", value: String(uniqueBreeds)  },
     { label: "Male / Female",     value: `${maleCount} / ${femaleCount}` },
   ];
@@ -192,7 +193,7 @@ async function generateClinicReport(pdfDoc, fonts, reportData) {
     const cx = MARGIN + i * (cardW + 4);
     page1.drawRectangle({ x: cx, y: y - 52, width: cardW, height: 60, color: COLORS.primaryLight, borderRadius: 6 });
     page1.drawRectangle({ x: cx, y: y + 4,  width: cardW, height: 4,  color: COLORS.primary,      borderRadius: 3 });
-    drawText(page1, card.value, { x: cx + 10, y: y - 12, size: 18, font: fonts.bold,    color: COLORS.primaryDark });
+    drawText(page1, card.value, { x: cx + 10, y: y - 20, size: 18, font: fonts.bold,    color: COLORS.primaryDark });
     drawText(page1, card.label, { x: cx + 10, y: y - 34, size: 8,  font: fonts.regular, color: COLORS.muted });
   });
  
@@ -221,9 +222,9 @@ async function generateClinicReport(pdfDoc, fonts, reportData) {
   const femalePct = Math.round((femaleCount / total) * 100);
   y -= 24;
   page1.drawRectangle({ x: MARGIN + 8,  y: y - 4, width: 10, height: 10, color: COLORS.primaryDark, borderRadius: 2 });
-  drawText(page1, `Male — ${maleCount} (${malePct}%)`,   { x: MARGIN + 22, y: y + 4, size: 9, font: fonts.regular, color: COLORS.dark });
+  drawText(page1, `Male — ${maleCount} (${malePct}%)`,   { x: MARGIN + 22, y: y - 2, size: 9, font: fonts.regular, color: COLORS.dark });
   page1.drawRectangle({ x: MARGIN + 140, y: y - 4, width: 10, height: 10, color: COLORS.female, borderRadius: 2 });
-  drawText(page1, `Female — ${femaleCount} (${femalePct}%)`, { x: MARGIN + 154, y: y + 4, size: 9, font: fonts.regular, color: COLORS.dark });
+  drawText(page1, `Female — ${femaleCount} (${femalePct}%)`, { x: MARGIN + 155, y: y - 2, size: 9, font: fonts.regular, color: COLORS.dark });
  
   y -= 30;
   drawDivider(page1, y + 4);
@@ -235,8 +236,8 @@ async function generateClinicReport(pdfDoc, fonts, reportData) {
  
   // Table header
   page1.drawRectangle({ x: MARGIN, y: y - 14, width: CONTENT_W, height: 22, color: COLORS.primary, borderRadius: 4 });
-  drawText(page1, "BREED",            { x: MARGIN + 12,          y: y - 6,  size: 8, font: fonts.bold, color: COLORS.white });
-  drawText(page1, "COUNT",            { x: MARGIN + CONTENT_W - 60, y: y - 6, size: 8, font: fonts.bold, color: COLORS.white });
+  drawText(page1, "BREED",            { x: MARGIN + 12,              y: y - 6, size: 8, font: fonts.bold, color: COLORS.white });
+  drawText(page1, "COUNT",            { x: MARGIN + CONTENT_W - 60,  y: y - 6, size: 8, font: fonts.bold, color: COLORS.white });
   drawText(page1, "SHARE",            { x: MARGIN + CONTENT_W - 110, y: y - 6, size: 8, font: fonts.bold, color: COLORS.white });
   y -= 22;
  
@@ -245,15 +246,15 @@ async function generateClinicReport(pdfDoc, fonts, reportData) {
     const rowBg = i % 2 === 0 ? COLORS.white : COLORS.rowAlt;
     page1.drawRectangle({ x: MARGIN, y: y - 14, width: CONTENT_W, height: 22, color: rowBg });
  
-    const pct  = Math.round((b.count / totalBreedCount) * 100);
+    const pct   = Math.round((b.count / totalBreedCount) * 100);
     const bBarW = Math.round((b.count / totalBreedCount) * 80);
  
     drawText(page1, b.breed,        { x: MARGIN + 12,           y: y - 6,  size: 9, font: fonts.regular, color: COLORS.dark });
-    drawText(page1, String(b.count), { x: MARGIN + CONTENT_W - 55, y: y - 6, size: 9, font: fonts.bold,    color: COLORS.primaryDark });
+    drawText(page1, String(b.count), { x: MARGIN + CONTENT_W - 50, y: y - 6, size: 9, font: fonts.bold,    color: COLORS.primaryDark });
  
     // Mini bar
-    page1.drawRectangle({ x: MARGIN + CONTENT_W - 110, y: y - 10, width: 80,    height: 8, color: COLORS.border,       borderRadius: 4 });
-    page1.drawRectangle({ x: MARGIN + CONTENT_W - 110, y: y - 10, width: bBarW, height: 8, color: COLORS.primary,      borderRadius: 4 });
+    page1.drawRectangle({ x: MARGIN + CONTENT_W - 160, y: y - 10, width: 80,    height: 8, color: COLORS.border,       borderRadius: 4 });
+    page1.drawRectangle({ x: MARGIN + CONTENT_W - 160, y: y - 10, width: bBarW, height: 8, color: COLORS.primary,      borderRadius: 4 });
     drawText(page1, `${pct}%`, { x: MARGIN + CONTENT_W - 22, y: y - 6, size: 7, font: fonts.regular, color: COLORS.muted });
  
     y -= 22;
@@ -268,7 +269,7 @@ async function generateClinicReport(pdfDoc, fonts, reportData) {
   // ── Page 2: Patient Roster ────────────────────────────────────────────────
   const page2 = pdfDoc.addPage([PAGE_W, PAGE_H]);
   drawPageHeader(page2, fonts, clinicName, "Clinic Summary Report");
-  y = PAGE_H - 94;
+  y = PAGE_H - 110;
  
   y = drawSectionHeading(page2, fonts, "Patient Roster", y);
   y -= 8;

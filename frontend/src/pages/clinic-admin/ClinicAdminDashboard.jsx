@@ -20,6 +20,7 @@ export default function ClinicAdminDashboard() {
   const [recentRecords, setRecentRecords] = useState([]);
   const [todayStats, setTodayStats] = useState({ appointments: 0, checkIns: 0 });
   const [pendingCount, setPendingCount] = useState(0);
+  // const [pdfUrl, setPdfUrl]  = useState(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -199,7 +200,9 @@ export default function ClinicAdminDashboard() {
   };
 
 const handleDownload = async () => {
-    downloadClinicReport(clinicID);
+    // const pdfUrl = 
+    await downloadClinicReport(clinicID);
+    // setPdfUrl(pdfUrl);
 };
 
   if (loading) {
@@ -247,7 +250,7 @@ const handleDownload = async () => {
           </div>
         </div>
       </div>
-
+      {/* <iframe src={pdfUrl} width="100%" height="1000px" />        */}
       <div>
         {/* Today's Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">

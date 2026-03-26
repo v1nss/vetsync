@@ -14,7 +14,6 @@ export const registerClinic = async (clinicData) => {
 export const fetchClinicByOwnerId = async (owner_id) => {
     try {
         const res = await api.get(`/clinics/get-clinic/${owner_id}`);
-        console.log("Clinic Fetched Successfully");
         return res.data;
     } catch (err) {
         console.error("Unable to fetch clinic by owner id", err);

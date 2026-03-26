@@ -14,7 +14,6 @@ export default function ClinicAdminEHRPage() {
     try {
       setLoading(true);
       const res = await getVetClinicPatients();
-      console.log("Fetched clinic patients:", res);
       if (res && res.patients) {
         const transformedPatients = res.patients.map(cp => {
           const pet = cp.pet;
