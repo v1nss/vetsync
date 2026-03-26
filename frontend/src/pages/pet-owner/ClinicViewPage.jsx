@@ -344,8 +344,14 @@ export default function ClinicViewPage({ onLike }) {
                   <FaPhoneAlt className="text-gray-700 text-xl mt-1 shrink-0" />
                   <span className="text-gray-700">{displayNumber}</span>
                 </div>
+                {/* Note */}
+                <div className="flex lg:hidden p-4 rounded-xl border border-blue-300 bg-blue-100 text-xs text-blue-900">
+                  <p><strong>Note:</strong> Prices may vary per clinic. The displayed price range may change after the pet’s consultation, depending on the pet’s condition and the services required.</p>
+                </div>  
               </div>
             </div>
+
+
 
             {/* Mobile Operating Hours - Only shown on mobile */}
             {clinic.schedules && Array.isArray(clinic.schedules) && clinic.schedules.length > 0 && (
@@ -535,9 +541,10 @@ export default function ClinicViewPage({ onLike }) {
                 Book appointment
               </button>
               
-              {/* <div className="text-center text-sm text-gray-500">
-                You won't be charged yet
-              </div> */}
+              {/* Note */}
+              <div className="p-4 rounded-xl border border-blue-300 bg-blue-100 text-xs text-blue-900">
+                <p><strong>Note:</strong> Prices may vary per clinic. The displayed price range may change after the pet’s consultation, depending on the pet’s condition and the services required.</p>
+              </div>  
             </div>
           </div>
         </div>
@@ -551,7 +558,7 @@ export default function ClinicViewPage({ onLike }) {
       </div>
 
       <div className="lg:hidden h-20"></div>
-      <Footer />
+      
     </main>
   );
 }
