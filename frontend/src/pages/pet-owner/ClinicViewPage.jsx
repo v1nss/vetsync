@@ -346,7 +346,7 @@ export default function ClinicViewPage({ onLike }) {
                 </div>
                 {/* Note */}
                 <div className="flex lg:hidden p-4 rounded-xl border border-blue-300 bg-blue-100 text-xs text-blue-900">
-                  <p><strong>Note:</strong> Prices may vary per clinic. The displayed price range may change after the pet’s consultation, depending on the pet’s condition and the services required.</p>
+                  <p><strong>Note:</strong> Service fees may differ across clinics. The final cost will be assessed after consultation, depending on the pet’s condition and required treatment.</p>                
                 </div>  
               </div>
             </div>
@@ -543,8 +543,7 @@ export default function ClinicViewPage({ onLike }) {
               
               {/* Note */}
               <div className="p-4 rounded-xl border border-blue-300 bg-blue-100 text-xs text-blue-900">
-                <p><strong>Note:</strong> Prices may vary per clinic. The displayed price range may change after the pet’s consultation, depending on the pet’s condition and the services required.</p>
-              </div>  
+                <p><strong>Note:</strong> Service fees may differ across clinics. The final cost will be assessed after consultation, depending on the pet’s condition and required treatment.</p>              </div>  
             </div>
           </div>
         </div>
