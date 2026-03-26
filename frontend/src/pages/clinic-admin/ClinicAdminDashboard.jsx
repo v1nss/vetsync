@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { FaUsers, FaCalendarAlt, FaUserMd, FaBell, FaNotesMedical, FaArrowUp, FaPaw, FaClock } from "react-icons/fa";
+import { FiDownload} from "react-icons/fi";
 import { Link } from "react-router";
-import { fetchMyClinic } from "../../global/api/clinicAdmin";
+import { fetchMyClinic, downloadClinicReport } from "../../global/api/clinicAdmin";
 import { getVetClinicPatients, getVetClinicEHRs } from "../../global/api/clinicPatient";
 import { fetchClinicVets } from "../../global/api/clinicAdmin";
 import { fetchAppointmentsByClinic } from "../../global/api/appointment";
@@ -14,7 +15,7 @@ export default function ClinicAdminDashboard() {
     totalVets: 0,
     activePatients: 0,
   });
-
+  const [clinicID, setClinicID] = useState(null);
   const [upcomingAppointments, setUpcomingAppointments] = useState([]);
   const [recentRecords, setRecentRecords] = useState([]);
   const [todayStats, setTodayStats] = useState({ appointments: 0, checkIns: 0 });
@@ -27,6 +28,7 @@ export default function ClinicAdminDashboard() {
         
         // Fetch clinic to get clinic_id
         const clinic = await fetchMyClinic();
+        setClinicID(clinic?.clinic_id);
         if (!clinic || !clinic.clinic_id) {
           console.error("No clinic found");
           setLoading(false);
@@ -196,6 +198,10 @@ export default function ClinicAdminDashboard() {
     }
   };
 
+const handleDownload = async () => {
+    downloadClinicReport(clinicID);
+};
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -219,6 +225,13 @@ export default function ClinicAdminDashboard() {
             </p>
           </div>
           <div className="flex gap-3 mt-3 sm:mt-0">
+            <button
+              onClick={() => handleDownload()}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium"
+            >
+              <FiDownload className="w-4 h-4" />
+              <span className="hidden md:inline">Download Report</span>
+            </button>
             <Link
               to="/clinic-admin/appointments"
               className="relative px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg font-medium transition flex items-center gap-2"

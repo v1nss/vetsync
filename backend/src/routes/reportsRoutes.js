@@ -14,6 +14,6 @@ router.get("/user-activity", authenticate, verifySystemAdmin, fetchUserActivityR
 router.get("/audit-trail", authenticate, verifySystemAdmin, fetchAuditTrail);
 router.get("/clinic-performance", authenticate, verifySystemAdmin, fetchClinicPerformanceReport);
 router.post("/patient", authenticate, verifyClinicAdmin, downloadPatientReport);
-router.post("/clinic", authenticate, verifySystemAdmin, downloadClinicReport);
+router.post("/clinic/:clinicId", authenticate, downloadClinicReport);
 
 export default router;

@@ -4,6 +4,9 @@ import Clinic from "../models/clinicModel.js";
 import User from "../models/users/userModel.js";
 import AuditLog from "../models/auditLogModel.js";
 import Appointment from "../models/appointmentModel.js";
+import ClinicPatient from "../models/clinicPatientModel.js";
+import Pet from "../models/petModel.js";
+import PetOwner from "../models/users/petOwnerModel.js";
 
 export const getUserActivityReport = async () => {
   const clinicStats = await Clinic.findAll({
@@ -179,4 +182,97 @@ export const getClinicPerformanceReport = async () => {
   }));
 
   return { clinics: ranked };
+};
+
+export const getClinicReport = async (clinicId) =>{
+  const patients = await ClinicPatient.findAll({
+    where: { clinic_id: clinicId },
+    include: [
+      {
+        model: Pet,
+        as: "pet",
+        attributes: ["pet_id", "name", "species", "breed", "birthdate", "gender"],
+        include: [
+          {
+            model: User,
+            as: "owner",
+            attributes: ["id", "first_name", "last_name"],
+          },
+        ],
+      },
+    ],
+    order: [["createdAt", "DESC"]],
+  });
+
+  const petIds = patients.map(cp => cp.pet?.pet_id).filter(Boolean);
+
+  const appointmentCounts = petIds.length > 0
+    ? await Appointment.findAll({
+        where: { pet_id: { [Op.in]: petIds }, clinic_id: clinicId },
+        attributes: [
+          "pet_id",
+          [sequelize.fn("COUNT", sequelize.col("appointment_id")), "appointmentCount"],
+        ],
+        group: ["pet_id"],
+        raw: true,
+      })
+    : [];
+
+  const countMap = {};
+  appointmentCounts.forEach((ac) => {
+    countMap[ac.pet_id] = parseInt(ac.appointmentCount, 10);
+  });
+
+  // Gender counts
+  const genderCounts = patients.reduce(
+    (acc, cp) => {
+      const gender = cp.pet?.gender?.toLowerCase();
+      if (gender === "male")        acc.male++;
+      else if (gender === "female") acc.female++;
+      return acc;
+    },
+    { male: 0, female: 0 }
+  );
+
+  // Breed summary
+  const breedMap = {};
+  patients.forEach((cp) => {
+    const breed = cp.pet?.breed;
+    if (breed) breedMap[breed] = (breedMap[breed] || 0) + 1;
+  });
+
+  const breedSummary = Object.entries(breedMap)
+    .map(([breed, count]) => ({ breed, count }))
+    .sort((a, b) => b.count - a.count);
+
+  // Map to plain objects with only needed fields
+  const patientList = patients
+    .map((cp) => {
+      const pet = cp.pet;
+      if (!pet) return null;
+
+      const birthdate = pet.birthdate ? new Date(pet.birthdate) : null;
+      const age = birthdate
+        ? Math.floor((Date.now() - birthdate) / (1000 * 60 * 60 * 24 * 365.25))
+        : null;
+
+      return {
+        name: pet.name,
+        species: pet.species,
+        breed: pet.breed,
+        age,
+        owner: pet.owner
+          ? `${pet.owner.first_name} ${pet.owner.last_name}`
+          : null,
+        appointmentCount: countMap[pet.pet_id] || 0,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.appointmentCount - a.appointmentCount);
+
+  return {
+    patients: patientList,
+    genderCounts,
+    breedSummary,
+  };
 };

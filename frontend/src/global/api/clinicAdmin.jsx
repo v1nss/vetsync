@@ -170,14 +170,30 @@ export const downloadPatientReport = async (patientData) => {
   }
 }
 
-export const downloadClinicReport = async () => {
+export const downloadClinicReport = async (clinicId) => {
   try {
-    const res = await api.get('/reports/clinic', {
-      responseType: 'blob',
-    });
-    return res.data;
+    const res = await api.post(`/reports/clinic/${clinicId}`,
+    null,
+    { responseType: "blob" }
+  );
+
+    const disposition = res.headers['Content-Disposition'];
+
+    let filename = `Clinic-${clinicId || "Report"}.pdf`;
+
+    if (disposition) {
+      const match = disposition.match(/filename="(.+)"/);
+      if (match) filename = match[1];
+    }
+
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+
   } catch (err) {
     console.error("Unable to download clinic report", err);
     throw err;
   }
-}
+};

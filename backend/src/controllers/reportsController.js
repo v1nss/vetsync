@@ -1,4 +1,4 @@
-import { getUserActivityReport, getAuditTrail, getClinicPerformanceReport } from "../services/reportsService.js";
+import { getUserActivityReport, getAuditTrail, getClinicPerformanceReport, getClinicReport } from "../services/reportsService.js";
 import { generatePDFReport } from "../../global/utils/pdfGenerator.js";
 
 export const fetchUserActivityReport = async (req, res) => {
@@ -50,10 +50,11 @@ export const downloadPatientReport = async (req, res) => {
 
 export const downloadClinicReport = async (req, res) => {
   try {
-    const buffer = await generatePDFReport(req.body, "clinic");
+    const data = await getClinicReport(req.params.clinicId);
+    const buffer = await generatePDFReport(data, "clinic");
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="clinic-${req.body.clinicId || "report"}.pdf"`);
+    res.setHeader("Content-Disposition", `attachment; filename="clinic-${req.params.clinicId || "report"}.pdf"`);
     res.setHeader("Content-Length", buffer.length);
 
     res.status(200).send(buffer);

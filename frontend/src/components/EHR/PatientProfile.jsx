@@ -374,15 +374,8 @@ export default function PatientProfile({ patient, onBack }) {
 
   const handleDownload = async (patientData) => {
     try {
-      const blob = await downloadPatientReport(patientData);
+      downloadPatientReport(patientData);
 
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `patient-${patientData.petId || "report"}.pdf`;
-      link.click();
-
-      URL.revokeObjectURL(url); // clean up memory
     } catch (err) {
       console.error("Download failed", err);
     }
@@ -399,22 +392,23 @@ export default function PatientProfile({ patient, onBack }) {
     <>
       <div className="mx-auto">
         <div className="mb-6 flex justify-between items-center">
-          <div>
-            <button
-              onClick={onBack}
-              className="text-2xl mb-2 flex items-center gap-1 transition"
-            >
-              <FiChevronLeft />
-              <span className="text-2xl font-bold capitalize text-gray-900">{patient.name}'s Health Record</span>
-            </button>
-            <button
-              onClick={() => handleDownload(payload)}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium"
-            >
-              <FiDownload className="w-4 h-4" />
-              <span className="hidden sm:inline">Download Report</span>
-            </button>
-          </div>
+          <button
+            onClick={onBack}
+            className="text-2xl flex items-center gap-1 transition"
+          >
+            <FiChevronLeft />
+            <span className="text-2xl font-bold capitalize text-gray-900">
+              {patient.name}'s Health Record
+            </span>
+          </button>
+
+          <button
+            onClick={() => handleDownload(payload)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium"
+          >
+            <FiDownload className="w-4 h-4" />
+            <span className="hidden sm:inline">Download Report</span>
+          </button>
         </div>
 
         {/* Patient Card */}
