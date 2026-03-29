@@ -2,7 +2,7 @@ import { Sequelize } from "sequelize";
 import dotenv from "dotenv";
 dotenv.config();
 
-const isProduction = process.env.VITE_NODE_ENV === "production";
+const isProduction = process.env.NODE_ENV === "production";
 
 const dbUrl =
   process.env.PGURL ||
