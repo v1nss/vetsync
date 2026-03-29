@@ -46,31 +46,31 @@ app.use(cookieParser());
 app.use(auditLogger);
 
 //user Routes
-app.use("/users", userRoutes);
+app.use("/api/users", userRoutes);
 
 //auth Routes
-app.use('/auth', authRoutes);
+app.use('/api/auth', authRoutes);
 
 //pet Routes
-app.use("/pets", petRoutes);
+app.use("/api/pets", petRoutes);
 
 //clinic Routes
-app.use("/clinics", clinicRoutes);
+app.use("/api/clinics", clinicRoutes);
 
 // appointment Routes
-app.use("/appointments", appointmentRoutes);
+app.use("/api/appointments", appointmentRoutes);
 
 //system admin Routes
-app.use("/system-admin", systemAdminRoutes);
+app.use("/api/system-admin", systemAdminRoutes);
 
-app.use("/approval-logs", ApprovalLogRoutes);
+app.use("/api/approval-logs", ApprovalLogRoutes);
 
 // EHR Routes
-app.use("/ehr", ehrRoutes);
-app.use("/clinic-patients", clinicPatientRoutes);
+app.use("/api/ehr", ehrRoutes);
+app.use("/api/clinic-patients", clinicPatientRoutes);
 
 // Reports Routes
-app.use("/reports", reportsRoutes);
+app.use("/api/reports", reportsRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
