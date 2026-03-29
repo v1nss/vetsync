@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
-const isProduction = import.meta.env.NODE_ENV === "production";
+const isProduction = import.meta.env.VITE_NODE_ENV === "production";
 
 const api = axios.create({
   baseURL: isProduction ?  "/api" : `${BASE_URL}/api`, // Proxy in prodction, direct in development
