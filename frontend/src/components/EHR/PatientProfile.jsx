@@ -546,7 +546,7 @@ export default function PatientProfile({ patient, onBack }) {
               <p className="text-sm text-gray-600 mt-1">
                 {loadingRecords 
                   ? "Loading records..." 
-                  : `${displayHealthRecords.length} appointment${displayHealthRecords.length !== 1 ? 's' : ''} on record`}
+                  : `${displayHealthRecords.length} Health Record${displayHealthRecords.length !== 1 ? 's' : ''}`}
               </p>
             </div>
           </div>
