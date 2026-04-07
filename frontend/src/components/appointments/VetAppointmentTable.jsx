@@ -81,6 +81,7 @@ function VetAppointmentRow({ appointment, onMarkComplete, onViewDetails }) {
           <span className="line-clamp-2 text-xs">{appointment.notes}</span>
         </td>
       )}
+      
 
       {/* Status */}
       <td className="px-4 py-3">
@@ -145,6 +146,7 @@ export default function VetAppointmentTable({ appointments = [], onMarkComplete,
               <th className="px-4 py-3 font-semibold">Service</th>
               <th className="px-4 py-3 font-semibold">Contact</th>
               <th className="px-4 py-3 font-semibold">Clinic</th>
+              <th className="px-4 py-3 font-semibold">Notes</th>
               <th className="px-4 py-3 font-semibold">Status</th>
               <th className="px-4 py-3 font-semibold">Actions</th>
             </tr>
