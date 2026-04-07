@@ -10,6 +10,7 @@ import NotificationModal from "../NotificationModal";
 import { getVetClinicEHRs, getVetClinicPatient } from "../../global/api/clinicPatient";
 import { fetchAppointmentsByClinic } from "../../global/api/appointment";
 import { downloadPatientReport } from "../../global/api/clinicAdmin.jsx";
+import { deleteEHR } from "../../global/api/ehr";
 
 export default function PatientProfile({ patient, onBack }) {
   const [selectedRecord, setSelectedRecord] = useState(null);
@@ -31,6 +32,12 @@ export default function PatientProfile({ patient, onBack }) {
     title: '',
     message: ''
   });
+
+  const handleDeleteEHR = async (id) => {
+    await deleteEHR(id);
+    setDisplayHealthRecords(prev => prev.filter(r => r.id !== id));
+  };
+
 
   // Fetch pet details and calculate medical summary
   useEffect(() => {
@@ -612,6 +619,7 @@ export default function PatientProfile({ patient, onBack }) {
             <HealthRecordsTable 
               healthRecords={filteredRecords} 
               onRecordClick={setSelectedRecord}
+              onDelete={handleDeleteEHR}
             />
           ) : (
             <div className="text-center py-12">
