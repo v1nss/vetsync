@@ -121,7 +121,7 @@ export default function HealthRecordsTable({ healthRecords, onRecordClick, onDel
                     >
                       <FiEye className="w-4 h-4" />
                     </button>
-                    {role !== "pet_owner" && (
+                    {role == "vet_professional" && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
