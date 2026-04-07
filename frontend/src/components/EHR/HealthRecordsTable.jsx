@@ -1,7 +1,25 @@
-import React from "react";
-import { FiEye } from "react-icons/fi";
+import { useState } from "react";
+import { FiEye, FiTrash2 } from "react-icons/fi";
+import { useAuth } from "../../context/AuthContext";
+import { deleteEHR } from "../../global/api/ehr";
+import ConfirmationModal from "../ConfirmationModal";
 
-export default function HealthRecordsTable({ healthRecords, onRecordClick }) {
+export default function HealthRecordsTable({ healthRecords, onRecordClick, onDelete }) {
+  const { role } = useAuth();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedRecordId, setSelectedRecordId] = useState(null);
+
+  const handleDeleteEHR = (id) => {
+    setSelectedRecordId(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    await onDelete(selectedRecordId);
+    
+    setShowDeleteConfirm(false);
+  };
+
   if (!healthRecords || healthRecords.length === 0) {
     return (
       <div className="border border-gray-200 rounded-xl overflow-hidden">
@@ -103,6 +121,18 @@ export default function HealthRecordsTable({ healthRecords, onRecordClick }) {
                     >
                       <FiEye className="w-4 h-4" />
                     </button>
+                    {role !== "pet_owner" && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteEHR(record.id);
+                        }}
+                      className="p-2 text-gray-600 hover:text-primary hover:bg-primary/10 rounded-lg transition"
+                      title="Delete Record"
+                    >
+                      <FiTrash2 className="w-4 h-4" />
+                    </button>
+                    )}
                   </td>
                 </tr>
               );
@@ -110,6 +140,16 @@ export default function HealthRecordsTable({ healthRecords, onRecordClick }) {
           </tbody>
         </table>
       </div>
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDelete }
+        type="danger"
+        title="Delete Confirmation"
+        message="Are you sure you want to delete this record? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
     </div>
   );
 }

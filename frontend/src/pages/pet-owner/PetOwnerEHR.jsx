@@ -3,26 +3,22 @@ import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import PetsList from "../../components/EHR/PetsList";
 import PetRecordsView from "../../components/EHR/PetRecordsView";
-import { useAuth } from "../../context/AuthContext";
 import { fetchAllPetsById } from "../../global/api/pet";
 import { getEHRsByPet } from "../../global/api/ehr";
-import { FiChevronRight } from "react-icons/fi";
+import { FiChevronRight } from "react-icons/fi";  
 
 export default function PetOwnerEHR() {
-  const { token } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPet, setSelectedPet] = useState(null);
   const [loading, setLoading] = useState(true);
   const [pets, setPets] = useState([]);
   const [healthRecords, setHealthRecords] = useState(null);
   const [loadingRecords, setLoadingRecords] = useState(false);
-
   useEffect(() => {
     const fetchAllPets = async () => {
       setLoading(true);
       try {
         const res = await fetchAllPetsById();
-        // console.log(res);
         if (!res) {
           console.log("no pets exist");
           setPets([]);
@@ -37,7 +33,7 @@ export default function PetOwnerEHR() {
     };
 
     fetchAllPets();
-  }, [token]);
+  }, []);
 
   // Fetch health records when a pet is selected
   useEffect(() => {

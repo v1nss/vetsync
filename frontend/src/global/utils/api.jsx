@@ -1,11 +1,10 @@
-// api.js
 import axios from "axios";
 
 const BASE_URL     = import.meta.env.VITE_BACKEND_URL;
 const isProduction = import.meta.env.VITE_NODE_ENV === "production";
-
+console.log(`API Base URL: ${isProduction ? "/api" : BASE_URL}`); // Log the base URL being used
 const api = axios.create({
-  baseURL: isProduction ?  "/api" : `${BASE_URL}/api`, // Proxy in prodction, direct in development
+  baseURL: isProduction ?  "/api" : BASE_URL, // Proxy in prodction, direct in development
   withCredentials: true, // Send cookies with every request
 });
 

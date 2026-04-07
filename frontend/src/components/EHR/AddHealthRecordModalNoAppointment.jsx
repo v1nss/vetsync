@@ -249,8 +249,6 @@ export default function AddHealthRecordModalNoAppointment({ patient, onClose, on
       }
 
       // Get pet_owner_id - required field
-      // Try multiple possible paths for owner ID
-      console.log("Patient object:", patient);
       const petOwnerId = patient.owner?.id || patient.owner_id || patient.ownerId;
       if (!petOwnerId) {
         console.error("Owner ID not found. Patient object:", patient);

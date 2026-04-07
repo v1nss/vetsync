@@ -24,7 +24,7 @@ export default function VetProEHRPage() {
             const petOwner = owner?.petOwner;
             
             return {
-              id: pet?.pet_id?.toString() || cp.id?.toString(),
+              id: pet?.pet_id,
               pet_id: pet?.pet_id,
               name: pet?.name || "Unknown",
               species: pet?.species || "Unknown",

@@ -186,42 +186,21 @@ export const getVetClinicEHRs = async (req, res) => {
       // For vet professional: Get clinic_id from clinic_admin_id or appointments
       const vetProfessional = await VetProfessional.findOne({
         where: { user_id: userId },
-        attributes: ["clinic_admin_id"],
+        attributes: ["clinic_id"],
       });
 
-      if (vetProfessional && vetProfessional.clinic_admin_id) {
-        // Get clinic_id from clinic admin
-        const clinic = await Clinic.findOne({
-          where: { owner_id: vetProfessional.clinic_admin_id },
-          attributes: ["clinic_id"],
+      if (vetProfessional && vetProfessional.clinic_id) {
+        clinicId = vetProfessional.clinic_id;
+      } else {
+        return res.status(404).json({
+          message: "No clinic found for this vet professional",
         });
-
-        if (clinic) {
-          clinicId = clinic.clinic_id;
-        }
-      }
-
-      // Fallback: Get clinic_id from appointments
-      if (!clinicId) {
-        const recentAppointment = await Appointment.findOne({
-          where: { vet_professional_id: userId },
-          attributes: ["clinic_id"],
-          order: [["createdAt", "DESC"]],
-        });
-
-        if (!recentAppointment || !recentAppointment.clinic_id) {
-          return res.status(404).json({
-            message: "No clinic found for this vet professional",
-          });
-        }
-
-        clinicId = recentAppointment.clinic_id;
       }
     }
 
     // Get all EHRs for all clinic patients (using clinic_patients as reference)
     const ehrs = await getClinicPatientsEHRs(clinicId);
-
+    
     res.status(200).json({
       message: "Clinic EHR records fetched successfully",
       ehrs,

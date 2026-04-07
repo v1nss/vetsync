@@ -1,5 +1,10 @@
 import express from 'express';
-import { authenticate, verifyClinicAdmin } from '../../global/middleware/authMiddleware.js';
+import { 
+    authenticate, 
+    verifyClinicAdmin, 
+    verifyVetOrClinicAdmin 
+} from '../../global/middleware/authMiddleware.js';
+
 import { 
     createNewAppointment, 
     approveAppointmentRequest, 
@@ -21,7 +26,7 @@ router.get('/owner', authenticate, getAppointmentsByOwner);
 
 router.get('/vet', authenticate, getAppointmentsByVet);
 
-router.get('/clinic/:clinicId', authenticate, verifyClinicAdmin, fetchAppointmentsByClinic);
+router.get('/clinic/:clinicId', authenticate, verifyVetOrClinicAdmin, fetchAppointmentsByClinic);
 
 router.delete('/delete/:appointmentId', authenticate, deleteAppointmentById)
 
