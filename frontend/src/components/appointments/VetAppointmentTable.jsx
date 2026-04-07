@@ -76,10 +76,12 @@ function VetAppointmentRow({ appointment, onMarkComplete, onViewDetails }) {
       </td>
 
       {/* Notes */}
-      {appointment.notes && (
+      {appointment.notes ? (
         <td className="px-4 py-3 text-sm text-gray-600 max-w-[200px]">
           <span className="line-clamp-2 text-xs">{appointment.notes}</span>
         </td>
+      ) : (
+        <td className="px-4 py-3 text-sm text-gray-600 max-w-[200px]">No notes</td>
       )}
       
 
