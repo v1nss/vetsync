@@ -1,5 +1,6 @@
 import { getUserActivityReport, getAuditTrail, getClinicPerformanceReport, getClinicReport } from "../services/reportsService.js";
 import { generatePDFReport } from "../../global/utils/pdfGenerator.js";
+import { getEHRsByPet } from "../services/ehrService.js";
 
 export const fetchUserActivityReport = async (req, res) => {
   try {
@@ -35,6 +36,10 @@ export const fetchClinicPerformanceReport = async (req, res) => {
 
 export const downloadPatientReport = async (req, res) => {
   try {
+    if (req.body.patientId) {
+      const healthData = await getEHRsByPet(req.body.patientId);
+      req.body = { ...req.body, healthData };
+    }
     const buffer = await generatePDFReport(req.body, "patient");
 
     res.setHeader("Content-Type", "application/pdf");

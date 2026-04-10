@@ -1,5 +1,5 @@
 import express from "express";
-import { authenticate, verifyClinicAdmin, verifySystemAdmin } from "../../global/middleware/authMiddleware.js";
+import { authenticate, verifyClinicAdmin, verifySystemAdmin, verifyVetOrClinicAdmin } from "../../global/middleware/authMiddleware.js";
 import { 
     fetchUserActivityReport, 
     fetchAuditTrail, 
@@ -13,7 +13,7 @@ const router = express.Router();
 router.get("/user-activity", authenticate, verifySystemAdmin, fetchUserActivityReport);
 router.get("/audit-trail", authenticate, verifySystemAdmin, fetchAuditTrail);
 router.get("/clinic-performance", authenticate, verifySystemAdmin, fetchClinicPerformanceReport);
-router.post("/patient", authenticate, verifyClinicAdmin, downloadPatientReport);
-router.post("/clinic/:clinicId", authenticate, downloadClinicReport);
+router.post("/patient", authenticate, verifyVetOrClinicAdmin, downloadPatientReport);
+router.post("/clinic/:clinicId", authenticate, verifyClinicAdmin, downloadClinicReport);
 
 export default router;

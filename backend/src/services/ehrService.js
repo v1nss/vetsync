@@ -208,7 +208,7 @@ export const getEHRsByPet = async (petId, petOwnerId = null) => {
   ];
 
   if (!petOwnerId) {
-    baseIncludes.push({
+    include.push({
       model: Prescription,
       as: "prescriptions",
     });

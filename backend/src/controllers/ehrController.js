@@ -91,19 +91,9 @@ export const getPetEHRs = async (req, res) => {
     let ehrs;
     
     if (userType === 'pet_owner') {
-      // Pet owners can only see their own pet's EHRs
       ehrs = await getEHRsByPet(petId, userId);
-    } else if (userType === 'vet_professional') {
-      // Vet professionals can see EHRs for pets in their clinic
-      // Get all EHRs for the pet (they should only see their clinic's records)
-      ehrs = await getEHRsByPet(petId);
-      
-      // Optionally filter by clinic if needed (for now, return all)
-      // The frontend can filter by clinic if necessary
     } else {
-      return res.status(403).json({
-        message: "Unauthorized access",
-      });
+      ehrs = await getEHRsByPet(petId);
     }
 
     res.status(200).json({

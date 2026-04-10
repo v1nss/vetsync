@@ -11,8 +11,10 @@ import { getVetClinicEHRs, getVetClinicPatient } from "../../global/api/clinicPa
 import { fetchAppointmentsByClinic } from "../../global/api/appointment";
 import { downloadPatientReport } from "../../global/api/clinicAdmin.jsx";
 import { deleteEHR } from "../../global/api/ehr";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 export default function PatientProfile({ patient, onBack }) {
+  const { role } = useAuth();
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [displayHealthRecords, setDisplayHealthRecords] = useState([]);
@@ -237,7 +239,6 @@ export default function PatientProfile({ patient, onBack }) {
               attachedFiles: ehr.attached_files || null
               };
             });
-            
             setDisplayHealthRecords(transformedRecords);
           } else {
             setDisplayHealthRecords([]);
@@ -387,6 +388,15 @@ export default function PatientProfile({ patient, onBack }) {
     }
   };
 
+  const handleDownloadHealthRecord = async (patientData) => {
+    try {
+      downloadPatientReport(patientData, patient.id);
+
+    } catch (err) {
+      console.error("Download failed", err);
+    }
+  }
+
   const petForModal = {
     name: patient.name,
     species: patient.species,
@@ -407,14 +417,23 @@ export default function PatientProfile({ patient, onBack }) {
               {patient.name}'s Health Record
             </span>
           </button>
-
-          <button
-            onClick={() => handleDownload(payload)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium"
-          >
-            <FiDownload className="w-4 h-4" />
-            <span className="hidden sm:inline">Download Report</span>
-          </button>
+          <div className="flex justify-between gap-5">
+            <button
+              onClick={() => handleDownload(payload)}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium"
+            >
+              <FiDownload className="w-4 h-4" />
+              <span className="hidden sm:inline">Patient Info</span>
+            </button>
+            <button
+              onClick={() => handleDownloadHealthRecord(payload)}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium"
+            >
+              <FiDownload className="w-4 h-4" />
+              <span className="hidden sm:inline">Patient Health Record</span>
+            </button>
+          </div>
+          
         </div>
 
         {/* Patient Card */}
@@ -453,14 +472,16 @@ export default function PatientProfile({ patient, onBack }) {
                 </div>
 
                 {/* Add Health Record Button */}
-                <button 
-                  onClick={() => setShowAddModal(true)}
-                  className="flex w-full mt-4 sm:mt-0 sm:w-fit items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium"
-                >
-                  <FiPlus className="w-4 h-4" />
+                { role === "vet_professional" && (
+                  <button 
+                    onClick={() => setShowAddModal(true)}
+                    className="flex w-full mt-4 sm:mt-0 sm:w-fit items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium"
+                  >
+                    <FiPlus className="w-4 h-4" />
                   <span className="hidden sm:inline">Add Health Record</span>
                   <span className="sm:hidden">Add Record</span>
                 </button>
+                )}
               </div>
 
               {/* Details Grid */}
@@ -620,6 +641,7 @@ export default function PatientProfile({ patient, onBack }) {
               healthRecords={filteredRecords} 
               onRecordClick={setSelectedRecord}
               onDelete={handleDeleteEHR}
+              role={role}
             />
           ) : (
             <div className="text-center py-12">

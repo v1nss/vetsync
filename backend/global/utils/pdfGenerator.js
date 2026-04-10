@@ -98,71 +98,178 @@ function drawBadge(page, fonts, text, x, y, color = COLORS.accent) {
   drawText(page, text, { x: x + 1, y: y, size: 8, font: fonts.bold, color: COLORS.white });
 }
 
-// ─── PATIENT report ───────────────────────────────────────────────────────────
-async function generatePatientReport(pdfDoc, fonts, reportData) {
-  const page = pdfDoc.addPage([PAGE_W, PAGE_H]);
+// ─── EHR History section (appended to patient report) ─────────────────────────
+async function generateEHRSection(pdfDoc, fonts, clinicName, ehrs = [], pageNumber, totalPages) {
+  const sortedEHRs = [...ehrs].sort((a, b) => new Date(b.visit_date) - new Date(a.visit_date));
 
+  let page = pdfDoc.addPage([PAGE_W, PAGE_H]);
+  drawPageHeader(page, fonts, clinicName, "Patient Medical Record");
+  drawPageFooter(page, fonts, pageNumber, totalPages);
+  let y = PAGE_H - 94;
+  let currentPage = pageNumber;
+
+  const checkPageBreak = (neededSpace) => {
+    if (y - neededSpace < 60) {
+      drawPageFooter(page, fonts, currentPage, totalPages);
+      page = pdfDoc.addPage([PAGE_W, PAGE_H]);
+      drawPageHeader(page, fonts, clinicName, "Patient Medical Record");
+      currentPage++;
+      drawPageFooter(page, fonts, currentPage, totalPages);
+      y = PAGE_H - 94;
+    }
+  };
+
+  y = drawSectionHeading(page, fonts, "EHR / Health History", y);
+  y -= 8;
+
+  if (sortedEHRs.length === 0) {
+    drawText(page, "No health records found.", { x: MARGIN + 12, y, size: 10, font: fonts.oblique, color: COLORS.muted });
+    return;
+  }
+
+  for (const ehr of sortedEHRs) {
+    // ── Visit header card ──
+    checkPageBreak(50);
+    const visitDate = new Date(ehr.visit_date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+    const vetName = ehr.vetProfessional?.User
+      ? `Dr. ${ehr.vetProfessional.User.first_name} ${ehr.vetProfessional.User.last_name}`
+      : "—";
+
+    page.drawRectangle({ x: MARGIN, y: y - 30, width: CONTENT_W, height: 38, color: COLORS.primaryLight, borderRadius: 5 });
+    page.drawRectangle({ x: MARGIN, y: y - 30, width: 4, height: 38, color: COLORS.primary, borderRadius: 2 });
+
+    drawText(page, visitDate, { x: MARGIN + 14, y: y - 8, size: 11, font: fonts.bold, color: COLORS.primaryDark });
+    drawText(page, `Service: ${ehr.service ?? "—"}`, { x: MARGIN + 14, y: y - 22, size: 8, font: fonts.regular, color: COLORS.muted });
+
+    const vetW = fonts.regular.widthOfTextAtSize(vetName, 8);
+    drawText(page, vetName, { x: PAGE_W - MARGIN - vetW - 8, y: y - 8, size: 8, font: fonts.oblique, color: COLORS.muted });
+
+    if (ehr.appointment) {
+      const apptTime = ehr.appointment.time?.slice(0, 5) ?? "";
+      const apptLabel = `Appt: ${ehr.appointment.date} ${apptTime}`;
+      const apptW = fonts.regular.widthOfTextAtSize(apptLabel, 7);
+      drawText(page, apptLabel, { x: PAGE_W - MARGIN - apptW - 8, y: y - 22, size: 7, font: fonts.regular, color: COLORS.muted });
+    }
+
+    y -= 44;
+
+    // ── Sub-section renderer ──────────────────────────────────────────────
+    const drawSubSection = (label, items, color = COLORS.primary) => {
+      if (!items || items.length === 0) return;
+
+      checkPageBreak(28 + items.length * 32);
+
+      // Sub-heading
+      page.drawRectangle({ x: MARGIN + 8, y: y - 2, width: CONTENT_W - 8, height: 18, color: color === COLORS.primary ? COLORS.primaryLight : rgb(0.94, 0.96, 1), borderRadius: 3 });
+      drawText(page, label, { x: MARGIN + 16, y: y + 2, size: 8, font: fonts.bold, color: color });
+      y -= 22;
+
+      for (const item of items) {
+        checkPageBreak(34);
+        drawText(page, item.name, { x: MARGIN + 20, y, size: 9, font: fonts.bold, color: COLORS.dark });
+
+        if (item.duration) {
+          const durW = fonts.regular.widthOfTextAtSize(`Duration: ${item.duration}`, 7.5);
+          drawText(page, `Duration: ${item.duration}`, { x: PAGE_W - MARGIN - durW - 8, y, size: 7.5, font: fonts.regular, color: COLORS.muted });
+        }
+
+        if (item.description) {
+          drawText(page, item.description, { x: MARGIN + 20, y: y - 13, size: 8, font: fonts.regular, color: COLORS.muted, maxWidth: CONTENT_W - 30 });
+        }
+        y -= 32;
+      }
+    };
+
+    drawSubSection("Vaccinations",  ehr.vaccinations,  COLORS.primary);
+    drawSubSection("Lab Results",    ehr.labResults,    COLORS.primaryDark);
+    drawSubSection("Prescriptions",  ehr.prescriptions, COLORS.primaryDark);
+    drawSubSection("Dewormings",     ehr.dewormings,    COLORS.primary);
+
+    // Divider between visits
+    checkPageBreak(16);
+    drawDivider(page, y + 4);
+    y -= 16;
+  }
+}
+
+// ─── PATIENT report (updated) ─────────────────────────────────────────────────
+async function generatePatientReport(pdfDoc, fonts, reportData) {
+  const rawEHRs = Array.isArray(reportData.healthData)
+    ? reportData.healthData
+    : (reportData.healthData?.ehrs ?? []);
+
+  // Unwrap Sequelize instances — pull from dataValues if present
+  const ehrs = rawEHRs.map(ehr => {
+    const base = ehr.dataValues ?? ehr;
+    return {
+      ...base,
+      vetProfessional: ehr.vetProfessional?.dataValues
+        ? { ...ehr.vetProfessional.dataValues, User: ehr.vetProfessional.User?.dataValues ?? ehr.vetProfessional.User }
+        : ehr.vetProfessional,
+      appointment:    ehr.appointment?.dataValues    ?? ehr.appointment,
+      vaccinations:   (ehr.vaccinations  ?? []).map(v => v.dataValues ?? v),
+      dewormings:     (ehr.dewormings    ?? []).map(d => d.dataValues ?? d),
+      labResults:     (ehr.labResults    ?? []).map(l => l.dataValues ?? l),
+      prescriptions:  (ehr.prescriptions ?? []).map(p => p.dataValues ?? p),
+    };
+  });
+
+  // ── Two-pass page count ─────────────────────────────────────────────────
+  // Pass 1: dry run on a temp doc to get the real page count
+  const tempDoc = await PDFDocument.create();
+  const tempFonts = await loadFonts(tempDoc);
+  const dummyTotal = 99; // placeholder, doesn't matter for counting
+  tempDoc.addPage([PAGE_W, PAGE_H]); // page 1 (patient info)
+  await generateEHRSection(tempDoc, tempFonts, reportData.clinicName, ehrs, 2, dummyTotal);
+  const totalPages = tempDoc.getPageCount(); // real count
+
+  // Pass 2: render actual doc with correct totalPages
+  const page = pdfDoc.addPage([PAGE_W, PAGE_H]);
   drawPageHeader(page, fonts, reportData.clinicName, "Patient Medical Record");
+  drawPageFooter(page, fonts, 1, totalPages);
 
   let y = PAGE_H - 94;
 
-  // ── Pet Identity Card ──────────────────────────────────────────────────────
+  // Pet Identity Card
   page.drawRectangle({ x: MARGIN, y: y - 64, width: CONTENT_W, height: 74, color: COLORS.primaryLight, borderRadius: 6 });
-
-  // Large pet name
   drawText(page, reportData.petName, { x: MARGIN + 16, y: y - 12, size: 20, font: fonts.bold, color: COLORS.primary });
-
-  // Pet ID badge
   drawBadge(page, fonts, `ID: ${reportData.petId}`, MARGIN + 16, y - 28, COLORS.primary);
-
-  // Species / breed tag
   const speciesStr = [reportData.species, reportData.breed].filter(Boolean).join(" · ");
   drawText(page, speciesStr, { x: MARGIN + 16, y: y - 50, size: 9, font: fonts.oblique, color: COLORS.muted });
-
-  // Gender badge
   const genderColor = reportData.gender?.toLowerCase() === "female" ? rgb(0.75, 0.25, 0.55) : COLORS.primary;
   if (reportData.gender) drawBadge(page, fonts, reportData.gender, MARGIN + 200, y - 28, genderColor);
-
   y -= 84;
   drawDivider(page, y + 6);
   y -= 10;
 
-  // ── Patient Details ────────────────────────────────────────────────────────
+  // Patient Details
   y = drawSectionHeading(page, fonts, "Patient Details", y);
   y -= 8;
-
-  const col1 = MARGIN + 8;
-  const col2 = MARGIN + CONTENT_W / 2 + 8;
-  const colW = CONTENT_W / 2 - 16;
-
-  drawLabelValue(page, fonts, "Date of Birth",    reportData.birthdate,    col1, y, colW);
-  drawLabelValue(page, fonts, "Age",              reportData.age,          col2, y, colW);
+  const col1 = MARGIN + 8, col2 = MARGIN + CONTENT_W / 2 + 8, colW = CONTENT_W / 2 - 16;
+  drawLabelValue(page, fonts, "Date of Birth",       reportData.birthdate,    col1, y, colW);
+  drawLabelValue(page, fonts, "Age",                 reportData.age,          col2, y, colW);
   y -= 38;
-
-  drawLabelValue(page, fonts, "Weight",           reportData.weight != null ? `${reportData.weight}` : null, col1, y, colW);
-  drawLabelValue(page, fonts, "Registration No.", reportData.registration, col2, y, colW);
+  drawLabelValue(page, fonts, "Weight",              reportData.weight != null ? `${reportData.weight}` : null, col1, y, colW);
+  drawLabelValue(page, fonts, "Registration No.",    reportData.registration, col2, y, colW);
   y -= 38;
-
-  drawLabelValue(page, fonts, "Total Appointments", reportData.appointmentCount != null ? String(reportData.appointmentCount) : null, col1, y, colW);
+  drawLabelValue(page, fonts, "Total Appointments",  reportData.appointmentCount != null ? String(reportData.appointmentCount) : null, col1, y, colW);
   y -= 46;
-
   drawDivider(page, y + 4);
   y -= 14;
 
-  // ── Owner Information ──────────────────────────────────────────────────────
+  // Owner Information
   y = drawSectionHeading(page, fonts, "Owner Information", y);
   y -= 8;
-
   drawLabelValue(page, fonts, "Full Name", reportData.owner?.name,    col1, y, colW);
   drawLabelValue(page, fonts, "Email",     reportData.owner?.email,   col2, y, colW);
   y -= 38;
-
   drawLabelValue(page, fonts, "Phone",     reportData.owner?.phone,   col1, y, colW);
   drawLabelValue(page, fonts, "Address",   reportData.owner?.address, col2, y, colW * 1.2);
-  y -= 46;
 
-  drawDivider(page, y + 4);
-  y -= 14;
+  // ── EHR pages ──────────────────────────────────────────────────────────
+  if (ehrs.length > 0) {
+    await generateEHRSection(pdfDoc, fonts, reportData.clinicName, ehrs, 2, totalPages);
+  }
 }
 
 // ─── CLINIC report ────────────────────────────────────────────────────────────

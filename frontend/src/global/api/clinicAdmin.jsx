@@ -142,10 +142,11 @@ export const updateVetProfessional = async (vetId, vetData, profilePicture) => {
   }
 };
 
-export const downloadPatientReport = async (patientData) => {
+export const downloadPatientReport = async (patientData, patientId = null) => {
   try {
     const res = await api.post('/reports/patient', {
-      ...patientData
+      ...patientData,
+      patientId
     }, {
       responseType: 'blob',
     });

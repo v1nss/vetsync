@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { FiEye, FiTrash2 } from "react-icons/fi";
-import { useAuth } from "../../context/AuthContext";
-import { deleteEHR } from "../../global/api/ehr";
 import ConfirmationModal from "../ConfirmationModal";
 
-export default function HealthRecordsTable({ healthRecords, onRecordClick, onDelete }) {
-  const { role } = useAuth();
+export default function HealthRecordsTable({ healthRecords, onRecordClick, onDelete, role }) {
+  console.log(healthRecords)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedRecordId, setSelectedRecordId] = useState(null);
 
