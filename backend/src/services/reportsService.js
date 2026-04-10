@@ -151,6 +151,55 @@ export const getAuditTrail = async ({ page = 1, limit = 20, method, url, user_id
   };
 };
 
+const MAX_RANGE_DAYS = 7;
+
+function getRangeDays(startDate, endDate) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  const utcStart = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
+  const utcEnd = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
+
+  const msPerDay = 1000 * 60 * 60 * 24;
+
+  return Math.floor((utcEnd - utcStart) / msPerDay) + 1;
+}
+
+export const getAuditTrailReport = async ({
+  method,
+  url,
+  user_id,
+  startDate,
+  endDate
+}) => {
+  if (!startDate || !endDate) {
+    throw new Error("startDate and endDate are required for downloads");
+  }
+
+  const rangeDays = getRangeDays(startDate, endDate);
+
+  if (rangeDays > MAX_RANGE_DAYS) {
+    throw new Error(`Download range cannot exceed ${MAX_RANGE_DAYS} days`);
+  }
+
+  const where = {};
+
+  if (method) where.method = method;
+  if (url) where.url = { [Op.like]: `%${url}%` };
+  if (user_id) where.user_id = user_id;
+
+  where.createdAt = {
+    [Op.gte]: new Date(startDate),
+    [Op.lte]: new Date(endDate),
+  };
+
+  const logs = await AuditLog.findAll({
+    where,
+    order: [["createdAt", "DESC"]],
+    raw: true,
+  });
+  return logs;
+};
 
 export const getClinicPerformanceReport = async () => {
   const result = await Clinic.findAll({

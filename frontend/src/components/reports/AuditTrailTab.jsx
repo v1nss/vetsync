@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { fetchAuditTrail } from "../../global/api/systemAdmin";
 import Pagination from "../Pagination";
 import { FaSearch, FaFilter, FaTimes } from "react-icons/fa";
+import { FiDownload } from "react-icons/fi";
+import { downloadAuditTrail } from "../../global/api/systemAdmin";
+import NotificationModal from "../NotificationModal";
 
 const METHOD_OPTIONS = ["ALL", "GET", "POST", "PUT", "PATCH", "DELETE"];
 
@@ -43,6 +46,7 @@ export default function AuditTrailTab() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [notification, setNotification] = useState({ isOpen: false, type: "success", title: "", message: "" });
 
   const [urlSearch, setUrlSearch] = useState("");
   const [methodFilter, setMethodFilter] = useState("ALL");
@@ -88,6 +92,45 @@ export default function AuditTrailTab() {
     setPage(1);
   };
 
+  function getAuditRangeDays(startDate, endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    const utcStart = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
+    const utcEnd = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
+
+    const msPerDay = 1000 * 60 * 60 * 24;
+
+    return Math.floor((utcEnd - utcStart) / msPerDay) + 1; // inclusive
+  }
+
+  const handleDownloadAuditTrail = async () => {
+    const params = {};
+      if (methodFilter !== "ALL") params.method = methodFilter;
+      if (urlSearch.trim()) params.url = urlSearch.trim();
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+
+      if (getAuditRangeDays(startDate, endDate) > 7 || getAuditRangeDays(startDate, endDate) < 0 || !startDate || !endDate) {
+          setNotification({
+            isOpen: true,
+            type: 'info',
+            title: 'Info',
+            message: 'The selected date range exceeds 7 days or invalid.'
+          });
+          return;
+      }
+
+    await downloadAuditTrail(params);
+  };
+
+  const handleNotificationClose = () => {
+    setNotification({ ...notification, isOpen: false });
+    if (notification.type === 'success') {
+      onClose();
+    }
+  };
+
   const hasActiveFilters =
     urlSearch || methodFilter !== "ALL" || startDate || endDate;
 
@@ -108,6 +151,13 @@ export default function AuditTrailTab() {
               <FaSearch className="text-gray-400" />
             </button>
           </div>
+            <button
+              onClick={() => handleDownloadAuditTrail()}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium"
+            >
+              <FiDownload className="w-4 h-4" />
+              <span className="hidden sm:inline">Audit Logs</span>
+            </button>
           <button
             type="button"
             onClick={() => setShowFilters(!showFilters)}
@@ -298,6 +348,16 @@ export default function AuditTrailTab() {
           onPageChange={(p) => setPage(p)}
         />
       </div>
+
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={handleNotificationClose}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+      />
     </div>
+
+    
   );
 }

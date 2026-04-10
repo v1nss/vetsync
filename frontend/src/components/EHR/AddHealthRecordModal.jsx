@@ -5,7 +5,7 @@ import { FaPrescription } from "react-icons/fa";
 import NotificationModal from "../NotificationModal";
 
 export default function AddHealthRecordModal({ patient, appointment, onClose, onSave }) {
-  console.log("AddHealthRecordModal appointment:", appointment);
+  
   const [formData, setFormData] = useState({
     appointmentDate: appointment?.date || new Date().toISOString().split('T')[0],
     veterinarian: appointment?.assigned_vet || "",

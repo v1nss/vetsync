@@ -24,7 +24,6 @@ export const updateClinicStatus = async (clinicId, status) => {
 
 export const createApprovalLog = async (logData) => {
   try {
-    console.log("Creating approval log with data:", logData);
     const res = await api.post(`/approval-logs/create`, logData);
     return res.data;
   } catch (err) {
@@ -79,6 +78,29 @@ export const fetchClinicPerformanceReport = async () => {
     return res.data;
   } catch (err) {
     console.error("Unable to fetch clinic performance report", err);
+    throw err;
+  }
+};
+
+export const downloadAuditTrail = async (params = {}) => {
+   try {
+    const res = await api.get("/reports/audit-trail/download", {
+      params,
+      responseType: 'blob',
+    });
+
+    const url = window.URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `audit-trail-${params.startDate}-to-${params.endDate}.csv`);
+    document.body.appendChild(link);
+    link.click();
+
+    link.remove();
+    window.URL.revokeObjectURL(url);
+
+  } catch (err) {
+    console.error("Unable to download audit trail", err);
     throw err;
   }
 };

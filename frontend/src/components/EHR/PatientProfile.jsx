@@ -407,7 +407,7 @@ export default function PatientProfile({ patient, onBack }) {
   return (
     <>
       <div className="mx-auto">
-        <div className="mb-6 flex justify-between items-center">
+        <div className="mb-6 flex justify-startitems-center gap-3 flex-col sm:flex-row sm:justify-between">
           <button
             onClick={onBack}
             className="text-2xl flex items-center gap-1 transition"
@@ -423,14 +423,14 @@ export default function PatientProfile({ patient, onBack }) {
               className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium"
             >
               <FiDownload className="w-4 h-4" />
-              <span className="hidden sm:inline">Patient Info</span>
+              <span className="text-sm sm:text-base">Patient Info</span>
             </button>
             <button
               onClick={() => handleDownloadHealthRecord(payload)}
               className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium"
             >
               <FiDownload className="w-4 h-4" />
-              <span className="hidden sm:inline">Patient Health Record</span>
+              <span className="text-sm sm:text-base">Patient Health Record</span>
             </button>
           </div>
           
