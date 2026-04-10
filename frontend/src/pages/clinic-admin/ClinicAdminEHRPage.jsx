@@ -51,7 +51,6 @@ export default function ClinicAdminEHRPage() {
         });
 
         transformedPatients.sort((a, b) => b.appointmentCount - a.appointmentCount);
-        console.log("Transformed patient data for frontend:", transformedPatients);
         setPatients(transformedPatients);
       } else {
         setPatients([]);
