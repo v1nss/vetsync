@@ -1,861 +1,237 @@
-
 # VetSync
 
-
-
-> A full-stack veterinary clinic management platform connecting pet owners, veterinary professionals, and clinic administrators.
-
-
-
-[![Deployed on Vercel](https://img.shields.io/badge/deployed-vercel-black)](https://vetsync-business.vercel.app)
-
-[![Node.js](https://img.shields.io/badge/node-%3E=18-brightgreen)](https://nodejs.org)
-
-[![PostgreSQL](https://img.shields.io/badge/database-PostgreSQL-blue)](https://www.postgresql.org)
-
-[![License: ISC](https://img.shields.io/badge/license-ISC-yellow)](#license)
-
-
-
-VetSync is a multi-tenant web application that lets pet owners book appointments with veterinary clinics, gives veterinarians and clinic admins tools to manage patient records (EHR), and provides a system administrator portal for platform-level approvals and oversight.
-
-
-
-**Live demo:** [vetsync-business.vercel.app](https://vetsync-business.vercel.app)
-
-
-
------
-
-
-
-## Table of Contents
-
-
-
-- [Background](#background)
-
-- [Features](#features)
-
-- [Tech Stack](#tech-stack)
-
-- [Architecture](#architecture)
-
-- [Project Structure](#project-structure)
-
-- [Prerequisites](#prerequisites)
-
-- [Install](#install)
-
-- [Configuration](#configuration)
-
-- [Usage](#usage)
-
-- [API Overview](#api-overview)
-
-- [Database Migrations](#database-migrations)
-
-- [Roadmap](#roadmap)
-
-- [Contributing](#contributing)
-
-- [Maintainers](#maintainers)
-
-- [License](#license)
-
-
-
------
-
-
-
-## Background
-
-
-
-VetSync exists to streamline how small and mid-sized veterinary clinics coordinate with the pet owners they serve. The platform supports four user roles — **Pet Owner**, **Veterinary Professional**, **Clinic Administrator**, and **System Administrator** — each with a tailored dashboard and permission scope. Core flows include clinic discovery (with map-based search), appointment requests with approval/rejection workflows, electronic health records (EHR) attached to individual pets, and report generation.
-
-
-
-This README follows the [Standard Readme specification](https://github.com/RichardLitt/standard-readme) for structure and the [Contributor Covenant](https://www.contributor-covenant.org/) and [Conventional Commits](https://www.conventionalcommits.org/) standards for contribution workflow.
-
-
-
------
-
-
-
-## Features
-
-
-
-Confirmed in the current codebase:
-
-
-
-- **Multi-role authentication** with JWT access and refresh tokens stored in httpOnly cookies (Pet Owner, Vet Professional, Clinic Admin, System Admin).
-
-- **Clinic registration and approval workflow** managed by system administrators, with full audit logging.
-
-- **Appointment lifecycle** — request, approve, reject, complete — with email notifications via Brevo (Sendinblue).
-
-- **Electronic Health Records (EHR)** including vaccination, deworming, prescription, and lab result models, with file attachments uploaded to Google Drive via the Google Drive API.
-
-- **Pet profile management** with image uploads (Multer + Google Drive storage).
-
-- **Map-based clinic search** powered by Leaflet and React-Leaflet on the frontend.
-
-- **Calendar views** for appointments using FullCalendar.
-
-- **Reports module** with PDF generation via `pdf-lib`.
-
-- **Audit logging middleware** for tracking sensitive operations.
-
-
-
------
-
-
+A comprehensive veterinary clinic management system that connects pet owners with veterinary clinics and professionals. VetSync streamlines appointment booking, electronic health records (EHR) management, and clinic operations.
 
 ## Tech Stack
 
-
+### Frontend
+- **React 19** - UI library
+- **Vite** - Build tool and dev server
+- **TailwindCSS 4** - Utility-first CSS framework
+- **React Router 7** - Client-side routing
+- **Axios** - HTTP client
+- **FullCalendar** - Appointment calendar
+- **Leaflet/React-Leaflet** - Interactive maps
 
 ### Backend
+- **Node.js** with **Express 5** - REST API server
+- **PostgreSQL** - Relational database
+- **Sequelize** - ORM for database operations
+- **JWT** - Authentication tokens
+- **Brevo/Nodemailer** - Email services
+- **Google Drive API** - File storage
+- **pdf-lib** - PDF generation
 
+## Features
 
+### Pet Owners
+- Browse and search veterinary clinics
+- View clinic details with location on map
+- Book appointments with preferred clinics
+- Manage multiple pets
+- Access electronic health records (EHR)
+- View vaccination history, prescriptions, lab results
+- Profile and settings management
 
-- **Runtime:** Node.js (ES Modules)
+### Clinic Administrators
+- Dashboard with clinic analytics
+- Manage clinic information and schedule
+- Register and manage veterinary professionals
+- View and manage patient records (EHR)
+- Handle appointment requests
+- Clinic approval workflow (pending/approved/rejected status)
 
-- **Framework:** Express 5
+### Veterinary Professionals
+- View and manage assigned appointments
+- Access and update patient health records
+- Add vaccinations, prescriptions, deworming records
+- Record lab results
+- Profile management
 
-- **ORM:** Sequelize 6 with `sequelize-cli` for migrations
+### System Administrators
+- System-wide dashboard and analytics
+- Manage all registered clinics
+- Approve or reject clinic registrations
+- User management across all roles
+- Audit trail and logs
 
-- **Database:** PostgreSQL (via `pg` and `pg-hstore`)
+## User Types
 
-- **Auth:** `jsonwebtoken`, `bcryptjs`, `cookie-parser`
+| Role | Description |
+|------|-------------|
+| `pet_owner` | Pet owners who book appointments and manage their pets |
+| `clinic_admin` | Administrators who manage clinic operations |
+| `vet_professional` | Veterinary professionals who provide medical services |
+| `system_admin` | Platform administrators with full system access |
 
-- **Email:** `@getbrevo/brevo` (transactional email), `nodemailer` (fallback/utilities)
+## Getting Started
 
-- **File storage:** `googleapis` (Google Drive), `multer` (upload handling)
+### Prerequisites
+- Node.js (v18 or higher)
+- PostgreSQL (v14 or higher)
+- npm or yarn
 
-- **PDF generation:** `pdf-lib`
+### Environment Variables
 
-- **Dev tooling:** `nodemon`
+Create a `.env` file in the `/backend` directory:
 
+```env
+# Database
+DB_HOST=localhost
+DB_USER=postgres
+DB_PASSWORD=your_password
+DB_DATABASE=vetsync_dev
 
+# JWT
+JWT_SECRET=your_jwt_secret
 
-### Frontend
+# Email (Brevo)
+BREVO_API_KEY=your_brevo_api_key
 
-
-
-- **Framework:** React 19
-
-- **Build tool:** Vite 7
-
-- **Styling:** Tailwind CSS 4 (`@tailwindcss/vite` plugin)
-
-- **Routing:** React Router 7
-
-- **HTTP client:** Axios
-
-- **Maps:** Leaflet + React-Leaflet
-
-- **Calendar:** FullCalendar (daygrid, timegrid, interaction)
-
-- **Icons:** React Icons
-
-- **Linting:** ESLint 9 with React Hooks and React Refresh plugins
-
-- **Compiler:** React Compiler (Babel plugin, RC build)
-
-
-
-### Infrastructure
-
-
-
-- **Frontend hosting:** Vercel (`vetsync-business.vercel.app`)
-
-- **Database:** PostgreSQL (production connection via `PGURL` with SSL required)
-
-
-
------
-
-
-
-## Architecture
-
-
-
-VetSync follows a classic **client–server architecture** with a clear separation between the React SPA frontend and the Express REST API backend. The backend is organized in a **layered MVC pattern**: Routes → Controllers → Services → Models. Cross-cutting concerns (authentication, audit logging, file uploads, email, PDF generation, Google Drive integration) live under `backend/global/`.
-
-
-
+# Google Drive
+CLIENT_ID=your_client_id
+CLIENT_SECRET=your_client_secret
 ```
 
-┌────────────────────┐       HTTPS / Cookies       ┌────────────────────┐
+Create a `.env` file in the `/frontend` directory:
 
-│   React (Vite)     │ ◄──────────────────────────►│  Express REST API  │
-
-│  Vercel-hosted     │       JSON, JWT auth        │   Node.js runtime  │
-
-└────────────────────┘                             └─────────┬──────────┘
-
-                                                             │
-
-                                            ┌────────────────┼────────────────┐
-
-                                            ▼                ▼                ▼
-
-                                     ┌────────────┐  ┌──────────────┐ ┌────────────┐
-
-                                     │ PostgreSQL │  │ Google Drive │ │   Brevo    │
-
-                                     │ (Sequelize)│  │  (file store)│ │  (email)   │
-
-                                     └────────────┘  └──────────────┘ └────────────┘
-
+```env
+VITE_BACKEND_URL="http://localhost:4000"
+VITE_NODE_ENV="development"
 ```
 
+### Installation
 
+1. Clone the repository
+```bash
+git clone https://github.com/v1nssvetsync.git
+cd vetsync
+```
 
------
+2. Install backend dependencies
+```bash
+cd backend
+npm install
+```
 
+3. Install frontend dependencies
+```bash
+cd ../frontend
+npm install
+```
 
+4. Run database migrations
+```bash
+cd ../backend
+npm run migrate
+```
+
+5. Start the development servers
+
+Backend:
+```bash
+cd backend
+npm run dev
+```
+
+Frontend (in a new terminal):
+```bash
+cd frontend
+npm run dev
+```
+
+The frontend will be available at `http://localhost:5173` and the backend API at `http://localhost:3000`.
+
+## Test Accounts
+
+| Role | Email | Password |
+|------|-------|----------|
+| Pet Owner | `petowner@test.com` | `password123` |
+| Clinic Admin | `clinicadmin@test.com` | `password123` |
+| Vet Professional | `vetpro@test.com` | `password123` |
+| System Admin | `sysadmin@gmail.com` | `123456` |
+
+> **Note:** These are placeholder credentials for development/testing purposes. Update with actual seeded accounts.
 
 ## Project Structure
 
-
-
 ```
-
 vetsync/
-
 ├── backend/
-
-│   ├── config/
-
-│   │   └── config.cjs                # sequelize-cli config (dev/test/prod)
-
-│   ├── global/
-
-│   │   ├── config/                   # db, oauth, gDrive, multer
-
-│   │   ├── middleware/               # authMiddleware, auditMiddleware
-
-│   │   └── utils/                    # tokens, drive, emailService, pdfGenerator
-
-│   ├── migrations/                   # Sequelize migration files
-
-│   ├── src/
-
-│   │   ├── controllers/              # Request handlers per domain
-
-│   │   ├── models/                   # Sequelize models (pets, clinics, EHR, etc.)
-
-│   │   │   └── users/                # userModel + role-specific models
-
-│   │   ├── routes/                   # Express route definitions
-
-│   │   ├── services/                 # Business logic layer
-
-│   │   └── server.js                 # App entry point
-
-│   └── package.json
-
-│
-
+│   ├── config/           # Database configuration
+│   ├── global/           # Shared utilities, middleware, config
+│   │   ├── config/       # DB connection, multer, Google Drive
+│   │   ├── middleware/   # Auth, audit middleware
+│   │   └── utils/        # Helpers (token generation, PDF, Drive)
+│   ├── migrations/       # Sequelize migrations
+│   └── src/
+│       ├── controllers/  # Route handlers
+│       ├── models/       # Sequelize models
+│       ├── routes/       # API route definitions
+│       └── services/     # Business logic
 ├── frontend/
-
-│   ├── public/
-
-│   ├── src/
-
-│   │   ├── assets/
-
-│   │   ├── components/               # Reusable UI grouped by domain
-
-│   │   │   ├── appointments/
-
-│   │   │   ├── clinic/
-
-│   │   │   ├── EHR/
-
-│   │   │   ├── reports/
-
-│   │   │   ├── users/
-
-│   │   │   └── vet/
-
-│   │   ├── context/                  # React context providers
-
-│   │   ├── global/
-
-│   │   │   ├── api/                  # Axios instance & API helpers
-
-│   │   │   └── utils/
-
-│   │   ├── hooks/                    # Custom React hooks
-
-│   │   ├── pages/
-
-│   │   │   ├── clinic-admin/
-
-│   │   │   ├── pet-owner/
-
-│   │   │   ├── system-admin/
-
-│   │   │   ├── Unauthorized/
-
-│   │   │   └── vet-pro/
-
-│   │   ├── routes/                   # AppRoutes.jsx and route guards
-
-│   │   ├── utils/
-
-│   │   ├── App.jsx
-
-│   │   └── main.jsx
-
-│   └── package.json
-
-│
-
-├── .gitattributes
-
-├── .gitignore
-
-├── README.md
-
-└── TODO.md
-
+│   └── src/
+│       ├── components/   # Reusable UI components
+│       ├── context/      # React context providers
+│       ├── global/       # API clients
+│       ├── pages/        # Page components by user role
+│       └── routes/       # Route configuration
+└── README.md
 ```
 
-
-
------
-
-
-
-## Prerequisites
-
-
-
-Before setting up VetSync locally you will need:
-
-
-
-- **Node.js** 18 LTS or newer (required by Vite 7 and Express 5)
-
-- **npm** 9+ (or a compatible package manager such as pnpm or yarn)
-
-- **PostgreSQL** 13+ running locally or accessible via a connection string
-
-- **Google Cloud project** with Drive API enabled (for EHR file uploads). You will need either OAuth 2.0 client credentials or a service account.
-
-- **Brevo (Sendinblue) account** with an API key (for transactional email)
-
-
-
------
-
-
-
-## Install
-
-
-
-Clone the repository and install dependencies for both workspaces.
-
-
-
-```bash
-
-git clone https://github.com/dionisioedgarjustin/vetsync.git
-
-cd vetsync
-
-
-
-# Backend
-
-cd backend
-
-npm install
-
-
-
-# Frontend
-
-cd ../frontend
-
-npm install
-
-```
-
-
-
------
-
-
-
-## Configuration
-
-
-
-The backend reads its configuration from a `.env` file located at `backend/.env`. **This file is gitignored — never commit it.** Create one with the following keys:
-
-
-
-```dotenv
-
-# --- Server ---
-
-PORT=4000
-
-NODE_ENV=development
-
-
-
-# CORS — comma-separated list of allowed origins
-
-ALLOWED_ORIGINS=http://localhost:5173,https://vetsync-business.vercel.app
-
-
-
-# --- Database ---
-
-# For local dev you can use the discrete vars below; in production set PGURL.
-
-DB_USER=postgres
-
-DB_PASSWORD=password
-
-DB_HOST=localhost
-
-DB_PORT=5432
-
-DB_DATABASE=vetsync_dev
-
-# PGURL=postgres://user:pass@host:5432/dbname    # production (SSL is forced)
-
-
-
-# --- Auth ---
-
-JWT_SECRET=replace-with-a-long-random-string
-
-JWT_REFRESH_SECRET=replace-with-a-different-long-random-string
-
-
-
-# --- Brevo (transactional email) ---
-
-BREVO_API_KEY=xkeysib-...
-
-BREVO_FROM_EMAIL=noreply@yourdomain.com
-
-BREVO_FROM_NAME=VetSync
-
-
-
-# --- Google Drive (OAuth flow) ---
-
-CLIENT_ID=your-google-oauth-client-id
-
-CLIENT_SECRET=your-google-oauth-client-secret
-
-REDIRECT_URI=http://localhost:4000/oauth/callback
-
-REFRESH_TOKEN=your-google-refresh-token
-
-
-
-# --- Google Drive (Service Account, alternative) ---
-
-CLIENT_EMAIL=service-account@project.iam.gserviceaccount.com
-
-CLIENT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-
-```
-
-
-
-The frontend resolves the API base URL through its Axios instance in `frontend/src/global/api/`. Update that file (or add a `VITE_*` env var if you introduce one) to point at your backend during development.
-
-
-
------
-
-
-
-## Usage
-
-
-
-### Run the backend
-
-
-
-```bash
-
-cd backend
-
-
-
-# Apply migrations against your dev database
-
-npm run migrate
-
-
-
-# Start in watch mode
-
-npm run dev          # nodemon src/server.js
-
-# or
-
-npm start            # node src/server.js
-
-```
-
-
-
-The API will listen on `http://localhost:4000` by default.
-
-
-
-### Run the frontend
-
-
-
-```bash
-
-cd frontend
-
-npm run dev          # vite --host  → http://localhost:5173
-
-```
-
-
-
-### Build for production
-
-
-
-```bash
-
-# Backend — no build step, run directly with `npm start`
-
-
-
-# Frontend
-
-cd frontend
-
-npm run build        # outputs to dist/
-
-npm run preview      # local preview of the production build
-
-```
-
-
-
-### Linting
-
-
-
-```bash
-
-cd frontend
-
-npm run lint
-
-```
-
-
-
-### Email testing utilities
-
-
-
-The backend ships helper scripts for verifying email configuration:
-
-
-
-```bash
-
-cd backend
-
-npm run test-email           # validates env + connection
-
-npm run test-email-send      # sends a real test email
-
-npm run test-brevo           # exercises the Brevo client directly
-
-```
-
-
-
------
-
-
-
-## API Overview
-
-
-
-The Express server mounts the following route groups (see `backend/src/server.js`):
-
-
-
-|Base path         |Module               |Purpose                                           |
-
-|------------------|---------------------|--------------------------------------------------|
-
-|`/auth`           |`authRoutes`         |Login, logout, refresh token, current-user (`/me`)|
-
-|`/users`          |`userRoutes`         |User registration and profile management          |
-
-|`/pets`           |`petRoutes`          |Pet CRUD for owners (with image upload)           |
-
-|`/clinics`        |`clinicRoutes`       |Clinic registration, search, public lookup        |
-
-|`/appointments`   |`appointmentRoutes`  |Create, approve, reject, complete appointments    |
-
-|`/system-admin`   |`systemAdminRoutes`  |Platform admin operations                         |
-
-|`/approval-logs`  |`approvalLogsRoutes` |Audit trail for approvals                         |
-
-|`/ehr`            |`ehrRoutes`          |Electronic Health Records (with file attachments) |
-
-|`/clinic-patients`|`clinicPatientRoutes`|Vet/clinic-side patient roster                    |
-
-|`/reports`        |`reportsRoutes`      |Report generation (PDF)                           |
-
-
-
-All authenticated endpoints require the `authToken` httpOnly cookie. Refresh uses a separate `refreshToken` cookie. Role gating is enforced by `verifyOwner`, `verifyVetProfessional`, `verifyClinicAdmin`, and `verifyVetOrClinicAdmin` middleware in `backend/global/middleware/authMiddleware.js`.
-
-
-
------
-
-
-
-## Database Migrations
-
-
-
-VetSync uses Sequelize migrations managed by `sequelize-cli`. The CLI reads its configuration from `backend/config/config.cjs`.
-
-
-
-```bash
-
-cd backend
-
-
-
-# Run all pending migrations (dev)
-
-npm run migrate
-
-
-
-# Run against production
-
-npm run migrate:prod
-
-```
-
-
-
-To create a new migration:
-
-
-
-```bash
-
-npx sequelize-cli migration:generate --name your-change-name
-
-```
-
-
-
-The `seeders/` directory is intentionally gitignored — do not commit seed data.
-
-
-
------
-
-
-
-## Roadmap
-
-
-
-The current `TODO.md` lists the active high-priority items:
-
-
-
-- [x] Initial repository setup
-
-- [x] PostgreSQL database setup
-
-- [x] Initial backend setup
-
-- [x] Frontend setup
-
-- [x] Register module (Pet Owner & Vet Professional)
-
-- [ ] Initial model (in progress)
-
-- [ ] Login module (in progress)
-
-
-
-Please update `TODO.md` as items are completed or added.
-
-
-
------
-
-
-
-## Contributing
-
-
-
-Contributions are welcome. Please follow the workflow below.
-
-
-
-### Workflow
-
-
-
-1. **Fork** the repository and **clone** your fork locally.
-
-1. **Create a feature branch** from `main`:
-
-   
-
-   ```bash
-
-   git checkout -b feat/short-description
-
-   ```
-
-1. **Make your changes**, keeping commits small and focused.
-
-1. **Lint** before committing:
-
-   
-
-   ```bash
-
-   cd frontend && npm run lint
-
-   ```
-
-1. **Commit** using the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format:
-
-- `feat: add appointment rescheduling endpoint`
-
-- `fix: prevent duplicate clinic registration`
-
-- `docs: clarify Google Drive setup`
-
-- `refactor: extract email templates to dedicated module`
-
-- `chore: bump sequelize to 6.37.9`
-
-1. **Push** your branch and open a **Pull Request** against `main` with:
-
-- A clear description of the change
-
-- Linked issue (if applicable)
-
-- Screenshots or terminal output for UI/CLI changes
-
-1. Address review feedback and keep the branch rebased on `main`.
-
-
-
-### Code style
-
-
-
-- **Backend:** ES Modules (`import`/`export`), async/await, consistent error responses (`res.status(...).json({ message: ... })`).
-
-- **Frontend:** Functional React components with hooks, Tailwind utility classes, ESLint must pass with zero warnings (`--max-warnings 0`).
-
-- Keep controllers thin; put business logic in `services/`.
-
-- Follow the existing folder-by-domain structure when adding new features.
-
-
-
-### Code of Conduct
-
-
-
-This project adopts the [Contributor Covenant v2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/). By participating you are expected to uphold it. Report unacceptable behavior to the maintainer listed below.
-
-
-
-### Reporting issues
-
-
-
-Open a GitHub Issue with:
-
-
-
-- **Environment:** Node version, OS, browser (if frontend)
-
-- **Steps to reproduce**
-
-- **Expected vs. actual behavior**
-
-- **Logs or screenshots** where relevant
-
-
-
-For security-sensitive issues, please contact the maintainer privately rather than filing a public issue.
-
-
-
------
-
-
-
-## Maintainers
-
-
-
-- [@dionisioedgarjustin](https://github.com/dionisioedgarjustin)
-
-
-
------
-
-
+## API Endpoints
+
+### Authentication (`/auth`)
+- `POST /auth/login` - User login
+- `POST /auth/logout` - User logout
+- `POST /auth/refresh-token` - Refresh access token
+- `GET /auth/me` - Get current user profile
+
+### Users (`/users`)
+- `POST /users/register` - Register new user (pet owner or clinic admin)
+- `GET /users/:id` - Get user by ID
+- `PUT /users/update/:id` - Update user details
+- `PUT /users/email-check` - Check if email exists
+- `POST /users/vet` - Create vet professional (clinic admin only)
+- `PATCH /users/vet/:vetId` - Update vet professional
+- `GET /users/my-clinic/vets` - Get vet professionals for clinic
+
+### Pets (`/pets`)
+- `POST /pets/register` - Register a new pet
+- `GET /pets/` - Get current user's pets
+- `GET /pets/:pet_id` - Get pet by ID
+- `PATCH /pets/:pet_id` - Update pet
+- `DELETE /pets/:pet_id` - Delete pet
+
+### Clinics (`/clinics`)
+- `POST /clinics/register` - Register new clinic (clinic admin only)
+- `PATCH /clinics/update/:clinicId` - Update clinic details
+- `GET /clinics/approved` - Get all approved clinics
+- `GET /clinics/search` - Search clinics
+- `GET /clinics/public/:clinicId` - Get clinic by ID (public)
+- `GET /clinics/my-clinic` - Get current admin's clinic
+
+### Appointments (`/appointments`)
+- `POST /appointments/create` - Create new appointment
+- `GET /appointments/owner` - Get appointments by pet owner
+- `GET /appointments/vet` - Get appointments by vet professional
+- `GET /appointments/clinic/:clinicId` - Get appointments by clinic
+- `PATCH /appointments/approve/:appointmentId` - Approve appointment
+- `PATCH /appointments/reject/:appointmentId` - Reject appointment
+- `PATCH /appointments/complete/:appointmentId` - Mark appointment complete
+- `DELETE /appointments/delete/:appointmentId` - Delete appointment
+
+### EHR - Electronic Health Records (`/ehr`)
+- `POST /ehr/create` - Create new health record (vet only)
+- `GET /ehr/:ehrId` - Get health record by ID
+- `GET /ehr/owner/all` - Get all EHRs for pet owner
+- `GET /ehr/pet/:petId` - Get all EHRs for a specific pet
+- `GET /ehr/vet/all` - Get all EHRs created by vet
+- `GET /ehr/clinic/:clinicId` - Get all EHRs for clinic
+- `PATCH /ehr/:ehrId` - Update health record
+- `DELETE /ehr/:ehrId` - Delete health record
+- `DELETE /ehr/:ehrId/file/:fileId` - Delete file from health record
 
 ## License
 
-
-
-This project is licensed under the **ISC License** (declared in `backend/package.json`). The frontend `package.json` does not yet declare a license — maintainers should align both packages and add a top-level `LICENSE` file.
-
-
-
------
-
-
-
-*This README was structured following the [Standard Readme spec](https://github.com/RichardLitt/standard-readme). All technical claims were verified directly against the source code at the time of writing.*
-
+This project is licensed under the ISC License.
